@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitZone - Tu Gimnasio 24/7</title>
+  <style>
+    /* =============== RESET =============== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:#1a1a1a; color:#fff; line-height:1.6;
+    }
+
+    /* =============== NAV =============== */
+    nav {
+      background:rgba(26,26,26,0.95);
+      padding:1rem 2rem; position:fixed; width:100%; top:0; z-index:1000;
+      backdrop-filter:blur(10px); border-bottom:2px solid #ff4500;
+    }
+    nav ul { list-style:none; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+    .logo { font-size:1.8rem; font-weight:bold; color:#ff4500; text-transform:uppercase; letter-spacing:2px; }
+    .nav-links { display:flex; gap:2rem; align-items:center; }
+    nav a { color:#fff; text-decoration:none; transition:color .3s; font-weight:500; }
+    nav a:hover { color:#ff4500; }
+    .mobile-menu-btn { display:none; background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer; }
+    .user-info { display:none; align-items:center; gap:1rem; }
+    .user-info.active{ display:flex; }
+    .user-name { color:#ff4500; font-weight:bold; }
+    .btn-logout{
+      background:transparent; border:2px solid #ff4500; color:#ff4500;
+      padding:.5rem 1rem; border-radius:5px; cursor:pointer; transition:all .3s;
+    }
+    .btn-logout:hover{ background:#ff4500; color:#fff; }
+
+    /* =============== PAGES =============== */
+    .page { display:none; min-height:100vh; padding-top:80px; }
+    .page.active { display:block; }
+
+    /* =============== HERO (HOME) =============== */
+    .hero{
+      height:90vh;
+      background:linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)),
+      url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600') center/cover;
+      display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:2rem;
+    }
+    .hero h1{ font-size:4rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:3px; }
+    .highlight{ color:#ff4500; }
+    .hero p{ font-size:1.5rem; margin-bottom:2rem; max-width:700px; }
+
+    /* =============== BUTTONS =============== */
+    .btn{
+      background:#ff4500; color:#fff; padding:1rem 2.5rem; border:none; border-radius:50px;
+      font-size:1.1rem; cursor:pointer; transition:all .3s; text-decoration:none; display:inline-block; font-weight:bold; text-transform:uppercase;
+    }
+    .btn:hover{ background:#ff6a33; transform:translateY(-3px); box-shadow:0 10px 30px rgba(255,69,0,.4); }
+    .btn:disabled{ background:#666; cursor:not-allowed; transform:none; }
+    .btn-secondary{ background:transparent; border:2px solid #ff4500; margin-left:1rem; }
+    .btn-secondary:hover{ background:#ff4500; }
+
+    /* =============== SECTIONS =============== */
+    .features{ padding:4rem 2rem; background:#242424; }
+    .features h2{ text-align:center; font-size:2.5rem; margin-bottom:3rem; color:#ff4500; }
+    .features-grid{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:2rem; max-width:1200px; margin:0 auto;
+    }
+    .feature-card{
+      background:#1a1a1a; padding:2rem; border-radius:10px; text-align:center; transition:transform .3s; border:2px solid transparent;
+    }
+    .feature-card:hover{ transform:translateY(-10px); border-color:#ff4500; }
+    .feature-icon{ font-size:3rem; margin-bottom:1rem; }
+
+    /* =============== PRICING =============== */
+    .pricing-container{ padding:4rem 2rem; max-width:1200px; margin:0 auto; }
+    .pricing-container h2{ text-align:center; font-size:2.5rem; margin-bottom:3rem; color:#ff4500; }
+    .pricing-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:2rem; }
+    .pricing-card{
+      background:#242424; border-radius:15px; padding:2.5rem; text-align:center; border:3px solid #333; transition:all .3s;
+    }
+    .pricing-card:hover{ border-color:#ff4500; transform:scale(1.05); }
+    .pricing-card.featured{ border-color:#ff4500; background:#2a2a2a; }
+    .pricing-card h3{ font-size:1.8rem; margin-bottom:1rem; }
+    .price{ font-size:3rem; color:#ff4500; margin:1rem 0; }
+    .pricing-features{ list-style:none; margin:2rem 0; text-align:left; }
+    .pricing-features li{ padding:.5rem 0; border-bottom:1px solid #333; }
+    .pricing-features li:before{ content:"✓ "; color:#ff4500; font-weight:bold; }
+
+    /* =============== FORMS (AUTH/CONTACT/PAYMENT/MODALS) =============== */
+    .auth-container{ padding:4rem 2rem; max-width:500px; margin:0 auto; }
+    .auth-form{
+      background:#242424; padding:3rem; border-radius:15px; border:2px solid #333;
+    }
+    .auth-form h2{ text-align:center; margin-bottom:2rem; color:#ff4500; }
+    .form-group{ margin-bottom:1.5rem; }
+    .form-group label{ display:block; margin-bottom:.5rem; color:#ccc; }
+    .form-group input, .form-group select, .form-group textarea{
+      width:100%; padding:.8rem; border:2px solid #333; background:#1a1a1a; color:#fff; border-radius:5px; font-size:1rem; font-family:inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus{ outline:none; border-color:#ff4500; }
+    .auth-links{ text-align:center; margin-top:1.5rem; }
+    .auth-links a{ color:#ff4500; text-decoration:none; }
+    .success-message,.error-message{ padding:1rem; border-radius:5px; margin-bottom:1rem; display:none; }
+    .success-message{ background:#28a745; color:#fff; }
+    .error-message{ background:#dc3545; color:#fff; }
+    .success-message.show,.error-message.show{ display:block; }
+
+    /* =============== LOCATIONS / CLASSES / CONTACT / PAYMENT =============== */
+    .locations-container,.classes-container,.contact-container,.payment-container{ padding:4rem 2rem; max-width:1200px; margin:0 auto; }
+    .map-container{
+      background:#242424; height:400px; border-radius:15px; margin-bottom:2rem; display:flex; align-items:center; justify-content:center; border:2px solid #333;
+    }
+    .locations-list,.classes-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:2rem; }
+    .location-card,.class-card{
+      background:#242424; padding:2rem; border-radius:10px; border:2px solid #333; transition:border-color .3s;
+    }
+    .location-card:hover,.class-card:hover{ border-color:#ff4500; }
+    .location-card h3,.class-card h3{ color:#ff4500; margin-bottom:1rem; }
+    .class-card{
+      background:linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.7)),
+      url('https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800') center/cover;
+      min-height:250px; display:flex; flex-direction:column; justify-content:flex-end;
+    }
+    .class-card .spots{ color:#ff4500; font-weight:bold; margin-top:.5rem; }
+
+    .contact-grid{ display:grid; grid-template-columns:1fr 1fr; gap:3rem; }
+    .contact-info{ background:#242424; padding:2rem; border-radius:15px; }
+    .contact-info h3{ color:#ff4500; margin-bottom:1rem; }
+    .faq-item{ background:#242424; padding:1.5rem; border-radius:10px; margin-bottom:1rem; border:2px solid #333; }
+    .faq-item h4{ color:#ff4500; margin-bottom:.5rem; }
+
+    .payment-summary{
+      background:#242424; padding:2rem; border-radius:15px; margin-bottom:2rem; border:2px solid #ff4500;
+    }
+
+    /* =============== ADMIN PANEL =============== */
+    .admin-container{ padding:4rem 2rem; max-width:1400px; margin:0 auto; }
+    .admin-header{ text-align:center; margin-bottom:3rem; }
+    .admin-header h1{ color:#ff4500; font-size:2.5rem; margin-bottom:.5rem; }
+    .admin-tabs{ display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; justify-content:center; }
+    .admin-tab{
+      padding:1rem 2rem; background:#242424; border:2px solid #333; border-radius:10px; cursor:pointer;
+      transition:all .3s; font-weight:bold; color:#fff;
+    }
+    .admin-tab:hover{ border-color:#ff4500; }
+    .admin-tab.active{ background:#ff4500; border-color:#ff4500; }
+    .admin-content{ display:none; }
+    .admin-content.active{ display:block; }
+
+    .dashboard-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:2rem; margin-bottom:3rem; }
+    .stat-card{
+      background:linear-gradient(135deg,#242424,#1a1a1a); padding:2rem; border-radius:15px; border:2px solid #333; transition:all .3s;
+    }
+    .stat-card:hover{ border-color:#ff4500; transform:translateY(-5px); }
+    .stat-icon{ font-size:3rem; margin-bottom:1rem; }
+    .stat-value{ font-size:2.5rem; color:#ff4500; font-weight:bold; margin-bottom:.5rem; }
+    .stat-label{ color:#888; font-size:1rem; }
+
+    .data-table{ background:#242424; border-radius:15px; overflow-x:auto; margin-bottom:2rem; }
+    .data-table table{ width:100%; border-collapse:collapse; }
+    .data-table th{ background:#1a1a1a; padding:1rem; text-align:left; color:#ff4500; font-weight:bold; }
+    .data-table td{ padding:1rem; border-bottom:1px solid #333; }
+    .data-table tr:hover{ background:#1a1a1a; }
+
+    .action-btn{ padding:.5rem 1rem; margin:0 .25rem; border:none; border-radius:5px; cursor:pointer; transition:all .3s; font-size:.9rem; }
+    .btn-edit{ background:#ffa500; color:#fff; } .btn-edit:hover{ background:#ff8c00; }
+    .btn-delete{ background:#dc3545; color:#fff; } .btn-delete:hover{ background:#c82333; }
+    .btn-create{ background:#28a745; color:#fff; padding:1rem 2rem; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:2rem; transition:all .3s; }
+    .btn-create:hover{ background:#218838; }
+
+    .badge{ padding:.25rem .75rem; border-radius:20px; font-size:.85rem; font-weight:bold; }
+    .badge-success{ background:#28a745; color:#fff; }
+    .badge-warning{ background:#ffc107; color:#000; }
+    .badge-danger{ background:#dc3545; color:#fff; }
+    .badge-info{ background:#17a2b8; color:#fff; }
+
+    .chart-container{ background:#242424; padding:2rem; border-radius:15px; margin-bottom:2rem; border:2px solid #333; }
+    .chart-container h3{ color:#ff4500; margin-bottom:1rem; }
+
+    /* =============== MODALS =============== */
+    .modal{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.8); z-index:2000; justify-content:center; align-items:center; }
+    .modal.show{ display:flex; }
+    .modal-content{
+      background:#242424; padding:2rem; border-radius:15px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; border:2px solid #ff4500;
+    }
+    .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+    .modal-header h3{ color:#ff4500; font-size:1.8rem; }
+    .close-modal{ background:none; border:none; color:#fff; font-size:2rem; cursor:pointer; transition:color .3s; }
+    .close-modal:hover{ color:#ff4500; }
+
+    /* =============== LOADING =============== */
+    .loading{ display:none; text-align:center; padding:2rem; }
+    .loading.show{ display:block; }
+    .spinner{
+      border:4px solid #333; border-top:4px solid #ff4500; border-radius:50%;
+      width:50px; height:50px; animation:spin 1s linear infinite; margin:0 auto;
+    }
+    @keyframes spin{ 0%{ transform:rotate(0deg);} 100%{ transform:rotate(360deg);} }
+
+    /* =============== RESPONSIVE =============== */
+    @media (max-width:768px){
+      .hero h1{ font-size:2.5rem; }
+      .hero p{ font-size:1.2rem; }
+      nav .nav-links{
+        display:none; flex-direction:column; width:100%; position:absolute; top:100%; left:0; background:rgba(26,26,26,.98); padding:1rem;
+      }
+      nav .nav-links.active{ display:flex; }
+      .mobile-menu-btn{ display:block; }
+      .contact-grid{ grid-template-columns:1fr; }
+      .btn-secondary{ margin-left:0; margin-top:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li class="logo">FitZone</li>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      <div class="nav-links" id="navLinks">
+        <li><a href="#" onclick="showPage('home')">Inicio</a></li>
+        <li><a href="#" onclick="showPage('pricing')">Precios</a></li>
+        <li><a href="#" onclick="showPage('locations')">Ubicaciones</a></li>
+        <li><a href="#" onclick="showPage('classes')">Clases</a></li>
+        <li><a href="#" onclick="showPage('contact')">Contacto</a></li>
+        <li id="adminLink" style="display:none;"><a href="#" onclick="showPage('admin')">Panel Admin</a></li>
+        <li id="authLink"><a href="#" onclick="showPage('login')">Login</a></li>
+        <li class="user-info" id="userInfo">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </li>
+      </div>
+    </ul>
+  </nav>
+
+  <!-- =============== HOME =============== -->
+  <div id="home" class="page active">
+    <div class="hero">
+      <h1>Transforma tu <span class="highlight">Vida</span></h1>
+      <p>Acceso 24/7 a más de 50 ubicaciones. Equipamiento de última generación. Clases ilimitadas.</p>
+      <div>
+        <button class="btn" onclick="showPage('pricing')">Únete Ahora</button>
+        <button class="btn btn-secondary" onclick="showPage('pricing')">Ver Precios</button>
+      </div>
+    </div>
+
+    <div class="features">
+      <h2>¿Por Qué Elegir FitZone?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏋️</div>
+          <h3>Equipamiento Premium</h3>
+          <p>Las mejores máquinas y equipos del mercado para tu entrenamiento óptimo.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🕐</div>
+          <h3>Acceso 24/7</h3>
+          <p>Entrena cuando quieras, donde quieras. Siempre abierto para ti.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3>Clases Grupales</h3>
+          <p>Yoga, spinning, crossfit y más. Instructores certificados.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📍</div>
+          <h3>+50 Ubicaciones</h3>
+          <p>Red nacional de gimnasios. Un solo plan, múltiples opciones.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💪</div>
+          <h3>Entrenadores Expertos</h3>
+          <p>Personal capacitado para ayudarte a alcanzar tus metas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Planes Personalizados</h3>
+          <p>Rutinas diseñadas específicamente para tus objetivos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== PRICING =============== -->
+  <div id="pricing" class="page">
+    <div class="pricing-container">
+      <h2>Planes y Precios</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Plan Básico</h3>
+          <div class="price">$29<span style="font-size:1rem;">/mes</span></div>
+          <ul class="pricing-features">
+            <li>Acceso a 1 gimnasio</li>
+            <li>Horario 6am - 10pm</li>
+            <li>Área de pesas</li>
+            <li>Cardio ilimitado</li>
+            <li>Vestidores y duchas</li>
+          </ul>
+          <button class="btn" onclick="seleccionarPlan('BASICO',29)">Seleccionar</button>
+        </div>
+
+        <div class="pricing-card featured">
+          <h3>Plan Premium</h3>
+          <div class="price">$49<span style="font-size:1rem;">/mes</span></div>
+          <ul class="pricing-features">
+            <li>Acceso a todas las ubicaciones</li>
+            <li>Acceso 24/7</li>
+            <li>Todas las clases grupales</li>
+            <li>1 sesión de entrenamiento personal</li>
+            <li>Invita a un amigo gratis</li>
+            <li>Nutrición básica</li>
+          </ul>
+          <button class="btn" onclick="seleccionarPlan('PREMIUM',49)">Seleccionar</button>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Plan Anual</h3>
+          <div class="price">$399<span style="font-size:1rem;">/año</span></div>
+          <ul class="pricing-features">
+            <li>Todo del Plan Premium</li>
+            <li>Ahorra $189 al año</li>
+            <li>3 sesiones personales/mes</li>
+            <li>Plan nutricional completo</li>
+            <li>Sin compromiso de permanencia</li>
+            <li>Acceso prioritario</li>
+          </ul>
+          <button class="btn" onclick="seleccionarPlan('ANUAL',399)">Seleccionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== LOGIN / REGISTER =============== -->
+  <div id="login" class="page">
+    <div class="auth-container">
+      <div class="auth-form">
+        <h2 id="authTitle">Iniciar Sesión</h2>
+        <div id="successMsg" class="success-message"></div>
+        <div id="errorMsg" class="error-message"></div>
+        <form id="authForm" onsubmit="manejarAutenticacion(event)">
+          <div class="form-group" id="nameGroup" style="display:none;">
+            <label>Nombre Completo</label>
+            <input type="text" id="nombreCompleto" placeholder="Tu nombre" />
+          </div>
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" id="correoElectronico" required placeholder="tu@email.com" />
+          </div>
+          <div class="form-group" id="phoneGroup" style="display:none;">
+            <label>Teléfono</label>
+            <input type="tel" id="numeroTelefono" placeholder="+51 999 999 999" />
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="contrasena" required placeholder="••••••••" />
+          </div>
+          <button type="submit" class="btn" id="btnAuth" style="width:100%;">Continuar</button>
+        </form>
+        <div class="auth-links">
+          <p id="toggleText">¿No tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Regístrate</a></p>
+          <p><a href="#" onclick="mostrarMensaje('Se ha enviado un enlace de recuperación a tu correo','success')">¿Olvidaste tu contraseña?</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== LOCATIONS =============== -->
+  <div id="locations" class="page">
+    <div class="locations-container">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Encuentra tu FitZone</h2>
+      <div class="map-container">
+        <div style="text-align:center;">
+          <div style="font-size:3rem; margin-bottom:1rem;">🗺️</div>
+          <p>Mapa Interactivo - Integración con Google Maps (en producción)</p>
+          <p style="color:#888; font-size:.9rem;">Búsqueda por ubicación GPS próximamente</p>
+        </div>
+      </div>
+      <div class="loading" id="loadingLocations">
+        <div class="spinner"></div>
+        <p>Cargando ubicaciones...</p>
+      </div>
+      <div class="locations-list" id="locationsList"></div>
+    </div>
+  </div>
+
+  <!-- =============== CLASSES =============== -->
+  <div id="classes" class="page">
+    <div class="classes-container">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Clases y Horarios</h2>
+      <div class="loading" id="loadingClasses">
+        <div class="spinner"></div>
+        <p>Cargando clases...</p>
+      </div>
+      <div class="classes-grid" id="classesList"></div>
+    </div>
+  </div>
+
+  <!-- =============== CONTACT =============== -->
+  <div id="contact" class="page">
+    <div class="contact-container">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Contacto</h2>
+      <div class="contact-grid">
+        <div>
+          <div class="contact-info">
+            <h3>Información de Contacto</h3>
+            <p><strong>📞 Teléfono:</strong> +51 999 000 111</p>
+            <p><strong>✉️ Email:</strong> hola@fitzone.com</p>
+            <p><strong>📍 Oficina Central:</strong> Av. Principal 123, Lima</p>
+            <p><strong>⏰ Atención:</strong> 24/7 vía chat y email</p>
+          </div>
+          <div style="margin-top:2rem;">
+            <h3 style="color:#ff4500; margin-bottom:1rem;">Preguntas Frecuentes</h3>
+            <div class="faq-item"><h4>¿Puedo pausar mi membresía?</h4><p>Sí, puedes pausar tu membresía hasta por 2 meses al año.</p></div>
+            <div class="faq-item"><h4>¿Hay período de prueba?</h4><p>Ofrecemos un día de pase gratis para conocer nuestras instalaciones.</p></div>
+            <div class="faq-item"><h4>¿Necesito experiencia previa?</h4><p>No, todos los niveles son bienvenidos. Tenemos instructores para principiantes.</p></div>
+          </div>
+        </div>
+        <div>
+          <div class="auth-form">
+            <h3 style="text-align:center; color:#ff4500;">Envíanos un Mensaje</h3>
+            <div id="contactSuccessMsg" class="success-message"></div>
+            <div id="contactErrorMsg" class="error-message"></div>
+            <form onsubmit="enviarMensajeContacto(event)">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="contactNombre" required placeholder="Tu nombre" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="contactEmail" required placeholder="tu@email.com" />
+              </div>
+              <div class="form-group">
+                <label>Asunto</label>
+                <input type="text" id="contactAsunto" required placeholder="¿En qué podemos ayudarte?" />
+              </div>
+              <div class="form-group">
+                <label>Mensaje</label>
+                <textarea id="contactMensaje" required placeholder="Escribe tu mensaje..." style="min-height:120px;"></textarea>
+              </div>
+              <button type="submit" class="btn" id="btnContact" style="width:100%;">Enviar Mensaje</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== PAYMENT =============== -->
+  <div id="payment" class="page">
+    <div class="payment-container" style="max-width:800px;">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Completar Pago</h2>
+      <div class="payment-summary">
+        <h3>Resumen de tu pedido</h3>
+        <p><strong>Plan seleccionado:</strong> <span id="selectedPlan">-</span></p>
+        <p><strong>Total:</strong> $<span id="totalAmount">0</span></p>
+      </div>
+      <div class="auth-form">
+        <h3 style="color:#ff4500;">Datos de Pago</h3>
+        <div id="paymentSuccessMsg" class="success-message"></div>
+        <div id="paymentErrorMsg" class="error-message"></div>
+        <form onsubmit="procesarPago(event)">
+          <div class="form-group">
+            <label>Nombre en la Tarjeta</label>
+            <input type="text" id="nombreTarjeta" required placeholder="Como aparece en la tarjeta" />
+          </div>
+          <div class="form-group">
+            <label>Número de Tarjeta</label>
+            <input type="text" id="numeroTarjeta" required placeholder="1234 5678 9012 3456" maxlength="19" />
+          </div>
+          <div class="form-group">
+            <label>Fecha de Expiración</label>
+            <input type="text" id="fechaExpiracion" required placeholder="MM/AA" maxlength="5" />
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" id="cvv" required placeholder="123" maxlength="4" />
+          </div>
+          <button type="submit" class="btn" id="btnPayment" style="width:100%;">Confirmar Pago</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== ADMIN =============== -->
+  <div id="admin" class="page">
+    <div class="admin-container">
+      <div class="admin-header">
+        <h1>Panel de Administración</h1>
+        <p>Gestión completa del gimnasio FitZone</p>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="cambiarTabAdmin('dashboard', this)">Dashboard</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('usuarios', this)">Usuarios</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('membresias', this)">Membresías</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('clases-admin', this)">Clases</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('ubicaciones-admin', this)">Ubicaciones</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('pagos-admin', this)">Pagos</button>
+        <button class="admin-tab" onclick="cambiarTabAdmin('reportes', this)">Reportes</button>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="tab-dashboard" class="admin-content active">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Estadísticas Generales</h2>
+        <div class="loading" id="loadingDashboard"><div class="spinner"></div><p>Cargando estadísticas...</p></div>
+        <div class="dashboard-grid" id="dashboardStats"></div>
+      </div>
+
+      <!-- Usuarios -->
+      <div id="tab-usuarios" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Gestión de Usuarios</h2>
+        <div class="loading" id="loadingUsuarios"><div class="spinner"></div><p>Cargando usuarios...</p></div>
+        <div class="data-table" id="usuariosTable"></div>
+      </div>
+
+      <!-- Membresías -->
+      <div id="tab-membresias" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Gestión de Membresías</h2>
+        <div class="loading" id="loadingMembresias"><div class="spinner"></div><p>Cargando membresías...</p></div>
+        <div class="data-table" id="membresiasTable"></div>
+      </div>
+
+      <!-- Clases -->
+      <div id="tab-clases-admin" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Gestión de Clases</h2>
+        <button class="btn-create" onclick="abrirModalCrearClase()">+ Crear Nueva Clase</button>
+        <div class="loading" id="loadingClasesAdmin"><div class="spinner"></div><p>Cargando clases...</p></div>
+        <div class="data-table" id="clasesAdminTable"></div>
+      </div>
+
+      <!-- Ubicaciones -->
+      <div id="tab-ubicaciones-admin" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Gestión de Ubicaciones</h2>
+        <button class="btn-create" onclick="abrirModalCrearUbicacion()">+ Crear Nueva Ubicación</button>
+        <div class="loading" id="loadingUbicacionesAdmin"><div class="spinner"></div><p>Cargando ubicaciones...</p></div>
+        <div class="data-table" id="ubicacionesAdminTable"></div>
+      </div>
+
+      <!-- Pagos -->
+      <div id="tab-pagos-admin" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Historial de Pagos</h2>
+        <div class="loading" id="loadingPagosAdmin"><div class="spinner"></div><p>Cargando pagos...</p></div>
+        <div class="data-table" id="pagosAdminTable"></div>
+      </div>
+
+      <!-- Reportes -->
+      <div id="tab-reportes" class="admin-content">
+        <h2 style="color:#ff4500; margin-bottom:2rem;">Reportes y Análisis</h2>
+
+        <div class="chart-container">
+          <h3>Reporte de Membresías</h3>
+          <div class="loading" id="loadingReporteMembresias"><div class="spinner"></div></div>
+          <div id="reporteMembresiaContent"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Reporte de Ingresos</h3>
+          <select id="periodoIngresos" onchange="cargarReporteIngresos()" style="padding:.5rem; background:#1a1a1a; color:#fff; border:2px solid #333; border-radius:5px; margin-bottom:1rem;">
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+          <div class="loading" id="loadingReporteIngresos"><div class="spinner"></div></div>
+          <div id="reporteIngresosContent"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Reporte de Clases (Ocupación)</h3>
+          <div class="loading" id="loadingReporteClases"><div class="spinner"></div></div>
+          <div id="reporteClasesContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== MODAL CLASE =============== -->
+  <div id="modalClase" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalClaseTitle">Crear Nueva Clase</h3>
+        <button class="close-modal" onclick="cerrarModal('modalClase')">&times;</button>
+      </div>
+      <form id="formClase" onsubmit="guardarClase(event)">
+        <input type="hidden" id="claseId"/>
+        <div class="form-group"><label>Nombre de la Clase</label><input type="text" id="claseNombre" required/></div>
+        <div class="form-group"><label>Descripción</label><textarea id="claseDescripcion" style="min-height:80px;"></textarea></div>
+        <div class="form-group"><label>Horario</label><input type="text" id="claseHorario" required placeholder="Ej: Lunes, Miércoles - 7:00 AM"/></div>
+        <div class="form-group"><label>Instructor</label><input type="text" id="claseInstructor" required/></div>
+        <div class="form-group"><label>Capacidad Máxima</label><input type="number" id="claseCapacidad" required min="1"/></div>
+        <div class="form-group"><label>Duración (minutos)</label><input type="number" id="claseDuracion" required min="15"/></div>
+        <button type="submit" class="btn" style="width:100%;">Guardar Clase</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============== MODAL UBICACIÓN =============== -->
+  <div id="modalUbicacion" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalUbicacionTitle">Crear Nueva Ubicación</h3>
+        <button class="close-modal" onclick="cerrarModal('modalUbicacion')">&times;</button>
+      </div>
+      <form id="formUbicacion" onsubmit="guardarUbicacion(event)">
+        <input type="hidden" id="ubicacionId"/>
+        <div class="form-group"><label>Nombre de la Ubicación</label><input type="text" id="ubicacionNombre" required/></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="ubicacionDireccion" required/></div>
+        <div class="form-group"><label>Distrito</label><input type="text" id="ubicacionDistrito" required/></div>
+        <div class="form-group"><label>Ciudad</label><input type="text" id="ubicacionCiudad" required/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="ubicacionTelefono" required/></div>
+        <div class="form-group"><label>Horario</label><input type="text" id="ubicacionHorario" required value="24/7"/></div>
+        <div class="form-group"><label>Latitud</label><input type="number" step="0.0001" id="ubicacionLatitud"/></div>
+        <div class="form-group"><label>Longitud</label><input type="number" step="0.0001" id="ubicacionLongitud"/></div>
+        <button type="submit" class="btn" style="width:100%;">Guardar Ubicación</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============== MODAL USUARIO =============== -->
+  <div id="modalUsuario" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Usuario</h3>
+        <button class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</button>
+      </div>
+      <form id="formUsuario" onsubmit="guardarUsuario(event)">
+        <input type="hidden" id="usuarioEditId"/>
+        <div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioEditNombre" required/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="usuarioEditTelefono"/></div>
+        <div class="form-group">
+          <label>Rol</label>
+          <select id="usuarioEditRol">
+            <option value="USUARIO">Usuario</option>
+            <option value="ENTRENADOR">Entrenador</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="usuarioEditActivo">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============== SCRIPT (APP) =============== -->
+<script>
+  /* ================== CONFIG ENDPOINTS ================== */
+  const API_URL = 'http://localhost:8080/api';
+  const ENDPOINTS = {
+    auth: {
+      login:        `${API_URL}/autenticacion/iniciar-sesion`,
+      register:     `${API_URL}/autenticacion/registrar`,
+    },
+    membresias: {
+      crear:        `${API_URL}/membresias`,
+      porUsuario:   (usuarioId) => `${API_URL}/membresias/usuario/${usuarioId}`,
+      cancelar:     (membresiaId) => `${API_URL}/membresias/${membresiaId}/cancelar`, 
+
+    },
+    pagos: {
+      crear:        `${API_URL}/pagos`,
+      porUsuario:   (usuarioId) => `${API_URL}/pagos/usuario/${usuarioId}`,
+    },
+    clases: {
+      listar:       `${API_URL}/clases`,
+      inscribir:    `${API_URL}/clases/inscribir`,
+      porUsuario:   (usuarioId) => `${API_URL}/clases/usuario/${usuarioId}`,
+    },
+    ubicaciones: {
+      listar:       `${API_URL}/ubicaciones`,
+      porId:        (id) => `${API_URL}/ubicaciones/${id}`,
+      porDistrito:  (distrito) => `${API_URL}/ubicaciones/distrito/${encodeURIComponent(distrito)}`,
+    },
+    contacto: {
+      enviar:       `${API_URL}/contacto`,
+      listar:       `${API_URL}/contacto`,
+      noLeidos:     `${API_URL}/contacto/no-leidos`,
+    },
+    admin: {
+      dashboard:    `${API_URL}/admin/dashboard`,
+      usuarios:     `${API_URL}/admin/usuarios`,
+      usuarioId:    (id) => `${API_URL}/admin/usuarios/${id}`,
+      clases:       `${API_URL}/admin/clases`,
+      claseId:      (id) => `${API_URL}/admin/clases/${id}`,
+      ubicaciones:  `${API_URL}/admin/ubicaciones`,
+      ubicacionId:  (id) => `${API_URL}/admin/ubicaciones/${id}`,
+      membresias:   `${API_URL}/admin/membresias`,
+      pagos:        `${API_URL}/admin/pagos`,
+      reporteMembresias: `${API_URL}/admin/reportes/membresias`,
+      reporteClases:     `${API_URL}/admin/reportes/clases`,
+      reporteIngresos:   (periodo='mensual') => `${API_URL}/admin/reportes/ingresos?periodo=${periodo}`
+    }
+  };
+
+  /* ================== HELPERS ================== */
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+  });
+
+  // INTENTO DE PARSEO ROBUSTO DE JSON (incluye rescate aunque el header sea JSON)
+  async function getJson(url, options = {}) {
+    const headers = options.headers ? { ...options.headers } : {};
+    headers['Accept'] = 'application/json';
+
+    const res = await fetch(url, { ...options, headers });
+    const raw = await res.text();
+    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+    const tryParse = (txt) => { try { return JSON.parse(txt); } catch { return null; } };
+
+    const extractJsonLoosely = (txt) => {
+      const iArr = txt.indexOf('[');
+      const iObj = txt.indexOf('{');
+      let start = -1, end = -1;
+      if (iArr !== -1 && (iArr < iObj || iObj === -1)) { start = iArr; end = txt.lastIndexOf(']'); }
+      else if (iObj !== -1) { start = iObj; end = txt.lastIndexOf('}'); }
+      if (start !== -1 && end !== -1 && end > start) {
+        return tryParse(txt.substring(start, end + 1));
+      }
+      return null;
+    };
+
+    // 1) Si dice JSON, primero intento directo, luego rescate
+    if (contentType.includes('application/json')) {
+      let data = tryParse(raw);
+      if (data === null) {
+        console.warn('JSON inválido (content-type JSON). Intentando rescate… Muestra parcial:', raw.slice(0, 400));
+        data = extractJsonLoosely(raw);
+      }
+      if (data === null) {
+        console.error('No se pudo rescatar JSON. Dump parcial:', raw.slice(0, 500));
+        throw new Error(`Respuesta no es JSON válido (status ${res.status})`);
+      }
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    // 2) Si NO dice JSON, usar rescate directamente
+    const rescued = extractJsonLoosely(raw);
+    if (rescued !== null) {
+      return { ok: res.ok, status: res.status, data: rescued };
+    }
+
+    console.error('La respuesta NO es JSON. Dump parcial:', raw.slice(0, 500));
+    throw new Error(`La API devolvió un cuerpo no-JSON (status ${res.status})`);
+  }
+
+  async function sendJson(url, method, payload, extraHeaders = {}) {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...extraHeaders },
+      body: payload ? JSON.stringify(payload) : null
+    });
+    const raw = await res.text();
+    let data = null;
+
+    const tryParse = (txt) => { try { return JSON.parse(txt); } catch { return null; } };
+    const extractJsonLoosely = (txt) => {
+      const iArr = txt.indexOf('[');
+      const iObj = txt.indexOf('{');
+      let start = -1, end = -1;
+      if (iArr !== -1 && (iArr < iObj || iObj === -1)) { start = iArr; end = txt.lastIndexOf(']'); }
+      else if (iObj !== -1) { start = iObj; end = txt.lastIndexOf('}'); }
+      if (start !== -1 && end !== -1 && end > start) {
+        return tryParse(txt.substring(start, end + 1));
+      }
+      return null;
+    };
+
+    if (raw) {
+      data = tryParse(raw) ?? extractJsonLoosely(raw);
+    }
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  /* ================== ESTADO GLOBAL ================== */
+  let usuarioActual = null;
+  let planSeleccionado = null;
+  let precioSeleccionado = 0;
+  let membresiaId = null;
+  let modoLogin = true;
+  let claseEditando = null;
+  let ubicacionEditando = null;
+
+  /* ================== INICIO ================== */
+  window.addEventListener('DOMContentLoaded', () => {
+    verificarSesion();
+    cargarUbicaciones();
+    cargarClases();
+
+    const numeroTarjetaInput = document.getElementById('numeroTarjeta');
+    if (numeroTarjetaInput) {
+      numeroTarjetaInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\s/g,'').replace(/\D/g,'');
+        e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
+      });
+    }
+    const fechaExpiracionInput = document.getElementById('fechaExpiracion');
+    if (fechaExpiracionInput) {
+      fechaExpiracionInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g,'');
+        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2,4);
+        e.target.value = v;
+      });
+    }
+  });
+
+  /* ================== AUTH ================== */
+  function verificarSesion() {
+    const u = localStorage.getItem('usuario');
+    const t = localStorage.getItem('token');
+    if (u && t) {
+      usuarioActual = JSON.parse(u);
+      actualizarUIUsuario();
+    }
+  }
+
+  function actualizarUIUsuario() {
+    if (usuarioActual) {
+      document.getElementById('authLink').style.display = 'none';
+      document.getElementById('userInfo').classList.add('active');
+      document.getElementById('userName').textContent = usuarioActual.nombreCompleto;
+      if (usuarioActual.rol === 'ADMINISTRADOR') {
+        document.getElementById('adminLink').style.display = 'block';
+      }
+    } else {
+      document.getElementById('authLink').style.display = 'block';
+      document.getElementById('userInfo').classList.remove('active');
+      document.getElementById('adminLink').style.display = 'none';
+    }
+  }
+
+async function manejarAutenticacion(event) {
+    event.preventDefault();
+    const correoElectronico = document.getElementById('correoElectronico').value.trim();
+    const contrasena = document.getElementById('contrasena').value;
+    const btnAuth = document.getElementById('btnAuth');
+    btnAuth.disabled = true; btnAuth.textContent = 'Procesando...';
+
+    try {
+      let url, body;
+      if (modoLogin) {
+        url = ENDPOINTS.auth.login;
+        body = { correoElectronico, contrasena };
+      } else {
+        const nombreCompleto = document.getElementById('nombreCompleto').value.trim();
+        let numeroTelefono = document.getElementById('numeroTelefono').value.trim();
+        
+        // Validar y formatear teléfono
+        if (numeroTelefono) {
+          // Remover espacios y caracteres no numéricos excepto +
+          numeroTelefono = numeroTelefono.replace(/[^\d+]/g, '');
+          // Si no empieza con +, agregar +51
+          if (!numeroTelefono.startsWith('+')) {
+            numeroTelefono = '+51' + numeroTelefono;
+          }
+        } else {
+          // Si está vacío, usar null o un valor por defecto
+          numeroTelefono = null;
+        }
+        
+        url = ENDPOINTS.auth.register;
+        body = { nombreCompleto, correoElectronico, contrasena, numeroTelefono };
+      }
+
+      const { ok, data } = await sendJson(url, 'POST', body);
+
+      if (ok && data?.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('usuario', JSON.stringify({
+          usuarioId: data.usuarioId,
+          nombreCompleto: data.nombreCompleto,
+          correoElectronico: data.correoElectronico,
+          rol: data.rol
+        }));
+        usuarioActual = JSON.parse(localStorage.getItem('usuario'));
+        mostrarMensaje(modoLogin ? '¡Bienvenido de nuevo!' : '¡Cuenta creada exitosamente!', 'success');
+        setTimeout(() => {
+          actualizarUIUsuario();
+          showPage('home');
+          document.getElementById('authForm').reset();
+        }, 1200);
+      } else {
+        mostrarMensaje((data && (data.mensaje || data.error)) || 'Error en la autenticación', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      mostrarMensaje('Error de conexión. Verifica que la API esté ejecutándose.', 'error');
+    } finally {
+      btnAuth.disabled = false; btnAuth.textContent = 'Continuar';
+    }
+  }
+
+  function cerrarSesion() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    usuarioActual = null;
+    actualizarUIUsuario();
+    showPage('home');
+    mostrarMensaje('Sesión cerrada exitosamente','success');
+  }
+
+  function cambiarModoAuth(e) {
+    e.preventDefault();
+    modoLogin = !modoLogin;
+    const title = document.getElementById('authTitle');
+    const nameGroup = document.getElementById('nameGroup');
+    const phoneGroup = document.getElementById('phoneGroup');
+    const toggleText = document.getElementById('toggleText');
+
+    if (modoLogin) {
+      title.textContent = 'Iniciar Sesión';
+      nameGroup.style.display = 'none';
+      phoneGroup.style.display = 'none';
+      toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Regístrate</a>';
+    } else {
+      title.textContent = 'Crear Cuenta';
+      nameGroup.style.display = 'block';
+      phoneGroup.style.display = 'block';
+      toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Inicia Sesión</a>';
+    }
+  }
+
+  /* ================== MEMBRESÍA & PAGO ================== */
+async function seleccionarPlan(tipoPlan, precio) {
+    if (!usuarioActual) {
+      mostrarMensaje('Debes iniciar sesión para seleccionar un plan','error');
+      showPage('login');
+      return;
+    }
+    
+    console.log('✅ Plan seleccionado:', tipoPlan, 'Precio:', precio);
+    
+    // SOLO guardamos los datos, NO creamos la membresía aún
+    planSeleccionado = tipoPlan; 
+    precioSeleccionado = precio;
+    membresiaId = null; // Resetear membresiaId
+    
+    document.getElementById('selectedPlan').textContent = `Plan ${tipoPlan}`;
+    document.getElementById('totalAmount').textContent = precio;
+    showPage('payment');
+}
+
+async function procesarPago(event) {
+    event.preventDefault();
+    const btnPayment = document.getElementById('btnPayment');
+    btnPayment.disabled = true; 
+    btnPayment.textContent = 'Procesando pago...';
+
+    const nombreTarjeta = document.getElementById('nombreTarjeta').value.trim();
+    const numeroTarjeta = document.getElementById('numeroTarjeta').value.replace(/\s/g,'');
+    const fechaExpiracion = document.getElementById('fechaExpiracion').value.trim();
+    const cvv = document.getElementById('cvv').value.trim();
+
+    console.log('🔍 Iniciando proceso de pago...');
+    console.log('Plan seleccionado:', planSeleccionado);
+    console.log('Precio:', precioSeleccionado);
+
+    if (!usuarioActual || !usuarioActual.usuarioId) {
+        alert('❌ Error: Usuario no está autenticado.');
+        showPage('login');
+        return;
+    }
+
+    if (!planSeleccionado || !precioSeleccionado) {
+        alert('❌ Error: No se ha seleccionado un plan válido.');
+        showPage('pricing');
+        return;
+    }
+
+    let membresiaIdTemporal = null;
+
+    try {
+        // ============================================
+        // PASO 1: CREAR LA MEMBRESÍA PRIMERO
+        // ============================================
+        console.log('📝 Paso 1: Creando membresía...');
+        
+        const payloadMembresia = {
+            tipoPlan: planSeleccionado,
+            usuarioId: usuarioActual.usuarioId,
+            renovacionAutomatica: true
+        };
+
+        const { ok: okMembresia, data: dataMembresia } = await sendJson(
+            ENDPOINTS.membresias.crear, 
+            'POST',
+            payloadMembresia,
+            authHeaders()
+        );
+
+        if (!okMembresia || !dataMembresia?.id) {
+            console.error('❌ Error al crear membresía:', dataMembresia);
+            throw new Error(dataMembresia?.mensaje || dataMembresia?.error || 'No se pudo crear la membresía');
+        }
+
+        membresiaIdTemporal = dataMembresia.id;
+        console.log('✅ Membresía creada con ID:', membresiaIdTemporal);
+
+        // ============================================
+        // PASO 2: PROCESAR EL PAGO
+        // ============================================
+        console.log('💳 Paso 2: Procesando pago...');
+
+        const payloadPago = {
+            membresiaId: membresiaIdTemporal,
+            usuarioId: usuarioActual.usuarioId,
+            nombreTarjeta: nombreTarjeta,
+            numeroTarjeta: numeroTarjeta,
+            fechaExpiracion: fechaExpiracion,
+            cvv: cvv,
+            monto: precioSeleccionado
+        };
+
+        console.log('📤 Enviando pago:', payloadPago);
+
+        const { ok: okPago, data: dataPago } = await sendJson(
+            ENDPOINTS.pagos.crear, 
+            'POST', 
+            payloadPago,
+            authHeaders()
+        );
+
+        console.log('📥 Respuesta del pago:', { okPago, dataPago });
+
+        if (okPago) {
+            // ============================================
+            // ✅ ÉXITO: Pago procesado correctamente
+            // ============================================
+            membresiaId = membresiaIdTemporal;
+            const idTx = dataPago?.idTransaccion || dataPago?.transaccion || '—';
+            
+            console.log('✅ PAGO EXITOSO! Transacción:', idTx);
+            
+            mostrarMensajeEnPagina('paymentSuccessMsg', 
+                `¡Pago exitoso! 🎉\nID de transacción: ${idTx}\nMembresía activada correctamente.`, 
+                'success'
+            );
+            
+            setTimeout(() => { 
+                showPage('home'); 
+                document.querySelector('#payment form').reset();
+                planSeleccionado = null;
+                precioSeleccionado = 0;
+            }, 3000);
+            
+        } else {
+            // ============================================
+            // ❌ ERROR EN EL PAGO: CANCELAR LA MEMBRESÍA
+            // ============================================
+            console.error('❌ Error en el pago:', dataPago);
+            console.warn('🔄 Cancelando membresía ID', membresiaIdTemporal);
+            
+            // CANCELAR LA MEMBRESÍA AUTOMÁTICAMENTE
+            try {
+                const { ok: okCancelar } = await sendJson(
+                    ENDPOINTS.membresias.cancelar(membresiaIdTemporal),
+                    'PUT',
+                    null,
+                    authHeaders()
+                );
+                
+                if (okCancelar) {
+                    console.log('✅ Membresía cancelada automáticamente');
+                } else {
+                    console.error('⚠️ No se pudo cancelar la membresía automáticamente');
+                }
+            } catch (errCancelar) {
+                console.error('⚠️ Error al cancelar membresía:', errCancelar);
+            }
+            
+            // Construir mensaje de error
+            let mensajeError = 'Error al procesar el pago';
+            if (dataPago) {
+                if (typeof dataPago === 'object' && !dataPago.mensaje && !dataPago.error) {
+                    const errores = Object.entries(dataPago)
+                        .map(([campo, msg]) => `• ${campo}: ${msg}`)
+                        .join('\n');
+                    mensajeError = `Errores de validación:\n${errores}`;
+                } else {
+                    mensajeError = dataPago.mensaje || dataPago.error || JSON.stringify(dataPago);
+                }
+            }
+            
+            alert('❌ Pago rechazado\n\n' + mensajeError + '\n\nLa membresía ha sido cancelada automáticamente.');
+            mostrarMensajeEnPagina('paymentErrorMsg', 
+                'El pago no pudo procesarse. Por favor verifica tus datos e intenta nuevamente.', 
+                'error'
+            );
+        }
+        
+    } catch (e) {
+        console.error('💥 Error capturado:', e);
+        
+        // Si se creó la membresía pero hubo un error, cancelarla
+        if (membresiaIdTemporal) {
+            console.warn('🔄 Cancelando membresía debido a error:', membresiaIdTemporal);
+            try {
+                await sendJson(
+                    ENDPOINTS.membresias.cancelar(membresiaIdTemporal),
+                    'PUT',
+                    null,
+                    authHeaders()
+                );
+                console.log('✅ Membresía cancelada por error');
+            } catch (errCancelar) {
+                console.error('⚠️ No se pudo cancelar la membresía:', errCancelar);
+            }
+        }
+        
+        alert('❌ Error: ' + e.message);
+        mostrarMensajeEnPagina('paymentErrorMsg', 
+            'Ocurrió un error inesperado. La membresía ha sido cancelada.', 
+            'error'
+        );
+    } finally {
+        btnPayment.disabled = false; 
+        btnPayment.textContent = 'Confirmar Pago';
+    }
+}
+
+  /* ================== PÚBLICO: UBICACIONES Y CLASES ================== */
+  async function cargarUbicaciones() {
+    const loading = document.getElementById('loadingLocations');
+    const list = document.getElementById('locationsList');
+    loading.classList.add('show');
+    try {
+      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
+      if (ok && Array.isArray(data)) {
+        list.innerHTML = '';
+        data.forEach(u => {
+          const card = document.createElement('div');
+          card.className = 'location-card';
+          card.innerHTML = `
+            <h3>${u.nombreUbicacion}</h3>
+            <p><strong>📍 Dirección:</strong> ${u.direccion}</p>
+            <p><strong>🏙️ Distrito:</strong> ${u.distrito}</p>
+            <p><strong>⏰ Horario:</strong> ${u.horario}</p>
+            <p><strong>📞 Teléfono:</strong> ${u.numeroTelefono}</p>
+            <button class="btn" style="margin-top:1rem;" onclick="alert('Ver detalles de ${u.nombreUbicacion}')">Ver Detalles</button>
+          `;
+          list.appendChild(card);
+        });
+      } else {
+        list.innerHTML = '<p style="color:#ff4500; text-align:center;">No hay ubicaciones disponibles.</p>';
+      }
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = '<p style="color:#ff4500; text-align:center;">Error al cargar ubicaciones. Verifica que la API esté ejecutándose.</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+  async function cargarClases() {
+    const loading = document.getElementById('loadingClasses');
+    const list = document.getElementById('classesList');
+    loading.classList.add('show');
+    try {
+      const { ok, data: clases } = await getJson(ENDPOINTS.clases.listar);
+      if (ok && Array.isArray(clases)) {
+        list.innerHTML = '';
+        clases.forEach(c => {
+          const inscritos = Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos || 0);
+          const cupos = Math.max((c.capacidadMaxima || 0) - inscritos, 0);
+          const div = document.createElement('div');
+          div.className = 'class-card';
+          div.innerHTML = `
+            <h3>${c.nombreClase}</h3>
+            <p>${c.descripcion || ''}</p>
+            <p style="margin:1rem 0;"><strong>📅 ${c.horario}</strong></p>
+            <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor}</p>
+            <p class="spots">🎯 Cupos disponibles: ${cupos}/${c.capacidadMaxima}</p>
+            <button class="btn" onclick="inscribirseEnClase(${c.id})">Inscribirme</button>
+          `;
+          list.appendChild(div);
+        });
+      } else {
+        list.innerHTML = '<p style="color:#ff4500; text-align:center;">No hay clases disponibles.</p>';
+      }
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = '<p style="color:#ff4500; text-align:center;">Error al cargar clases. Verifica que la API esté ejecutándose.</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+async function inscribirseEnClase(claseId) {
+    if (!usuarioActual) {
+      mostrarMensaje('Debes iniciar sesión para inscribirte en una clase','error');
+      showPage('login');
+      return;
+    }
+    
+    console.log('🔍 Inscribiendo en clase...');
+    console.log('Usuario ID:', usuarioActual.usuarioId);
+    console.log('Clase ID:', claseId);
+    
+    const payload = {
+      usuarioId: usuarioActual.usuarioId,
+      claseId: claseId
+    };
+    
+    console.log('📤 Enviando inscripción:', payload);
+    
+    try {
+      const response = await fetch(ENDPOINTS.clases.inscribir, {
+        method:'POST',
+        headers:{ 
+          'Content-Type':'application/json', 
+          'Accept': 'application/json',
+          ...authHeaders() 
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      console.log('📥 Respuesta status:', response.status);
+      
+      const contentType = response.headers.get("content-type");
+      let resultado;
+      
+      if (contentType && contentType.includes("application/json")) {
+        resultado = await response.json();
+        console.log('📥 Respuesta JSON:', resultado);
+      } else {
+        resultado = await response.text();
+        console.log('📥 Respuesta texto:', resultado);
+      }
+      
+      if (response.ok) { 
+        alert(`✅ ${resultado}`); 
+        cargarClases(); 
+      } else { 
+        console.error('❌ Error en inscripción:', resultado);
+        
+        let mensajeError = 'No se pudo inscribir en la clase';
+        if (typeof resultado === 'object') {
+          if (resultado.mensaje || resultado.error) {
+            mensajeError = resultado.mensaje || resultado.error;
+          } else {
+            const errores = Object.entries(resultado)
+              .map(([campo, msg]) => `• ${campo}: ${msg}`)
+              .join('\n');
+            mensajeError = `Errores de validación:\n${errores}`;
+          }
+        } else if (typeof resultado === 'string') {
+          mensajeError = resultado;
+        }
+        
+        alert(`❌ ${mensajeError}`);
+      }
+    } catch (e) {
+      console.error('💥 Error capturado:', e);
+      alert('❌ Error de conexión con la API');
+    }
+  }
+  /* ================== CONTACTO ================== */
+  async function enviarMensajeContacto(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btnContact');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    const nombreRemitente = document.getElementById('contactNombre').value;
+    const correoRemitente = document.getElementById('contactEmail').value;
+    const asunto = document.getElementById('contactAsunto').value;
+    const mensaje = document.getElementById('contactMensaje').value;
+
+    try {
+      const { ok, data } = await sendJson(ENDPOINTS.contacto.enviar, 'POST',
+        { nombreRemitente, correoRemitente, asunto, mensaje }
+      );
+      if (ok) {
+        mostrarMensajeEnPagina('contactSuccessMsg', (typeof data === 'string' ? data : 'Mensaje enviado'), 'success');
+        document.querySelector('#contact form').reset();
+      } else {
+        mostrarMensajeEnPagina('contactErrorMsg',(data && (data.mensaje || data.error)) || 'Error al enviar mensaje','error');
+      }
+    } catch (e) {
+      console.error(e);
+      mostrarMensajeEnPagina('contactErrorMsg', 'Error de conexión con la API','error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Enviar Mensaje';
+    }
+  }
+
+  /* ================== NAV ================== */
+  function showPage(pageId) {
+    if (pageId === 'admin') {
+      if (!usuarioActual || usuarioActual.rol !== 'ADMINISTRADOR') {
+        alert('Acceso denegado. Solo administradores.');
+        pageId = 'home';
+      }
+    }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.getElementById('navLinks').classList.remove('active');
+    window.scrollTo(0,0);
+    if (pageId === 'locations') cargarUbicaciones();
+    else if (pageId === 'classes') cargarClases();
+    else if (pageId === 'admin') cargarDashboard();
+  }
+  function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+
+  /* ================== UI HELPERS ================== */
+  function mostrarMensaje(mensaje, tipo) {
+    const s = document.getElementById('successMsg');
+    const e = document.getElementById('errorMsg');
+    if (tipo === 'success') { s.textContent = mensaje; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=> s.classList.remove('show'), 3000); }
+    else { e.textContent = mensaje; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=> e.classList.remove('show'), 5000); }
+  }
+  function mostrarMensajeEnPagina(elementId, mensaje, tipo) {
+    const el = document.getElementById(elementId);
+    el.textContent = mensaje; el.classList.add('show');
+    setTimeout(()=> el.classList.remove('show'), tipo==='success'?3000:5000);
+  }
+
+  /* ================== ADMIN ================== */
+  function cambiarTabAdmin(tab, elBtn){
+    document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active'));
+    if (elBtn) elBtn.classList.add('active');
+    const area = document.getElementById(`tab-${tab}`);
+    if (area) area.classList.add('active');
+
+    switch(tab){
+      case 'dashboard': cargarDashboard(); break;
+      case 'usuarios': cargarUsuariosAdmin(); break;
+      case 'membresias': cargarMembresiasAdmin(); break;
+      case 'clases-admin': cargarClasesAdmin(); break;
+      case 'ubicaciones-admin': cargarUbicacionesAdmin(); break;
+      case 'pagos-admin': cargarPagosAdmin(); break;
+      case 'reportes': cargarReportes(); break;
+    }
+  }
+
+  async function cargarDashboard(){
+    const loading = document.getElementById('loadingDashboard');
+    const container = document.getElementById('dashboardStats');
+    loading.classList.add('show');
+    try{
+      const { ok, data } = await getJson(ENDPOINTS.admin.dashboard, { headers: { ...authHeaders() }});
+      if(ok && data){
+        container.innerHTML = `
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${data.totalUsuarios}</div><div class="stat-label">Total Usuarios</div><div style="color:#28a745; margin-top:.5rem;">✓ ${data.usuariosActivos} activos</div></div>
+          <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value">${data.totalMembresias}</div><div class="stat-label">Total Membresías</div><div style="color:#28a745; margin-top:.5rem;">✓ ${data.membresiasActivas} activas</div></div>
+          <div class="stat-card"><div class="stat-icon">🏋️</div><div class="stat-value">${data.totalClases}</div><div class="stat-label">Clases Disponibles</div></div>
+          <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-value">${data.totalUbicaciones}</div><div class="stat-label">Ubicaciones</div></div>
+          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${Number(data.ingresosMensuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Mensuales</div></div>
+          <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value">${Number(data.ingresosAnuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Anuales</div></div>
+          <div class="stat-card"><div class="stat-icon">🆕</div><div class="stat-value">${data.nuevosMiembrosMes||0}</div><div class="stat-label">Nuevos Miembros (Mes)</div></div>
+          <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">${data.inscripcionesClasesMes||0}</div><div class="stat-label">Inscripciones a Clases</div></div>
+        `;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+  async function cargarUsuariosAdmin(){
+    const loading = document.getElementById('loadingUsuarios');
+    const container = document.getElementById('usuariosTable');
+    loading.classList.add('show');
+    try{
+      const { ok, data: usuarios } = await getJson(ENDPOINTS.admin.usuarios, { headers: { ...authHeaders() }});
+      if(ok && Array.isArray(usuarios)){
+        container.innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Fecha Registro</th><th>Acciones</th></tr></thead>
+            <tbody>
+              ${usuarios.map(u=>`
+                <tr>
+                  <td>${u.id}</td>
+                  <td>${u.nombreCompleto}</td>
+                  <td>${u.correoElectronico}</td>
+                  <td>${u.numeroTelefono || 'N/A'}</td>
+                  <td><span class="badge badge-info">${u.rol}</span></td>
+                  <td><span class="badge ${u.estaActivo ? 'badge-success':'badge-danger'}">${u.estaActivo?'Activo':'Inactivo'}</span></td>
+                  <td>${u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleDateString() : '—'}</td>
+                  <td>
+                    <button class="action-btn btn-edit" onclick="editarUsuario(${u.id}, '${(u.nombreCompleto||'').replace(/'/g,"\\'")}', '${u.numeroTelefono||''}', '${u.rol}', ${!!u.estaActivo})">Editar</button>
+                    <button class="action-btn btn-delete" onclick="eliminarUsuario(${u.id})">Eliminar</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar usuarios</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar usuarios</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+  function editarUsuario(id, nombre, telefono, rol, activo){
+    document.getElementById('usuarioEditId').value = id;
+    document.getElementById('usuarioEditNombre').value = nombre || '';
+    document.getElementById('usuarioEditTelefono').value = telefono || '';
+    document.getElementById('usuarioEditRol').value = rol || 'USUARIO';
+    document.getElementById('usuarioEditActivo').value = String(!!activo);
+    abrirModal('modalUsuario');
+  }
+
+  async function guardarUsuario(event){
+    event.preventDefault();
+    const id = document.getElementById('usuarioEditId').value;
+    const nombreCompleto = document.getElementById('usuarioEditNombre').value;
+    const numeroTelefono = document.getElementById('usuarioEditTelefono').value;
+    const rol = document.getElementById('usuarioEditRol').value;
+    const estaActivo = document.getElementById('usuarioEditActivo').value === 'true';
+
+    try{
+      const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id), 'PUT',
+        { nombreCompleto, numeroTelefono, rol, estaActivo },
+        authHeaders()
+      );
+      if(ok){ cerrarModal('modalUsuario'); cargarUsuariosAdmin(); }
+      else { alert('No se pudo guardar el usuario'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function eliminarUsuario(id){
+    if(!confirm('¿Eliminar usuario?')) return;
+    try{
+      const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id), 'DELETE', null, authHeaders());
+      if(ok){ cargarUsuariosAdmin(); } else { alert('No se pudo eliminar'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function cargarMembresiasAdmin(){
+    const loading = document.getElementById('loadingMembresias');
+    const container = document.getElementById('membresiasTable');
+    loading.classList.add('show');
+    try{
+      const { ok, data: membresias } = await getJson(ENDPOINTS.admin.membresias, { headers: { ...authHeaders() }});
+      if(ok && Array.isArray(membresias)){
+        container.innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Usuario</th><th>Plan</th><th>Precio</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Auto-Renovación</th></tr></thead>
+            <tbody>
+              ${membresias.map(m=>`
+                <tr>
+                  <td>${m.id}</td>
+                  <td>${m.usuario?.nombreCompleto || '—'}</td>
+                  <td><span class="badge badge-info">${m.tipoPlan}</span></td>
+                  <td>${m.precio}</td>
+                  <td>${m.fechaInicio ? new Date(m.fechaInicio).toLocaleDateString() : '—'}</td>
+                  <td>${m.fechaFin ? new Date(m.fechaFin).toLocaleDateString() : '—'}</td>
+                  <td><span class="badge ${m.estado==='ACTIVO'?'badge-success':'badge-warning'}">${m.estado}</span></td>
+                  <td>${m.renovacionAutomatica ? '✓ Sí' : '✗ No'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar membresías</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar membresías</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+  async function cargarClasesAdmin(){
+    const loading = document.getElementById('loadingClasesAdmin');
+    const container = document.getElementById('clasesAdminTable');
+    loading.classList.add('show');
+    try{
+      const { ok, data: clases } = await getJson(ENDPOINTS.clases.listar);
+      if(ok && Array.isArray(clases)){
+        container.innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Instructor</th><th>Horario</th><th>Capacidad</th><th>Inscritos</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+              ${clases.map(c=>`
+                <tr>
+                  <td>${c.id}</td><td>${c.nombreClase}</td><td>${c.nombreInstructor}</td><td>${c.horario}</td>
+                  <td>${c.capacidadMaxima}</td><td>${Array.isArray(c.usuariosInscritos)?c.usuariosInscritos.length:(c.inscritos||0)}</td>
+                  <td>${c.duracionMinutos} min</td>
+                  <td><span class="badge ${c.estaActivo ? 'badge-success':'badge-danger'}">${c.estaActivo ? 'Activo':'Inactivo'}</span></td>
+                  <td>
+                    <button class="action-btn btn-edit" onclick='editarClase(${JSON.stringify(c).replace(/'/g,"&apos;")})'>Editar</button>
+                    <button class="action-btn btn-delete" onclick="eliminarClase(${c.id})">Eliminar</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar clases</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar clases</p>';
+    } finally {
+      loading.classList.remove('show');
+    }
+  }
+
+  function abrirModalCrearClase(){
+    claseEditando = null;
+    document.getElementById('modalClaseTitle').textContent = 'Crear Nueva Clase';
+    document.getElementById('formClase').reset();
+    document.getElementById('claseId').value = '';
+    abrirModal('modalClase');
+  }
+
+  function editarClase(c){
+    claseEditando = c?.id || null;
+    document.getElementById('modalClaseTitle').textContent = 'Editar Clase';
+    document.getElementById('claseId').value = c.id || '';
+    document.getElementById('claseNombre').value = c.nombreClase || '';
+    document.getElementById('claseDescripcion').value = c.descripcion || '';
+    document.getElementById('claseHorario').value = c.horario || '';
+    document.getElementById('claseInstructor').value = c.nombreInstructor || '';
+    document.getElementById('claseCapacidad').value = c.capacidadMaxima || 1;
+    document.getElementById('claseDuracion').value = c.duracionMinutos || 60;
+    abrirModal('modalClase');
+  }
+
+  async function guardarClase(event){
+    event.preventDefault();
+    const id = document.getElementById('claseId').value;
+    const payload = {
+      nombreClase: document.getElementById('claseNombre').value,
+      descripcion: document.getElementById('claseDescripcion').value,
+      horario: document.getElementById('claseHorario').value,
+      nombreInstructor: document.getElementById('claseInstructor').value,
+      capacidadMaxima: Number(document.getElementById('claseCapacidad').value),
+      duracionMinutos: Number(document.getElementById('claseDuracion').value),
+      estaActivo: true
+    };
+    try{
+      const url = id ? ENDPOINTS.admin.claseId(id) : ENDPOINTS.admin.clases;
+      const method = id ? 'PUT' : 'POST';
+      const { ok } = await sendJson(url, method, payload, authHeaders());
+      if(ok){ cerrarModal('modalClase'); cargarClasesAdmin(); } else { alert('No se pudo guardar la clase'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function eliminarClase(id){
+    if(!confirm('¿Eliminar clase?')) return;
+    try{
+      const { ok } = await sendJson(ENDPOINTS.admin.claseId(id), 'DELETE', null, authHeaders());
+      if(ok){ cargarClasesAdmin(); } else { alert('No se pudo eliminar la clase'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function cargarUbicacionesAdmin(){
+    const loading = document.getElementById('loadingUbicacionesAdmin');
+    const container = document.getElementById('ubicacionesAdminTable');
+    loading.classList.add('show');
+    try{
+      const { ok, data: ubicaciones } = await getJson(ENDPOINTS.ubicaciones.listar);
+      if(ok && Array.isArray(ubicaciones)){
+        container.innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Distrito</th><th>Ciudad</th><th>Teléfono</th><th>Horario</th><th>Acciones</th></tr></thead>
+            <tbody>
+              ${ubicaciones.map(u=>`
+                <tr>
+                  <td>${u.id}</td><td>${u.nombreUbicacion}</td><td>${u.direccion}</td><td>${u.distrito}</td>
+                  <td>${u.ciudad || '—'}</td><td>${u.numeroTelefono}</td><td>${u.horario}</td>
+                  <td>
+                    <button class="action-btn btn-edit" onclick='editarUbicacion(${JSON.stringify(u).replace(/'/g,"&apos;")})'>Editar</button>
+                    <button class="action-btn btn-delete" onclick="eliminarUbicacion(${u.id})">Eliminar</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar ubicaciones</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar ubicaciones</p>';
+    } finally { loading.classList.remove('show'); }
+  }
+
+  function abrirModalCrearUbicacion(){
+    ubicacionEditando = null;
+    document.getElementById('modalUbicacionTitle').textContent = 'Crear Nueva Ubicación';
+    document.getElementById('formUbicacion').reset();
+    document.getElementById('ubicacionId').value = '';
+    abrirModal('modalUbicacion');
+  }
+
+  function editarUbicacion(u){
+    ubicacionEditando = u?.id || null;
+    document.getElementById('modalUbicacionTitle').textContent = 'Editar Ubicación';
+    document.getElementById('ubicacionId').value = u.id || '';
+    document.getElementById('ubicacionNombre').value = u.nombreUbicacion || '';
+    document.getElementById('ubicacionDireccion').value = u.direccion || '';
+    document.getElementById('ubicacionDistrito').value = u.distrito || '';
+    document.getElementById('ubicacionCiudad').value = u.ciudad || '';
+    document.getElementById('ubicacionTelefono').value = u.numeroTelefono || '';
+    document.getElementById('ubicacionHorario').value = u.horario || '24/7';
+    document.getElementById('ubicacionLatitud').value = u.latitud || '';
+    document.getElementById('ubicacionLongitud').value = u.longitud || '';
+    abrirModal('modalUbicacion');
+  }
+
+  async function guardarUbicacion(event){
+    event.preventDefault();
+    const id = document.getElementById('ubicacionId').value;
+    const payload = {
+      nombreUbicacion: document.getElementById('ubicacionNombre').value,
+      direccion: document.getElementById('ubicacionDireccion').value,
+      distrito: document.getElementById('ubicacionDistrito').value,
+      ciudad: document.getElementById('ubicacionCiudad').value,
+      numeroTelefono: document.getElementById('ubicacionTelefono').value,
+      horario: document.getElementById('ubicacionHorario').value,
+      latitud: parseFloat(document.getElementById('ubicacionLatitud').value || 0),
+      longitud: parseFloat(document.getElementById('ubicacionLongitud').value || 0)
+    };
+    try{
+      const url = id ? ENDPOINTS.admin.ubicacionId(id) : ENDPOINTS.admin.ubicaciones;
+      const method = id ? 'PUT' : 'POST';
+      const { ok } = await sendJson(url, method, payload, authHeaders());
+      if(ok){ cerrarModal('modalUbicacion'); cargarUbicacionesAdmin(); } else { alert('No se pudo guardar la ubicación'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function eliminarUbicacion(id){
+    if(!confirm('¿Eliminar ubicación?')) return;
+    try{
+      const { ok } = await sendJson(ENDPOINTS.admin.ubicacionId(id), 'DELETE', null, authHeaders());
+      if(ok){ cargarUbicacionesAdmin(); } else { alert('No se pudo eliminar la ubicación'); }
+    } catch(e){ console.error(e); alert('Error de conexión'); }
+  }
+
+  async function cargarPagosAdmin(){
+    const loading = document.getElementById('loadingPagosAdmin');
+    const container = document.getElementById('pagosAdminTable');
+    loading.classList.add('show');
+    try{
+      const { ok, data: pagos } = await getJson(ENDPOINTS.admin.pagos, { headers: { ...authHeaders() }});
+      if(ok && Array.isArray(pagos)){
+        container.innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Usuario</th><th>Membresía</th><th>Monto</th><th>Fecha</th><th>Transacción</th></tr></thead>
+            <tbody>
+              ${pagos.map(p=>`
+                <tr>
+                  <td>${p.id}</td>
+                  <td>${p.usuario?.nombreCompleto || '—'}</td>
+                  <td>${(p.membresia && p.membresia.id) || p.membresiaId || '—'}</td>
+                  <td>$${Number(p.monto||0).toFixed(2)}</td>
+                  <td>${(p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '—'}</td>
+                  <td>${p.idTransaccion || '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar pagos</p>';
+      }
+    } catch(e){
+      console.error(e);
+      container.innerHTML = '<p style="color:#dc3545;">Error al cargar pagos</p>';
+    } finally { loading.classList.remove('show'); }
+  }
+
+  function cargarReportes(){ cargarReporteMembresias(); cargarReporteIngresos(); cargarReporteClases(); }
+
+  async function cargarReporteMembresias(){
+    const loading = document.getElementById('loadingReporteMembresias');
+    const content = document.getElementById('reporteMembresiaContent');
+    loading.classList.add('show');
+    try{
+      const { ok, data: d } = await getJson(ENDPOINTS.admin.reporteMembresias, { headers: { ...authHeaders() }});
+      if(ok && d){
+        content.innerHTML = `
+          <p><strong>Total:</strong> ${d.totalMembresias ?? d.total ?? 0}</p>
+          <p><strong>Activas:</strong> ${d.membresiaActivas ?? d.activas ?? 0}</p>
+          <p><strong>Basico:</strong> ${d.membresiaBasico ?? 0} &nbsp; | &nbsp; <strong>Premium:</strong> ${d.membresiaPremium ?? 0} &nbsp; | &nbsp; <strong>Anual:</strong> ${d.membresiaAnual ?? 0}</p>
+          <p><strong>Pausadas:</strong> ${d.membresiasPausadas ?? 0} &nbsp; | &nbsp; <strong>Canceladas:</strong> ${d.membresiasCanceladas ?? 0} &nbsp; | &nbsp; <strong>Expiradas:</strong> ${d.membresiasExpiradas ?? d.vencidas ?? 0}</p>
+        `;
+      } else { content.innerHTML = '<p style="color:#dc3545;">Error al cargar reporte</p>'; }
+    } catch(e){ console.error(e); content.innerHTML = '<p style="color:#dc3545;">Error al cargar reporte</p>'; }
+    finally{ loading.classList.remove('show'); }
+  }
+
+  async function cargarReporteIngresos(){
+    const loading = document.getElementById('loadingReporteIngresos');
+    const content = document.getElementById('reporteIngresosContent');
+    const periodo = document.getElementById('periodoIngresos').value;
+    loading.classList.add('show');
+    try{
+      const { ok, data: d } = await getJson(ENDPOINTS.admin.reporteIngresos(periodo), { headers: { ...authHeaders() }});
+      if(ok && d){
+        content.innerHTML = `
+          <p><strong>Periodo:</strong> ${d.periodo || periodo}</p>
+          <p><strong>Total ingresos:</strong> $${Number(d.totalIngresos||0).toFixed(2)}</p>
+          <p><strong>Cantidad de pagos:</strong> ${d.cantidadPagos||0}</p>
+          <p><strong>Promedio por pago:</strong> $${Number(d.promedioIngreso||0).toFixed(2)}</p>
+          <p><strong>Método de pago más usado:</strong> ${d.metodoPagoMasUsado || 'N/A'}</p>
+        `;
+      } else { content.innerHTML = '<p style="color:#dc3545;">Error al cargar ingresos</p>'; }
+    } catch(e){ console.error(e); content.innerHTML = '<p style="color:#dc3545;">Error al cargar ingresos</p>'; }
+    finally{ loading.classList.remove('show'); }
+  }
+
+  async function cargarReporteClases(){
+    const loading = document.getElementById('loadingReporteClases');
+    const content = document.getElementById('reporteClasesContent');
+    loading.classList.add('show');
+    try{
+      const { ok, data: lista } = await getJson(ENDPOINTS.admin.reporteClases, { headers: { ...authHeaders() }});
+      if(ok && Array.isArray(lista)){
+        const rows = lista.map(r => `<li>${r.nombreClase}: ${Number(r.tasaOcupacion||r.porcentajeOcupacion||0).toFixed(1)}% (Inscritos: ${r.usuariosInscritos ?? r.inscritos ?? 0}/${r.capacidadMaxima ?? r.capacidad ?? 0})</li>`).join('');
+        content.innerHTML = rows ? `<ul>${rows}</ul>` : '<p>No hay datos</p>';
+      } else { content.innerHTML = '<p style="color:#dc3545;">Error al cargar reporte</p>'; }
+    } catch(e){ console.error(e); content.innerHTML = '<p style="color:#dc3545;">Error al cargar reporte</p>'; }
+    finally{ loading.classList.remove('show'); }
+  }
+
+  /* ================== MODALES ================== */
+  function abrirModal(id){ document.getElementById(id).classList.add('show'); }
+  function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
+</script>
+
+
+
+</body>
+</html>
