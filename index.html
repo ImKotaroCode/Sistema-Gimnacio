@@ -1152,17 +1152,25 @@ async function procesarPago(event) {
     }
   }
 
-  async function cargarClases() {
+async function cargarClases() {
     const loading = document.getElementById('loadingClasses');
     const list = document.getElementById('classesList');
     loading.classList.add('show');
+    
     try {
       const { ok, data: clases } = await getJson(ENDPOINTS.clases.listar);
+      
       if (ok && Array.isArray(clases)) {
         list.innerHTML = '';
+        
         clases.forEach(c => {
-          const inscritos = Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos || 0);
-          const cupos = Math.max((c.capacidadMaxima || 0) - inscritos, 0);
+          // ✅ Ahora usuariosInscritos es un NÚMERO (no un array)
+          const inscritos = c.usuariosInscritos || 0;
+          const capacidad = c.capacidadMaxima || 0;
+          const cupos = Math.max(capacidad - inscritos, 0);
+          
+          console.log(`Clase ${c.nombreClase}: ${inscritos}/${capacidad}`); // Debug
+          
           const div = document.createElement('div');
           div.className = 'class-card';
           div.innerHTML = `
@@ -1170,8 +1178,11 @@ async function procesarPago(event) {
             <p>${c.descripcion || ''}</p>
             <p style="margin:1rem 0;"><strong>📅 ${c.horario}</strong></p>
             <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor}</p>
-            <p class="spots">🎯 Cupos disponibles: ${cupos}/${c.capacidadMaxima}</p>
-            <button class="btn" onclick="inscribirseEnClase(${c.id})">Inscribirme</button>
+            <p class="spots">🎯 Cupos disponibles: ${cupos}/${capacidad}</p>
+            <p class="spots">👥 Inscritos: ${inscritos}</p>
+            <button class="btn" onclick="inscribirseEnClase(${c.id})" ${cupos <= 0 ? 'disabled' : ''}>
+              ${cupos <= 0 ? 'Clase llena' : 'Inscribirme'}
+            </button>
           `;
           list.appendChild(div);
         });
@@ -1180,11 +1191,11 @@ async function procesarPago(event) {
       }
     } catch (e) {
       console.error(e);
-      list.innerHTML = '<p style="color:#ff4500; text-align:center;">Error al cargar clases. Verifica que la API esté ejecutándose.</p>';
+      list.innerHTML = '<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
     } finally {
       loading.classList.remove('show');
     }
-  }
+}
 
 async function inscribirseEnClase(claseId) {
     if (!usuarioActual) {
@@ -1229,7 +1240,9 @@ async function inscribirseEnClase(claseId) {
       }
       
       if (response.ok) { 
-        alert(`✅ ${resultado}`); 
+        // ✅ Extraer el mensaje del objeto JSON
+        const mensaje = resultado.mensaje || resultado.message || resultado;
+        alert(`✅ ${mensaje}`); 
         cargarClases(); 
       } else { 
         console.error('❌ Error en inscripción:', resultado);
