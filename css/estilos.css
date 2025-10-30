@@ -237,3 +237,145 @@
 @media (max-width: 768px){
   .map-container{ aspect-ratio: 4 / 3; }
 }
+/* ==================== ADMIN POLISH PACK ==================== */
+/* Contenedores y títulos */
+.section-title{
+  color:#ff6a33;
+  margin:0 0 1rem 0;
+  font-size:1.8rem;
+  letter-spacing:.3px;
+}
+.section-top{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:1rem; margin-bottom:1rem;
+}
+.section-actions{ display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+
+/* Botón crear */
+.btn-create{
+  background:#ff4500; border:none; color:#fff; font-weight:700;
+  padding:.85rem 1.25rem; border-radius:12px; cursor:pointer;
+  box-shadow:0 8px 24px rgba(255,69,0,.25);
+  transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn-create:hover{ background:#ff6a33; transform:translateY(-2px); box-shadow:0 10px 30px rgba(255,69,0,.35); }
+
+/* Filtros */
+.filters{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+.filters input[type="text"], .filters select, .select-dark{
+  background:#171717; color:#eee; border:1.5px solid #2c2c2c;
+  padding:.65rem .8rem; border-radius:10px; min-width:210px;
+  outline:none; transition:border-color .2s, box-shadow .2s;
+}
+.filters input::placeholder{ color:#888; }
+.filters input:focus, .filters select:focus, .select-dark:focus{
+  border-color:#ff4500; box-shadow:0 0 0 3px rgba(255,69,0,.15);
+}
+
+/* Tabla */
+.data-table{
+  background:linear-gradient(180deg,#1b1b1b 0%, #171717 100%);
+  border:1px solid #2b2b2b; border-radius:16px;
+  box-shadow:0 14px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+  overflow:hidden;
+}
+.data-table table{ width:100%; border-collapse:separate; border-spacing:0; }
+.data-table thead th{
+  position:sticky; top:0; z-index:1;
+  background:linear-gradient(180deg,#141414 0%, #121212 100%);
+  color:#ff6a33; text-transform:none; letter-spacing:.2px;
+  font-weight:800; font-size:.95rem; padding:1rem .9rem;
+  border-bottom:1px solid #2c2c2c;
+}
+.data-table tbody td{
+  padding:1rem .9rem; border-bottom:1px solid #242424; color:#ddd;
+}
+.data-table tbody tr{
+  transition:background .15s ease, transform .05s ease;
+}
+.data-table tbody tr:nth-child(odd){ background:rgba(255,255,255,.015); }
+.data-table tbody tr:hover{
+  background:rgba(255,69,0,.06);
+}
+
+/* Badges (roles/estado/plan) */
+.badge{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.35rem .7rem; border-radius:999px; font-weight:800;
+  font-size:.78rem; letter-spacing:.2px;
+  box-shadow:inset 0 -1px 0 rgba(0,0,0,.25);
+}
+.badge-success{ background:#163e2a; color:#34d399; border:1px solid #0f2f20; }
+.badge-warning{ background:#3a2b0a; color:#ffd166; border:1px solid #2b1f07; }
+.badge-danger{  background:#3a0e12; color:#ff7b86; border:1px solid #2a0a0d; }
+.badge-info{    background:#0f2d39; color:#67e8f9; border:1px solid #0b212a; }
+
+/* Acciones */
+.action-btn{
+  border:none; padding:.55rem .9rem; border-radius:10px; cursor:pointer;
+  font-weight:700; font-size:.85rem;
+  transition:transform .08s ease, filter .15s ease, opacity .2s ease;
+}
+.btn-edit{ background:#ffa500; color:#191919; }
+.btn-edit:hover{ filter:brightness(1.06); transform:translateY(-1px); }
+.btn-delete{ background:#dc3545; color:#fff; }
+.btn-delete:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+
+/* Celdas “chip” para valores (teléfono, fechas, etc) opcional */
+td .chip{
+  background:#111; border:1px solid #252525; color:#cfcfcf;
+  padding:.35rem .6rem; border-radius:8px; font-size:.82rem;
+}
+
+/* Paginación (si la agregas luego) */
+.table-pagination{
+  display:flex; justify-content:flex-end; gap:.4rem; padding:1rem;
+}
+.table-pagination button{
+  background:#171717; color:#eee; border:1px solid #2c2c2c;
+  padding:.5rem .75rem; border-radius:8px; cursor:pointer;
+}
+.table-pagination button.active,
+.table-pagination button:hover{ border-color:#ff4500; color:#ffae8a; }
+
+/* Cabecera del módulo admin */
+.admin-header{
+  background:linear-gradient(180deg, rgba(255,69,0,.08), rgba(255,69,0,.02));
+  border:1px solid #2b2b2b; padding:1.25rem; border-radius:14px; margin-bottom:1.25rem;
+}
+.admin-header h1{ color:#ff6a33; margin:0 0 .25rem 0; }
+.admin-header p{ color:#bdbdbd; margin:0; }
+
+/* Tarjetas del dashboard */
+.dashboard-grid{ gap:1.25rem; }
+.stat-card{
+  border:1px solid #2b2b2b; border-radius:16px;
+  background:linear-gradient(145deg,#181818,#131313);
+  box-shadow:0 10px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.stat-icon{ filter:drop-shadow(0 2px 6px rgba(255,69,0,.25)); }
+.stat-value{ color:#ff6a33; }
+
+/* Inputs y selects generales del sitio (para formularios Modales) */
+.form-group input, .form-group select, .form-group textarea{
+  background:#121212; border:1.5px solid #272727;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus{
+  border-color:#ff4500; box-shadow:0 0 0 3px rgba(255,69,0,.12);
+}
+
+/* Scrollbar sutil (solo para navegadores webkit) */
+.data-table::-webkit-scrollbar{ height:10px; width:10px; }
+.data-table::-webkit-scrollbar-thumb{ background:#2a2a2a; border-radius:10px; }
+.data-table::-webkit-scrollbar-thumb:hover{ background:#383838; }
+
+/* Responsive fino */
+@media (max-width: 900px){
+  .data-table table{ font-size:.92rem; }
+  .filters input, .filters select{ min-width:160px; }
+}
+@media (max-width: 680px){
+  .section-top{ flex-direction:column; align-items:flex-start; }
+  .filters{ width:100%; }
+  .filters input, .filters select{ flex:1; min-width:unset; width:100%; }
+}
