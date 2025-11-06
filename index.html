@@ -4,12 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartFit - Tu Gimnasio 24/7</title>
+
   <link rel="stylesheet" href="css/estilos.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://js.stripe.com/v3"></script>
 
 </head>
 <body>
@@ -23,6 +26,7 @@
         <li><a href="#" onclick="showPage('locations')">Ubicaciones</a></li>
         <li><a href="#" onclick="showPage('classes')">Clases</a></li>
         <li><a href="#" onclick="showPage('contact')">Contacto</a></li>
+        <li id="perfilLink" style="display:none;"><a href="#" onclick="showPage('perfil')">Mi Perfil</a></li>
         <li id="adminLink" style="display:none;"><a href="#" onclick="showPage('admin')">Panel Admin</a></li>
         <li class="user-info" id="userInfo">
           <span class="user-name" id="userName"></span>
@@ -117,26 +121,33 @@
   <!-- ================= UBICACIONES ================= -->
   <div id="locations" class="page">
     <div class="locations-container">
-      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Encuentra tu FitZone</h2>
-      <div class="map-container">
-        <div class="map-header" style="text-align:center;">
-          <div style="font-size:3rem; margin-bottom:.5rem;">🗺️</div>
-          <p>Mapa Interactivo - Integración con Google Maps (en producción)</p>
+      <h2>Encuentra tu FitZone</h2>
+
+      <!-- Mapa con overlay -->
+      <div class="map-container-full">
+        <div id="map"></div>
+        <div class="map-dim"></div>
+        <div class="map-overlay">
+          <div class="map-emoji">🗺️</div>
+          <div class="map-title">Mapa Interactivo - Integración con Google Maps</div>
+          <div class="map-sub">En producción: búsqueda por ubicación GPS</div>
         </div>
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d710.0623193428297!2d-76.88396156762542!3d-12.017979333594807!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c342d50651b3%3A0x4b7661150d480a93!2sGimnasio%20Smart%20Fit%20-%20Qhatu%20Plaza%20-%20Santa%20Clara!5e0!3m2!1ses!2spe!4v1760017481962!5m2!1ses!2spe"
-          loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen>
-        </iframe>
       </div>
 
-      <div class="section-top" style="margin-top:1rem;">
+      <!-- Filtro -->
+      <div class="section-top" style="margin-top:1.25rem;">
         <div class="filters">
-          <input type="text" id="filtroPublicUbicacionesTexto" placeholder="Buscar distrito o ciudad" oninput="renderUbicacionesPublicas()"/>
+          <input type="text" id="filtroPublicUbicacionesTexto" placeholder="🔍 Buscar distrito o ciudad" oninput="renderUbicacionesPublicas()"/>
         </div>
       </div>
 
-      <div class="loading" id="loadingLocations"><div class="spinner"></div><p>Cargando ubicaciones...</p></div>
-      <div class="locations-list" id="locationsList"></div>
+      <div class="loading" id="loadingLocations">
+        <div class="spinner"></div>
+        <p>Cargando ubicaciones...</p>
+      </div>
+
+      <!-- Cards 3 columnas (render dinámico) -->
+      <div class="locations-grid" id="locationsList"></div>
     </div>
   </div>
 
@@ -217,7 +228,6 @@
         <p>Gestión completa del gimnasio</p>
       </div>
 
-      <!-- Pestañas arriba (sin sidebar) -->
       <div class="admin-tabs" id="adminTabs">
         <button class="admin-tab active" data-tab="dashboard" onclick="cambiarTabAdmin('dashboard', this)">Dashboard</button>
         <button class="admin-tab" data-tab="usuarios" onclick="cambiarTabAdmin('usuarios', this)">Usuarios</button>
@@ -268,7 +278,7 @@
           <div class="section-actions">
             <button class="btn-create" onclick="abrirModalCrearMembresia()">+ Crear Membresía (Presencial)</button>
             <div class="filters">
-              <input type="text" id="filtroMembresiasTexto" placeholder="Buscar por usuario o plan" oninput="renderMembresiasFiltradas()"/>
+              <input type="text" id="filtroMembresiasTexto" placeholder="Buscar por usuario o plan" oninput="renderMembresiasFiltradas"/>
               <select id="filtroMembresiasEstado" onchange="renderMembresiasFiltradas()">
                 <option value="">Estado: Todos</option>
                 <option value="ACTIVO">Activo</option>
@@ -338,43 +348,44 @@
         <div class="data-table" id="pagosAdminTable"></div>
       </div>
 
-    <!-- REPORTES -->
-    <div id="tab-reportes" class="admin-content">
-      <h2 class="section-title">Reportes y Análisis</h2>
+      <!-- REPORTES -->
+      <div id="tab-reportes" class="admin-content">
+        <h2 class="section-title">Reportes y Análisis</h2>
 
-      <!-- 🔽 Botones de descarga -->
-      <div class="section-actions" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
-        <button class="btn" onclick="descargarReportesExcel()">⬇️ Descargar reportes (Excel)</button> 
-        <button class="btn btn-secondary" onclick="descargarReportesPDF()">⬇️ Descargar reportes (PDF)</button>
-      </div>
+        <div class="section-actions" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+          <button class="btn" onclick="descargarReportesExcel()">⬇️ Descargar reportes (Excel)</button>
+          <button class="btn btn-secondary" onclick="descargarReportesPDF()">⬇️ Descargar reportes (PDF)</button>
+        </div>
 
-      <div class="chart-container">
-        <h3>Reporte de Membresías</h3>
-        <div class="loading" id="loadingReporteMembresias"><div class="spinner"></div></div>
-        <div id="reporteMembresiaContent"></div>
-      </div>
+        <div class="chart-container">
+          <h3>Reporte de Membresías</h3>
+          <div class="loading" id="loadingReporteMembresias"><div class="spinner"></div></div>
+          <div id="reporteMembresiaContent"></div>
+        </div>
 
-      <div class="chart-container">
-        <h3>Reporte de Ingresos</h3>
-        <select id="periodoIngresos" onchange="cargarReporteIngresos()" class="select-dark">
-          <option value="mensual">Mensual</option>
-          <option value="anual">Anual</option>
-        </select>
-        <div class="loading" id="loadingReporteIngresos"><div class="spinner"></div></div>
-        <div id="reporteIngresosContent"></div>
-      </div>
+        <div class="chart-container">
+          <h3>Reporte de Ingresos</h3>
+          <select id="periodoIngresos" onchange="cargarReporteIngresos()" class="select-dark">
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+          <div class="loading" id="loadingReporteIngresos"><div class="spinner"></div></div>
+          <div id="reporteIngresosContent"></div>
+        </div>
 
-      <div class="chart-container">
-        <h3>Reporte de Clases (Ocupación)</h3>
-        <div class="loading" id="loadingReporteClases"><div class="spinner"></div></div>
-        <div id="reporteClasesContent"></div>
-      </div>
+        <div class="chart-container">
+          <h3>Reporte de Clases (Ocupación)</h3>
+          <div class="loading" id="loadingReporteClases"><div class="spinner"></div></div>
+          <div id="reporteClasesContent"></div>
+        </div>
 
-      <div class="chart-container">
-        <h3>Evolución Mensual de Suscripciones</h3>
-        <canvas id="graficoSuscripciones"></canvas>
+        <div class="chart-container">
+          <h3>Evolución Mensual de Suscripciones</h3>
+          <canvas id="graficoSuscripciones"></canvas>
+        </div>
       </div>
     </div>
+  </div>
 
   <!-- ===== MODALES ===== -->
   <!-- Usuario -->
@@ -446,7 +457,143 @@
         <div class="form-group"><label>Horario</label><input type="text" id="ubicacionHorario" required value="24/7"/></div>
         <div class="form-group"><label>Latitud</label><input type="number" step="0.0001" id="ubicacionLatitud"/></div>
         <div class="form-group"><label>Longitud</label><input type="number" step="0.0001" id="ubicacionLongitud"/></div>
-        <button type="submit" class="btn" style="width:100%;">Guardar</button>
+        <button class="btn" style="width:100%;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============== PERFIL (USUARIO) =============== -->
+  <div id="perfil" class="page">
+    <section class="auth-container">
+      <div class="auth-form">
+        <h2 class="section-title" style="text-align:center">Mi Perfil</h2>
+
+        <div class="admin-tabs" role="tablist" style="margin-bottom:1rem">
+          <button class="admin-tab active" data-perfil-tab="info" onclick="cambiarTabPerfil('info', this)">👤 Información</button>
+          <button class="admin-tab" data-perfil-tab="membresia" onclick="cambiarTabPerfil('membresia', this)">💳 Membresía</button>
+          <button class="admin-tab" data-perfil-tab="pagos" onclick="cambiarTabPerfil('pagos', this)">💰 Pagos</button>
+          <button class="admin-tab" data-perfil-tab="clases" onclick="cambiarTabPerfil('clases', this)">🏋️ Clases</button>
+          <button class="admin-tab" data-perfil-tab="preferencias" onclick="cambiarTabPerfil('preferencias', this)">🔔 Preferencias</button>
+        </div>
+
+        <!-- Info Personal -->
+        <div id="perfil-info" class="admin-content active">
+          <form id="formPerfil" onsubmit="guardarPerfil(event)">
+            <div class="form-group">
+              <label>Nombre completo</label>
+              <input id="perfilNombre" type="text" required />
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input id="perfilCorreo" type="email" readonly />
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input id="perfilTelefono" type="text" placeholder="+51 9xx xxx xxx" />
+            </div>
+            <div class="form-group">
+              <label>Rol</label>
+              <input id="perfilRol" type="text" readonly />
+            </div>
+            <div class="form-group">
+              <label>Fecha de registro</label>
+              <input id="perfilFecha" type="text" readonly />
+            </div>
+            <div class="form-group">
+              <button class="btn" type="submit">Guardar cambios</button>
+              <button class="btn btn-secondary" type="button" onclick="abrirModalPassword()">Cambiar contraseña</button>
+              <button class="btn btn-secondary" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Membresía -->
+        <div id="perfil-membresia" class="admin-content">
+          <div class="payment-summary" id="perfilMembresiaBox">
+            <p>Cargando membresía...</p>
+          </div>
+          <div>
+            <button class="btn" id="btnActivarMembresia" style="display:none" onclick="activarMembresia()">Activar/Renovar</button>
+            <button class="btn btn-secondary" id="btnCancelarMembresia" style="display:none" onclick="cancelarMembresiaUsuario()">Cancelar membresía</button>
+            <label style="margin-left:1rem">
+              <input id="chkAutoRenov" type="checkbox" onchange="toggleAutoRenovacion(this)" />
+              Renovación automática
+            </label>
+          </div>
+        </div>
+
+        <!-- Pagos -->
+        <div id="perfil-pagos" class="admin-content">
+          <div class="section-top" style="margin-bottom:.5rem">
+            <div class="filters">
+              <input type="text" id="filtroPagosUsuario" placeholder="Buscar por transacción/fecha" oninput="renderPagosUsuario()" />
+            </div>
+            <div class="perfil-actions">
+              <button class="btn btn-secondary" onclick="descargarPagosUsuarioPDF()">Descargar PDF</button>
+              <button class="btn btn-secondary" onclick="descargarPagosUsuarioExcel()">Descargar Excel</button>
+            </div>
+          </div>
+          <div class="data-table" id="tablaPagosUsuario"></div>
+        </div>
+
+        <!-- Clases -->
+        <div id="perfil-clases" class="admin-content">
+          <div class="filters" style="margin-bottom:.5rem">
+            <select id="filtroClasesTipo" onchange="renderClasesUsuario()">
+              <option value="proximas">Próximas</option>
+              <option value="pasadas">Pasadas</option>
+              <option value="todas">Todas</option>
+            </select>
+          </div>
+          <div class="data-table" id="tablaClasesUsuario"></div>
+        </div>
+
+        <!-- Preferencias -->
+        <div id="perfil-preferencias" class="admin-content">
+          <form id="formPreferencias" onsubmit="guardarPreferencias(event)">
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="prefEmailNoti" />
+                Recibir notificaciones por correo
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Recordatorios de clases</label>
+              <select id="prefRecordatorios">
+                <option value="none">Sin recordatorios</option>
+                <option value="24h">24 horas antes</option>
+                <option value="2h">2 horas antes</option>
+                <option value="30m">30 minutos antes</option>
+              </select>
+            </div>
+            <button class="btn" type="submit">Guardar preferencias</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal Cambiar Contraseña -->
+  <div class="modal" id="modalPassword">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cambiar contraseña</h3>
+        <button class="close-modal" onclick="cerrarModal('modalPassword')">×</button>
+      </div>
+      <form id="formPassword" onsubmit="guardarPassword(event)">
+        <div class="form-group">
+          <label>Contraseña actual</label>
+          <input id="pwdActual" type="password" required />
+        </div>
+        <div class="form-group">
+          <label>Nueva contraseña</label>
+          <input id="pwdNueva" type="password" minlength="6" required />
+        </div>
+        <div class="form-group">
+          <label>Confirmar nueva contraseña</label>
+          <input id="pwdNueva2" type="password" minlength="6" required />
+        </div>
+        <button class="btn" type="submit">Actualizar</button>
       </form>
     </div>
   </div>
@@ -455,29 +602,54 @@
 /* ================== CONFIG / ENDPOINTS ================== */
 const API_URL = 'http://localhost:8080/api';
 const ENDPOINTS = {
-  auth: { login: `${API_URL}/autenticacion/iniciar-sesion`, register: `${API_URL}/autenticacion/registrar` },
+  auth: {
+    login: `${API_URL}/autenticacion/iniciar-sesion`,
+    register: `${API_URL}/autenticacion/registrar`
+  },
+  usuarios: {
+    me: `${API_URL}/usuarios/me`,
+    update: (id) => `${API_URL}/admin/usuarios/${id}`,
+    password: (id) => `${API_URL}/usuarios/${id}/contrasena`,
+    prefs: (id) => `${API_URL}/usuarios/${id}/preferencias`
+  },
   membresias: {
     crear: `${API_URL}/membresias`,
     porUsuario: (usuarioId) => `${API_URL}/membresias/usuario/${usuarioId}`,
     cancelar: (membresiaId) => `${API_URL}/membresias/${membresiaId}/cancelar`,
+    update: (membresiaId) => `${API_URL}/membresias/${membresiaId}`
   },
-  pagos: { crear: `${API_URL}/pagos`, porUsuario: (usuarioId) => `${API_URL}/pagos/usuario/${usuarioId}` },
-  clases: { listar: `${API_URL}/clases`, inscribir: `${API_URL}/clases/inscribir`, porUsuario: (usuarioId) => `${API_URL}/clases/usuario/${usuarioId}` },
-  ubicaciones: { listar: `${API_URL}/ubicaciones`, porId: (id)=>`${API_URL}/ubicaciones/${id}` },
-  contacto: { enviar: `${API_URL}/contacto`, listar: `${API_URL}/contacto` },
+  pagos: {
+    crear: `${API_URL}/pagos`,
+    porUsuario: (usuarioId) => `${API_URL}/pagos/usuario/${usuarioId}`
+  },
+  clases: {
+    listar: `${API_URL}/clases`,
+    inscribir: `${API_URL}/clases/inscribir`,
+    porUsuario: (usuarioId) => `${API_URL}/clases/usuario/${usuarioId}`,
+    cancelarInscripcion: (claseId) => `${API_URL}/clases/${claseId}/cancelar-inscripcion`
+  },
+  ubicaciones: {
+    listar: `${API_URL}/ubicaciones`,
+    porId: (id) => `${API_URL}/ubicaciones/${id}`
+  },
+  contacto: {
+    enviar: `${API_URL}/contacto`,
+    listar: `${API_URL}/contacto`
+  },
   admin: {
     dashboard: `${API_URL}/admin/dashboard`,
     usuarios: `${API_URL}/admin/usuarios`,
-    usuarioId: (id)=>`${API_URL}/admin/usuarios/${id}`,
+    usuarioId: (id) => `${API_URL}/admin/usuarios/${id}`,
     clases: `${API_URL}/admin/clases`,
-    claseId: (id)=>`${API_URL}/admin/clases/${id}`,
+    claseId: (id) => `${API_URL}/admin/clases/${id}`,
     ubicaciones: `${API_URL}/admin/ubicaciones`,
-    ubicacionId: (id)=>`${API_URL}/admin/ubicaciones/${id}`,
+    ubicacionId: (id) => `${API_URL}/admin/ubicaciones/${id}`,
     membresias: `${API_URL}/admin/membresias`,
     pagos: `${API_URL}/admin/pagos`,
     reporteMembresias: `${API_URL}/admin/reportes/membresias`,
     reporteClases: `${API_URL}/admin/reportes/clases`,
-    reporteIngresos: (periodo='mensual') => `${API_URL}/admin/reportes/ingresos?periodo=${periodo}`
+    reporteIngresos: (periodo = 'mensual') => `${API_URL}/admin/reportes/ingresos?periodo=${periodo}`,
+    reporteSuscripciones: `${API_URL}/admin/reportes/suscripciones-mensuales`
   }
 };
 
@@ -500,14 +672,6 @@ async function sendJson(url, method, payload, extraHeaders = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
-function getRol(u = usuarioActual){
-  const r1=(u?.rol??'').toString().trim();
-  const r2=Array.isArray(u?.roles)?(u.roles.find(x=>typeof x==='string')||''):'';
-  const r3=(u?.authority??u?.authorities?.[0]?.authority??'').toString();
-  return (r1||r2||r3).toUpperCase();
-}
-function isAdmin(u){ return getRol(u).includes('ADMIN'); }
-function isInstructor(u){ return getRol(u).includes('INSTRUC'); }
 function safeUsuarioNombre(x) {
   return x.usuarioNombre
       || (x.usuario && x.usuario.nombreCompleto)
@@ -518,7 +682,6 @@ function safeUsuarioNombre(x) {
 let usuarioActual = null;
 let planSeleccionado = null;
 let precioSeleccionado = 0;
-let membresiaId = null;
 
 /* ================== INICIO ================== */
 window.addEventListener('DOMContentLoaded', () => {
@@ -526,7 +689,7 @@ window.addEventListener('DOMContentLoaded', () => {
   actualizarUIUsuario();
   cargarUbicaciones();
   cargarClases();
-  // formateo inputs de pago
+  // enmascarado inputs pago
   const numeroTarjeta = document.getElementById('numeroTarjeta');
   if (numeroTarjeta) numeroTarjeta.addEventListener('input', e => {
     let v = e.target.value.replace(/\s/g,'').replace(/\D/g,''); e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
@@ -545,25 +708,15 @@ function verificarSesion(){
 }
 
 function actualizarUIUsuario() {
+  const isLogged = !!usuarioActual;
   const isAdmin = usuarioActual?.rol === 'ADMINISTRADOR';
   const isTrainer = usuarioActual?.rol === 'ENTRENADOR';
 
-  if (usuarioActual) {
-    document.getElementById('authLink').style.display = 'none';
-    document.getElementById('userInfo').classList.add('active');
-    document.getElementById('userName').textContent = usuarioActual.nombreCompleto;
-
-    // Mostrar "Panel Admin" para admin e instructor
-    if (isAdmin || isTrainer) {
-      document.getElementById('adminLink').style.display = 'block';
-    } else {
-      document.getElementById('adminLink').style.display = 'none';
-    }
-  } else {
-    document.getElementById('authLink').style.display = 'block';
-    document.getElementById('userInfo').classList.remove('active');
-    document.getElementById('adminLink').style.display = 'none';
-  }
+  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
+  document.getElementById('userInfo').classList.toggle('active', isLogged);
+  document.getElementById('userName').textContent = isLogged ? (usuarioActual.nombreCompleto || '') : '';
+  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
+  document.getElementById('adminLink').style.display = (isAdmin || isTrainer) ? 'block' : 'none';
 }
 
 async function manejarAutenticacion(event){
@@ -588,7 +741,9 @@ async function manejarAutenticacion(event){
     if (ok && data?.token){
       localStorage.setItem('token', data.token);
       localStorage.setItem('usuario', JSON.stringify({
-        usuarioId: data.usuarioId, nombreCompleto: data.nombreCompleto, correoElectronico: data.correoElectronico,
+        usuarioId: data.usuarioId,
+        nombreCompleto: data.nombreCompleto,
+        correoElectronico: data.correoElectronico,
         rol: data.rol || data.authority || (Array.isArray(data.roles)?data.roles[0]:'USUARIO')
       }));
       usuarioActual = JSON.parse(localStorage.getItem('usuario'));
@@ -616,13 +771,53 @@ function cambiarModoAuth(e){
 }
 
 /* ================== MEMBRESÍA & PAGO ================== */
-function seleccionarPlan(tipoPlan, precio){
-  if (!usuarioActual){ mostrarMensaje('Debes iniciar sesión','error'); showPage('login'); return; }
-  planSeleccionado = tipoPlan; precioSeleccionado = precio; membresiaId = null;
-  document.getElementById('selectedPlan').textContent = `Plan ${tipoPlan}`;
-  document.getElementById('totalAmount').textContent = precio;
-  showPage('payment');
+// Mapea tus planes a los price_id reales de Stripe
+const STRIPE_PRICE_MAP = {
+  BASICO:  "price_1SPSFOPSvkDPHeMDAYuIcbPx",   
+  PREMIUM: "price_1SPSAzPSvkDPHeMDIsBqzLJl",  
+  ANUAL:   "price_1SPSFvPSvkDPHeMDPibimNRW"     
+};
+
+async function seleccionarPlan(tipoPlan, precio) {
+  if (!usuarioActual) {
+    mostrarMensaje('Debes iniciar sesión', 'error');
+    showPage('login');
+    return;
+  }
+
+  const priceId = STRIPE_PRICE_MAP[tipoPlan];
+  if (!priceId) {
+    alert('No hay priceId configurado para ' + tipoPlan);
+    return;
+  }
+
+  try {
+    const { ok, data } = await sendJson(
+      'http://localhost:8080/api/pagos/stripe/checkout',
+      'POST',
+      {
+        priceId,
+        usuarioId: usuarioActual.usuarioId,
+        plan: tipoPlan
+      },
+      authHeaders()
+    );
+
+    if (!ok || !data?.sessionId) {
+      alert(data?.mensaje || 'No se pudo crear la sesión de pago');
+      return;
+    }
+
+    // 2) redirigimos a Stripe
+    const stripe = Stripe("pk_test_51SMeZBPSvkDPHeMDqR5nrAh8d48Scc8v0F8BncEhJkLqjqGTf5O6hQcLOZFdCX0Xknl3sZbwG3JY9xJM1YfVaf2A009ksXOexP");
+    await stripe.redirectToCheckout({ sessionId: data.sessionId });
+
+  } catch (err) {
+    console.error(err);
+    alert('Error de conexión con Stripe');
+  }
 }
+
 
 async function procesarPago(event){
   event.preventDefault();
@@ -631,13 +826,11 @@ async function procesarPago(event){
     if (!usuarioActual?.usuarioId) throw new Error('Usuario no autenticado');
     if (!planSeleccionado || !precioSeleccionado) throw new Error('Plan inválido');
 
-    // 1) Crear membresía
     const { ok:okM, data:dM } = await sendJson(ENDPOINTS.membresias.crear,'POST',
       { tipoPlan: planSeleccionado, usuarioId: usuarioActual.usuarioId, renovacionAutomatica: true }, authHeaders());
     if (!okM || !dM?.id) throw new Error('No se pudo crear la membresía');
     const membId = dM.id;
 
-    // 2) Pago simulado
     const payloadPago = {
       membresiaId: membId, usuarioId: usuarioActual.usuarioId,
       nombreTarjeta: document.getElementById('nombreTarjeta').value.trim(),
@@ -656,28 +849,54 @@ async function procesarPago(event){
 }
 
 /* ================== PÚBLICO: UBICACIONES Y CLASES ================== */
-async function cargarUbicaciones(){
-  const loading=document.getElementById('loadingLocations'); const list=document.getElementById('locationsList');
-  loading.classList.add('show');
-  try{
-    const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
-    window._ubicacionesCache = Array.isArray(data)?data:[];
+async function cargarUbicaciones() {
+  const loading = document.getElementById('loadingLocations');
+  const list = document.getElementById('locationsList');
+
+  try {
+    loading.classList.add('show');
+    list.style.display = 'none';
+
+    const response = await fetch(ENDPOINTS.ubicaciones.listar);
+    if (!response.ok) throw new Error('Error al cargar ubicaciones');
+
+    const data = await response.json();
+    window._ubicacionesCache = data;
+
+    // ===== CAMBIO: inicializa y pinta marcadores de forma segura para SPA
+    if (!map) initMap();
+    pintarMarcadores(window._ubicacionesCache || []);
+
     renderUbicacionesPublicas();
-  }catch{ list.innerHTML='<p style="color:#ff4500; text-align:center;">Error al cargar ubicaciones.</p>'; }
-  finally{ loading.classList.remove('show'); }
+
+    loading.classList.remove('show');
+    list.style.display = 'grid';
+  } catch (error) {
+    console.error('Error:', error);
+    loading.innerHTML = '<p style="color:#ff4500; padding: 2rem; text-align: center;">Error al cargar las ubicaciones. Por favor, intenta de nuevo.</p>';
+  }
 }
+function actualizarMapa(ubicacion) {
+  // (mantengo tu función si la usas en otro lado)
+}
+
 function renderUbicacionesPublicas(){
-  const list=document.getElementById('locationsList');
-  const q=(document.getElementById('filtroPublicUbicacionesTexto')?.value||'').toLowerCase();
-  const arr=(window._ubicacionesCache||[]).filter(u=>`${u.distrito||''} ${u.ciudad||''}`.toLowerCase().includes(q));
-  list.innerHTML = arr.length? arr.map(u=>`
-    <div class="location-card">
-      <h3>${u.nombreUbicacion}</h3>
+  const list = document.getElementById('locationsList');
+  const q = (document.getElementById('filtroPublicUbicacionesTexto')?.value || '').toLowerCase();
+  const arr = (window._ubicacionesCache || []).filter(u =>
+    `${u.distrito || ''} ${u.ciudad || ''} ${u.nombreUbicacion || ''}`.toLowerCase().includes(q)
+  );
+
+  list.innerHTML = arr.length ? arr.map((u, index) => `
+    <div class="location-card ${selectedLocationIndex === index ? 'selected' : ''}" onclick="seleccionarUbicacion(${index})">
+      <h3>SmartFit ${u.nombreUbicacion}</h3>
       <p><strong>📍 Dirección:</strong> ${u.direccion}</p>
       <p><strong>🏙️ Distrito:</strong> ${u.distrito}</p>
       <p><strong>⏰ Horario:</strong> ${u.horario}</p>
       <p><strong>📞 Teléfono:</strong> ${u.numeroTelefono}</p>
-    </div>`).join('') : '<p style="color:#ff4500; text-align:center;">No hay ubicaciones</p>';
+      <button class="btn-view-location" type="button">VER DETALLES</button>
+    </div>
+  `).join('') : '<p style="color:#ff4500; text-align:center; padding: 2rem; grid-column: 1/-1;">No hay ubicaciones disponibles</p>';
 }
 
 async function cargarClases(){
@@ -691,32 +910,138 @@ async function cargarClases(){
   finally{ loading.classList.remove('show'); }
 }
 function renderClasesPublicas(){
-  const list=document.getElementById('classesList');
-  const q=(document.getElementById('filtroPublicClasesTexto')?.value||'').toLowerCase();
-  const arr=(window._clasesCache||[]).filter(c=>`${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q));
-  list.innerHTML = arr.length? arr.map(c=>{
-    const inscritos = Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0);
-    const cupos = Math.max((c.capacidadMaxima||0)-inscritos,0);
-    return `<div class="class-card">
-      <h3>${c.nombreClase}</h3><p>${c.descripcion||''}</p>
-      <p style="margin:1rem 0;"><strong>📅 ${c.horario}</strong></p>
-      <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor}</p>
-      <p class="spots">🎯 Cupos: ${cupos}/${c.capacidadMaxima}</p>
-      <button class="btn" onclick="inscribirseEnClase(${c.id})">Inscribirme</button>
-    </div>`
+  const list = document.getElementById('classesList');
+  const q = (document.getElementById('filtroPublicClasesTexto')?.value || '').toLowerCase();
+  const arr = (window._clasesCache || []).filter(c =>
+    `${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q)
+  );
+
+  list.innerHTML = arr.length ? arr.map(c => {
+    const inscritos = (typeof c.usuariosInscritos === 'number')
+      ? c.usuariosInscritos
+      : (Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0));
+
+    const cap = Number(c.capacidadMaxima || 0);
+    const cupos = Math.max(cap - inscritos, 0);
+    const llena = cap > 0 && inscritos >= cap;
+
+    // 👇 horario se muestra como string (tal cual viene del backend)
+    const horarioStr = (typeof c.horario === 'string' && c.horario.trim())
+      ? c.horario
+      : (c.horario ? String(c.horario) : '—');
+
+    return `
+      <div class="class-card">
+        <h3>${c.nombreClase || '—'}</h3>
+        <p>${c.descripcion || ''}</p>
+        <p style="margin:1rem 0;"><strong>📅 ${horarioStr}</strong></p>
+        <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor || '—'}</p>
+        <p class="spots">
+          🎯 Cupos: <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || '—'}
+          ${llena ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>' : ''}
+        </p>
+        <button class="btn" id="btn-insc-${c.id}" onclick="inscribirseEnClase(${c.id})" ${llena?'disabled':''}>
+          Inscribirme
+        </button>
+      </div>`;
   }).join('') : '<p style="color:#ff4500; text-align:center;">No hay clases</p>';
 }
 
+
 async function inscribirseEnClase(claseId){
   if (!usuarioActual){ mostrarMensaje('Debes iniciar sesión','error'); showPage('login'); return; }
+  const btn = document.getElementById(`btn-insc-${claseId}`);
   try{
-    const payload={ usuarioId: usuarioActual.usuarioId, claseId };
-    const r = await fetch(ENDPOINTS.clases.inscribir,{ method:'POST', headers:{'Content-Type':'application/json',Accept:'application/json',...authHeaders()}, body:JSON.stringify(payload) });
-    const contentType=r.headers.get('content-type'); const data = contentType?.includes('json')? await r.json(): await r.text();
-    if (r.ok){ alert(`✅ ${typeof data==='string'?data:'Inscrito'}`); cargarClases(); }
-    else { throw new Error(typeof data==='string'?data:(data?.mensaje||data?.error||'No se pudo inscribir')); }
-  }catch(e){ alert('❌ '+e.message); }
+    btn && (btn.disabled = true);
+
+    const payload = { usuarioId: usuarioActual.usuarioId, claseId };
+    const r = await fetch(ENDPOINTS.clases.inscribir, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Accept:'application/json', ...authHeaders() },
+      body: JSON.stringify(payload)
+    });
+    const contentType = r.headers.get('content-type');
+    const data = contentType?.includes('json') ? await r.json() : await r.text();
+
+    if (!r.ok) throw new Error(typeof data === 'string' ? data : (data?.mensaje || 'No se pudo inscribir'));
+
+    // ✅ Decremento optimista en DOM
+    const span = document.getElementById(`cupos-${claseId}`);
+    if (span){
+      const nuevo = Math.max(0, (parseInt(span.textContent||'0',10) - 1));
+      span.textContent = String(nuevo);
+      if (nuevo === 0 && btn){
+        btn.disabled = true;
+        btn.title = 'Clase completa';
+      }
+    }
+
+    // ✅ Actualiza cache local (si la usas)
+    const i = (window._clasesCache||[]).findIndex(c=>Number(c.id)===Number(claseId));
+    if (i >= 0){
+      const c = window._clasesCache[i];
+      if (typeof c.usuariosInscritos === 'number') c.usuariosInscritos = Math.max(0, c.usuariosInscritos + 1);
+      else if (Array.isArray(c.usuariosInscritos)) c.usuariosInscritos.push({ id: usuarioActual.usuarioId });
+      else c.inscritos = (c.inscritos||0) + 1;
+    }
+
+    alert(`✅ ${typeof data==='string' ? data : (data?.mensaje || 'Inscripción exitosa')}`);
+
+    // 🔄 Pull rápido para sincronizar valores reales desde el backend
+    // (por si alguien más se inscribió justo antes)
+    try{
+      const { ok, data:lista } = await getJson(ENDPOINTS.clases.listar);
+      if (ok && Array.isArray(lista)){
+        window._clasesCache = lista;
+        // solo refrescamos los spans de cupos para no repintar todo
+        lista.forEach(c=>{
+          const inscritos = (typeof c.usuariosInscritos === 'number')
+            ? c.usuariosInscritos
+            : (Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0));
+          const cap = Number(c.capacidadMaxima||0);
+          const cupos = Math.max(cap - inscritos, 0);
+          const s = document.getElementById(`cupos-${c.id}`);
+          const b = document.getElementById(`btn-insc-${c.id}`);
+          if (s){ s.textContent = String(cupos); }
+          if (b){ b.disabled = (cupos<=0); }
+        });
+      }
+    }catch{}
+  }catch(e){
+    alert('❌ ' + e.message);
+  }finally{
+    // si quedó con cupos, habilita de nuevo
+    const span = document.getElementById(`cupos-${claseId}`);
+    if (btn && span && parseInt(span.textContent||'0',10) > 0) btn.disabled = false;
+  }
 }
+
+let _pollClases = null;
+
+function iniciarPollingCupos(){
+  if (_pollClases) return;
+  _pollClases = setInterval(async () => {
+    const visible = document.getElementById('classes')?.classList.contains('active');
+    if (!visible) return;
+    const { ok, data } = await getJson(ENDPOINTS.clases.listar);
+    if (!ok || !Array.isArray(data)) return;
+
+    window._clasesCache = data;
+    data.forEach(c=>{
+      const inscritos = (typeof c.usuariosInscritos === 'number')
+        ? c.usuariosInscritos
+        : (Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0));
+      const cap = Number(c.capacidadMaxima||0);
+      const cupos = Math.max(cap - inscritos, 0);
+      const s = document.getElementById(`cupos-${c.id}`);
+      const b = document.getElementById(`btn-insc-${c.id}`);
+      if (s) s.textContent = String(cupos);
+      if (b) b.disabled = (cupos<=0);
+    });
+  }, 15000); // 15s
+}
+
+window.addEventListener('DOMContentLoaded', iniciarPollingCupos);
 
 /* ================== CONTACTO ================== */
 async function enviarMensajeContacto(event){
@@ -746,9 +1071,7 @@ function showPage(pageId) {
         alert('Acceso denegado.');
         pageId = 'home';
       } else {
-        // Es admin o entrenador: ajustar tabs visibles
         configurarTabsAdminPorRol(rol);
-        // Tab por defecto: admin -> dashboard | entrenador -> clases
         if (isTrainer) {
           cambiarTabAdmin('clases-admin', document.querySelector('.admin-tab[data-tab="clases-admin"]'));
         } else {
@@ -758,20 +1081,44 @@ function showPage(pageId) {
     }
   }
 
+  if (pageId === 'perfil') {
+    if (!usuarioActual) {
+      alert('Debes iniciar sesión');
+      pageId = 'login';
+    } else {
+      irPerfil();
+    }
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(pageId).classList.add('active');
   document.getElementById('navLinks').classList.remove('active');
   window.scrollTo(0,0);
-  if (pageId === 'locations') cargarUbicaciones();
-  else if (pageId === 'classes') cargarClases();
-  else if (pageId === 'admin') cargarDashboard(); // si es entrenador, esta llamada no afectará
+
+  // ===== CAMBIO: lógica SPA para mapa al entrar a Ubicaciones
+  if (pageId === 'locations') {
+    if (!map) initMap();
+    // Revalida tamaño y centra si ya hay marcadores
+    setTimeout(() => {
+      try {
+        map.invalidateSize();
+        if (markers.length) {
+          const g = L.featureGroup(markers);
+          map.fitBounds(g.getBounds().pad(0.1));
+        }
+      } catch {}
+    }, 80);
+  } else if (pageId === 'classes') {
+    cargarClases();
+  } else if (pageId === 'admin') {
+    cargarDashboard();
+  }
 }
 
 function configurarTabsAdminPorRol(rol) {
   const isAdmin = rol === 'ADMINISTRADOR';
   const isTrainer = rol === 'ENTRENADOR';
 
-  // Botones/pestañas
   const tabs = [
     { key:'dashboard',        sel:'[data-tab="dashboard"]' },
     { key:'usuarios',         sel:'[data-tab="usuarios"]' },
@@ -783,16 +1130,14 @@ function configurarTabsAdminPorRol(rol) {
   ];
 
   tabs.forEach(t => {
-    const btn = document.querySelector(`.admin-menu ${t.sel}`);
+    const btn = document.querySelector(t.sel);
     const pane = document.getElementById(`tab-${t.key}`);
     if (!btn || !pane) return;
 
     if (isAdmin) {
-      // Admin ve todo
       btn.style.display = '';
       pane.style.display = '';
     } else if (isTrainer) {
-      // Entrenador: solo CLASES
       const allowed = (t.key === 'clases-admin');
       btn.style.display = allowed ? '' : 'none';
       pane.style.display = allowed ? '' : 'none';
@@ -800,7 +1145,6 @@ function configurarTabsAdminPorRol(rol) {
     }
   });
 
-  // Oculta botones de acciones de escritura si es entrenador
   const isTrainerOnly = isTrainer;
   document.querySelectorAll('.btn-create, .btn-edit, .btn-delete').forEach(b=>{
     if (isTrainerOnly) b.style.display = 'none';
@@ -838,28 +1182,10 @@ function cambiarTabAdmin(tab, elBtn){
     case 'dashboard': if(isAdmin) cargarDashboard(); break;
     case 'usuarios':  if(isAdmin) cargarUsuariosAdmin(); break;
     case 'membresias':if(isAdmin) cargarMembresiasAdmin(); break;
-    case 'clases-admin': cargarClasesAdmin(); break; // <- visible para ambos, pero los botones de crear/editar se ocultan al entrenador
+    case 'clases-admin': cargarClasesAdmin(); break;
     case 'ubicaciones-admin': if(isAdmin) cargarUbicacionesAdmin(); break;
     case 'pagos-admin': if(isAdmin) cargarPagosAdmin(); break;
     case 'reportes': if(isAdmin) cargarReportes(); break;
-  }
-}
-
-
-function aplicarPermisosTabs(){
-  const tabs = document.querySelectorAll('.admin-tabs .admin-tab');
-  if (isInstructor(usuarioActual) && !isAdmin(usuarioActual)){
-    tabs.forEach(t=>{
-      const k=t.getAttribute('data-tab');
-      const visible = (k==='clases-admin' || k==='ubicaciones-admin');
-      t.style.display = visible ? 'inline-block' : 'none';
-    });
-    // Forzar mostrar "clases" si estaba otra activa
-    const active = document.querySelector('.admin-tab.active'); if (!active || active.style.display==='none'){
-      const btn = document.querySelector('.admin-tab[data-tab="clases-admin"]'); if (btn) btn.click();
-    }
-  } else {
-    tabs.forEach(t=> t.style.display='inline-block');
   }
 }
 
@@ -1098,20 +1424,12 @@ function abrirModalCrearUbicacion() {
     alert('Solo un administrador puede crear ubicaciones.');
     return;
   }
-
-  ubicacionEditando = null;
   const form = document.getElementById('formUbicacion');
   if (form) form.reset();
-
-  const idInput = document.getElementById('ubicacionId');
-  if (idInput) idInput.value = '';
-  const title = document.getElementById('modalUbicacionTitle');
-  if (title) title.textContent = 'Crear Nueva Ubicación';
-
+  document.getElementById('ubicacionId').value = '';
+  document.getElementById('modalUbicacionTitle').textContent = 'Crear Nueva Ubicación';
   abrirModal('modalUbicacion');
 }
-
-// Asegúrate de exponerla al scope global cuando usas inline onclick en el HTML
 window.abrirModalCrearUbicacion = abrirModalCrearUbicacion;
 
 function editarUbicacion(u){
@@ -1168,9 +1486,6 @@ function renderUbicacionesFiltradas(){
 }
 
 /* ================== ADMIN: Pagos ================== */
-// Usa el mismo helper que ya tienes
-// function safeUsuarioNombre(p){ ... } (ya está definido arriba)
-
 async function cargarPagosAdmin() {
   const loading = document.getElementById('loadingPagosAdmin');
   const container = document.getElementById('pagosAdminTable');
@@ -1186,17 +1501,14 @@ async function cargarPagosAdmin() {
     loading.classList.remove('show');
   }
 }
-
 function renderPagosFiltrados() {
   const container = document.getElementById('pagosAdminTable');
   const q = (document.getElementById('filtroPagosTexto')?.value || '').toLowerCase();
-
   const arr = (window._pagosCache || []).filter(p => {
     const usuarioTxt = (safeUsuarioNombre(p) + ' ' + (p.usuarioId ?? '')).toLowerCase();
     const idTx = (p.idTransaccion || '').toLowerCase();
     return usuarioTxt.includes(q) || idTx.includes(q);
   });
-
   container.innerHTML = `
     <table>
       <thead>
@@ -1228,11 +1540,9 @@ function renderPagosFiltrados() {
     </table>`;
 }
 
-
 /* ================== ADMIN: Reportes ================== */
 function cargarReportes() {
   const rol = usuarioActual?.rol;
-
   if (rol !== 'ADMINISTRADOR') {
     const container = document.getElementById('tab-reportes');
     if (container) {
@@ -1244,14 +1554,12 @@ function cargarReportes() {
     }
     return;
   }
-
   cargarReporteMembresias();
   cargarReporteIngresos();
   cargarReporteClases();
-  cargarReporteSuscripcionesMensuales(); // 👈 importante
+  cargarReporteSuscripcionesMensuales();
 }
-/* ======================== EXPORTADORES ======================== */
-/** Asegura que existan caches. Si no, las carga ahora */
+
 async function ensureAdminCaches() {
   const peticiones = [];
 
@@ -1276,7 +1584,6 @@ async function ensureAdminCaches() {
       .then(r => { if (r.ok) window._pagosCache = r.data; }));
   }
 
-  // Reportes agregados
   if (!window._reporteMembresias) {
     peticiones.push(getJson(ENDPOINTS.admin.reporteMembresias, { headers: authHeaders() })
       .then(r => { if (r.ok) window._reporteMembresias = r.data; }));
@@ -1291,88 +1598,55 @@ async function ensureAdminCaches() {
       .then(r => { if (r.ok) window._reporteClases = r.data; }));
   }
   if (!window._suscripcionesMensuales) {
-    // Si protegiste este endpoint por rol, asegúrate de ser ADMIN
-    peticiones.push(getJson(`${API_URL}/admin/reportes/suscripciones-mensuales`, { headers: authHeaders() })
+    peticiones.push(getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() })
       .then(r => { if (r.ok) window._suscripcionesMensuales = r.data; }));
   }
 
   await Promise.allSettled(peticiones);
 }
-
-/** Util: fecha y hora bonita para nombre de archivo */
 function nowSlug() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
 }
-
-/** Limpia y mapea datos para Excel */
 function mapUsuariosExcel(data=[]) {
   return data.map(u => ({
-    ID: u.id,
-    'Nombre completo': u.nombreCompleto,
-    'Email': u.correoElectronico,
-    'Teléfono': u.numeroTelefono || '',
-    'Rol': u.rol,
-    'Activo': u.estaActivo ? 'Sí' : 'No',
-    'Fecha registro': u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleString() : ''
+    ID: u.id,'Nombre completo': u.nombreCompleto,'Email': u.correoElectronico,'Teléfono': u.numeroTelefono || '',
+    'Rol': u.rol,'Activo': u.estaActivo ? 'Sí' : 'No','Fecha registro': u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleString() : ''
   }));
 }
 function mapMembresiasExcel(data=[]) {
   return data.map(m => ({
-    ID: m.id,
-    'Usuario ID': m.usuarioId ?? (m.usuario?.id ?? ''),
-    'Usuario': m.usuarioNombre ?? (m.usuario?.nombreCompleto ?? ''),
-    'Plan': m.tipoPlan,
-    'Precio': m.precio ?? '',
-    'Inicio': m.fechaInicio ? new Date(m.fechaInicio).toLocaleString() : '',
-    'Fin': m.fechaFin ? new Date(m.fechaFin).toLocaleString() : '',
-    'Estado': m.estado,
-    'Auto-renovación': m.renovacionAutomatica ? 'Sí' : 'No',
+    ID: m.id,'Usuario ID': m.usuarioId ?? (m.usuario?.id ?? ''),'Usuario': m.usuarioNombre ?? (m.usuario?.nombreCompleto ?? ''),
+    'Plan': m.tipoPlan,'Precio': m.precio ?? '','Inicio': m.fechaInicio ? new Date(m.fechaInicio).toLocaleString() : '',
+    'Fin': m.fechaFin ? new Date(m.fechaFin).toLocaleString() : '','Estado': m.estado,'Auto-renovación': m.renovacionAutomatica ? 'Sí' : 'No',
   }));
 }
 function mapClasesExcel(data=[]) {
   return data.map(c => ({
-    ID: c.id,
-    'Nombre': c.nombreClase,
-    'Instructor': c.nombreInstructor,
-    'Horario': c.horario,
-    'Capacidad': c.capacidadMaxima ?? '',
-    'Inscritos': Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos ?? 0),
-    'Duración (min)': c.duracionMinutos ?? '',
-    'Activo': c.estaActivo ? 'Sí' : 'No',
+    ID: c.id,'Nombre': c.nombreClase,'Instructor': c.nombreInstructor,'Horario': c.horario,
+    'Capacidad': c.capacidadMaxima ?? '','Inscritos': Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos ?? 0),
+    'Duración (min)': c.duracionMinutos ?? '','Activo': c.estaActivo ? 'Sí' : 'No',
   }));
 }
 function mapUbicacionesExcel(data=[]) {
   return data.map(u => ({
-    ID: u.id,
-    'Nombre': u.nombreUbicacion,
-    'Dirección': u.direccion,
-    'Distrito': u.distrito,
-    'Ciudad': u.ciudad ?? '',
-    'Teléfono': u.numeroTelefono ?? '',
-    'Horario': u.horario ?? '',
-    'Latitud': u.latitud ?? '',
-    'Longitud': u.longitud ?? '',
+    ID: u.id,'Nombre': u.nombreUbicacion,'Dirección': u.direccion,'Distrito': u.distrito,'Ciudad': u.ciudad ?? '',
+    'Teléfono': u.numeroTelefono ?? '','Horario': u.horario ?? '','Latitud': u.latitud ?? '','Longitud': u.longitud ?? '',
   }));
 }
 function mapPagosExcel(data=[]) {
   return data.map(p => ({
-    ID: p.id,
-    'Usuario ID': p.usuarioId ?? (p.usuario?.id ?? ''),
-    'Usuario': p.usuarioNombre ?? (p.usuario?.nombreCompleto ?? ''),
-    'Membresía ID': p.membresiaId ?? (p.membresia?.id ?? ''),
-    'Monto': p.monto ?? '',
-    'Fecha pago': (p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '',
-    'Transacción': p.idTransaccion ?? '',
-    'Método': p.metodoPago ?? '',
-    'Estado': p.estadoPago ?? '',
+    ID: p.id,'Usuario ID': p.usuarioId ?? (p.usuario?.id ?? ''),'Usuario': p.usuarioNombre ?? (p.usuario?.nombreCompleto ?? ''),
+    'Membresía ID': p.membresiaId ?? (p.membresia?.id ?? ''),'Monto': p.monto ?? '',
+    'Fecha pago': (p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '','Transacción': p.idTransaccion ?? '',
+    'Método': p.metodoPago ?? '','Estado': p.estadoPago ?? '',
   }));
 }
 function mapReporteMembresiasExcel(r={}) {
   return [
     { Métrica: 'Total', Valor: r.totalMembresias ?? r.total ?? 0 },
-    { Métrica: 'Activas', Valor: r.membresiaActivas ?? r.activas ?? 0 },
+    { Métrica: 'Activas', Valor: r.membresiasActivas ?? r.activas ?? 0 },
     { Métrica: 'Básico', Valor: r.membresiaBasico ?? 0 },
     { Métrica: 'Premium', Valor: r.membresiaPremium ?? 0 },
     { Métrica: 'Anual', Valor: r.membresiaAnual ?? 0 },
@@ -1392,44 +1666,32 @@ function mapReporteIngresosExcel(r={}) {
 }
 function mapReporteClasesExcel(list=[]) {
   return list.map(x => ({
-    'Clase': x.nombreClase,
-    'Instructor': x.nombreInstructor ?? '',
-    'Capacidad': x.capacidadMaxima ?? 0,
-    'Inscritos': x.usuariosInscritos ?? 0,
-    'Ocupación %': typeof x.tasaOcupacion === 'number' ? x.tasaOcupacion.toFixed(1) : 0,
+    'Clase': x.nombreClase,'Instructor': x.nombreInstructor ?? '','Capacidad': x.capacidadMaxima ?? 0,
+    'Inscritos': x.usuariosInscritos ?? 0,'Ocupación %': typeof x.tasaOcupacion === 'number' ? x.tasaOcupacion.toFixed(1) : 0,
   }));
 }
 function mapSuscripcionesMensualesExcel(obj={}) {
-  // obj: { "2025-01": 10, "2025-02": 12, ... }
   return Object.entries(obj)
     .sort((a,b) => a[0].localeCompare(b[0]))
     .map(([mes, total]) => ({ Mes: mes, 'Nuevas suscripciones': total }));
 }
 
-/* ======================== EXCEL ======================== */
+/* ================== EXCEL & PDF ================== */
 async function descargarReportesExcel() {
   try {
     await ensureAdminCaches();
-
     const wb = XLSX.utils.book_new();
-
-    // Tablas CRUD
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUsuariosExcel(window._usuariosCache || [])), 'Usuarios');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapMembresiasExcel(window._membresiasCache || [])), 'Membresias');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapClasesExcel(window._clasesAdminCache || [])), 'Clases');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUbicacionesExcel(window._ubicacionesAdminCache || [])), 'Ubicaciones');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapPagosExcel(window._pagosCache || [])), 'Pagos');
-
-    // Reportes agregados
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteMembresiasExcel(window._reporteMembresias || {})), 'Rpt_Membresias');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteIngresosExcel(window._reporteIngresos || {})), 'Rpt_Ingresos');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteClasesExcel(window._reporteClases || [])), 'Rpt_Clases');
-
-    // Serie mensual
     if (window._suscripcionesMensuales) {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapSuscripcionesMensualesExcel(window._suscripcionesMensuales)), 'Suscripciones_Mensuales');
     }
-
     const filename = `reportes_fitzone_${nowSlug()}.xlsx`;
     XLSX.writeFile(wb, filename);
   } catch (e) {
@@ -1437,8 +1699,6 @@ async function descargarReportesExcel() {
     alert('No se pudo generar el Excel');
   }
 }
-
-/* ======================== PDF ======================== */
 async function descargarReportesPDF() {
   try {
     await ensureAdminCaches();
@@ -1471,7 +1731,6 @@ async function descargarReportesPDF() {
       });
     };
 
-    // Portada
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('Reporte General - FitZone', margin, y);
@@ -1480,30 +1739,25 @@ async function descargarReportesPDF() {
     doc.setFontSize(11);
     doc.text(`Fecha: ${new Date().toLocaleString()}`, margin, y); y += 24;
 
-    // Rpt Membresías (resumen)
     addTitle('Resumen de Membresías');
     const rm = window._reporteMembresias || {};
     addTable(['Métrica', 'Valor'], mapReporteMembresiasExcel(rm).map(r => [r['Métrica'], String(r['Valor'])]));
 
-    // Rpt Ingresos
     addTitle('Resumen de Ingresos');
     const ri = window._reporteIngresos || {};
     addTable(['Métrica', 'Valor'], mapReporteIngresosExcel(ri).map(r => [r['Métrica'], String(r['Valor'])]));
 
-    // Rpt Clases
     addTitle('Clases (Ocupación)');
     const rc = mapReporteClasesExcel(window._reporteClases || []);
     addTable(['Clase', 'Instructor', 'Capacidad', 'Inscritos', 'Ocupación %'],
       rc.map(x => [x['Clase'], x['Instructor'], x['Capacidad'], x['Inscritos'], x['Ocupación %']]));
 
-    // Suscripciones mensuales
     if (window._suscripcionesMensuales) {
       addTitle('Evolución Mensual de Suscripciones');
       const sm = mapSuscripcionesMensualesExcel(window._suscripcionesMensuales);
       addTable(['Mes', 'Nuevas suscripciones'], sm.map(r => [r['Mes'], r['Nuevas suscripciones']]));
     }
 
-    // (Opcional) Tablas CRUD resumidas
     addTitle('Usuarios (resumen)');
     const u = mapUsuariosExcel((window._usuariosCache || [])).slice(0, 20);
     addTable(['ID','Nombre','Email','Teléfono','Rol','Activo','Registro'],
@@ -1569,57 +1823,427 @@ async function cargarReporteClases(){
 async function cargarReporteSuscripcionesMensuales() {
   const canvas = document.getElementById('graficoSuscripciones');
   const ctx = canvas.getContext('2d');
-  const loading = document.getElementById('loadingSuscripcionesMensuales');
-
-  loading?.classList.add('show');
   try {
-    const { ok, data } = await getJson(`${API_URL}/admin/reportes/suscripciones-mensuales`, { headers: authHeaders() });
+    const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() });
     if (!ok) throw new Error("Error al obtener datos");
-
     const labels = Object.keys(data);
     const values = Object.values(data);
-
     if (window.suscripcionesChart) window.suscripcionesChart.destroy();
     window.suscripcionesChart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Nuevas suscripciones por mes',
-          data: values,
-          borderColor: '#ff4500',
-          backgroundColor: 'rgba(255,69,0,0.2)',
-          borderWidth: 3,
-          tension: 0.3,
-          fill: true,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        }]
-      },
+      data: { labels, datasets: [{ label:'Nuevas suscripciones por mes', data: values, borderColor:'#ff4500', backgroundColor:'rgba(255,69,0,0.2)', borderWidth:3, tension:0.3, fill:true, pointRadius:5, pointHoverRadius:7 }] },
       options: {
         responsive: true,
-        scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
-          x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
-        },
-        plugins: {
-          legend: { labels: { color: '#fff' } },
-          title: { display: true, text: 'Tendencia de Suscripciones Mensuales', color: '#ff4500', font: { size: 16 } }
-        }
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } }, x: { title: { display: true, text: 'Mes (yyyy-MM)' } } },
+        plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'Tendencia de Suscripciones Mensuales', color: '#ff4500', font: { size: 16 } } }
       }
     });
   } catch (err) {
     console.error(err);
     alert('No se pudo cargar el gráfico de suscripciones.');
-  } finally {
-    loading?.classList.remove('show');
   }
 }
 
+/* ===== export util ===== */
+function tablaDOMToArrays(tableEl){
+  const head = [...tableEl.querySelectorAll('thead th')].map(th=>th.innerText.trim());
+  const body = [...tableEl.querySelectorAll('tbody tr')].map(tr =>
+    [...tr.children].map(td => td.innerText.trim())
+  );
+  return { head, body };
+}
+function descargarTablaComoPDF(tableContainerId, filenameBase='Tabla'){
+  const table = document.querySelector(`#${tableContainerId} table`);
+  if(!table){ alert('No hay datos para exportar'); return; }
+  const { head, body } = tablaDOMToArrays(table);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p','pt');
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text(filenameBase, 36, 40);
+  doc.autoTable({ startY: 60, head: [head], body: body, styles: { fontSize: 9 }, headStyles: { fillColor: [255,69,0], textColor: 255 }, margin: { left: 36, right: 36 }, theme: 'striped' });
+  doc.save(`${filenameBase}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+function descargarTablaComoExcel(tableContainerId, filenameBase='Tabla'){
+  const table = document.querySelector(`#${tableContainerId} table`);
+  if(!table){ alert('No hay datos para exportar'); return; }
+  const { head, body } = tablaDOMToArrays(table);
+  const rows = body.map(r=>{ const obj = {}; head.forEach((h,i)=>{ obj[h] = r[i] ?? ''; }); return obj; });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Datos');
+  XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ================== PERFIL (Front) ================== */
+function usuarioActualLS(){ try { return JSON.parse(localStorage.getItem('usuario')||'{}'); } catch { return {}; } }
+function abrirModalPassword(){ document.getElementById('modalPassword').classList.add('show'); }
+function cambiarTabPerfil(tab, btn){
+  document.querySelectorAll('[data-perfil-tab]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['info','membresia','pagos','clases','preferencias'].forEach(id=>{ document.getElementById('perfil-'+id).classList.remove('active'); });
+  document.getElementById('perfil-'+tab).classList.add('active');
+  if(tab==='membresia') cargarMembresiaUsuario();
+  if(tab==='pagos')     cargarPagosUsuario();
+  if(tab==='clases')    cargarClasesUsuario();
+  if(tab==='preferencias') cargarPreferencias();
+}
+async function cargarPerfil(){
+  let me = null;
+  try { const { ok, data } = await getJson(ENDPOINTS.usuarios.me, { headers: { ...authHeaders() }}); if(ok) me = data; } catch {}
+  if(!me){
+    const ls = usuarioActualLS();
+    const { ok, data } = await getJson(ENDPOINTS.admin.usuarios, { headers: { ...authHeaders() }}); if(ok){ me = (data||[]).find(u=>u.id === ls.usuarioId); }
+  }
+  if(!me){ alert('No se pudo cargar el perfil'); return; }
+  document.getElementById('perfilNombre').value = me.nombreCompleto || '';
+  document.getElementById('perfilCorreo').value = me.correoElectronico || '';
+  document.getElementById('perfilTelefono').value = me.numeroTelefono || '';
+  document.getElementById('perfilRol').value = me.rol || 'USUARIO';
+  document.getElementById('perfilFecha').value = me.fechaCreacion ? new Date(me.fechaCreacion).toLocaleString() : '—';
+  window._perfilUsuario = me;
+}
+window.cargarPerfil = cargarPerfil;
+
+async function guardarPerfil(e){
+  e.preventDefault();
+  const me = window._perfilUsuario; if(!me) return;
+  const payload = {
+    nombreCompleto: document.getElementById('perfilNombre').value.trim(),
+    numeroTelefono: document.getElementById('perfilTelefono').value.trim(),
+    rol: me.rol,
+    estaActivo: me.estaActivo ?? true
+  };
+  const { ok } = await sendJson(ENDPOINTS.usuarios.update(me.id), 'PUT', payload, authHeaders());
+  if(ok){ alert('Perfil actualizado'); cargarPerfil(); }
+  else { alert('No se pudo guardar'); }
+}
+
+async function guardarPassword(e){
+  e.preventDefault();
+  const me = window._perfilUsuario; if(!me) return;
+  const a = document.getElementById('pwdActual').value;
+  const n = document.getElementById('pwdNueva').value;
+  const n2= document.getElementById('pwdNueva2').value;
+  if(n!==n2){ alert('La nueva contraseña no coincide'); return; }
+  const payload = { actual: a, nueva: n };
+  const { ok, data } = await sendJson(ENDPOINTS.usuarios.password(me.id), 'PUT', payload, authHeaders());
+  if(ok){ alert('Contraseña actualizada'); cerrarModal('modalPassword'); }
+  else { alert((data && data.mensaje) || 'No se pudo actualizar'); }
+}
+
+/* ===== MEMBRESÍA (Perfil) ===== */
+async function cargarMembresiaUsuario(){
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  const box = document.getElementById('perfilMembresiaBox');
+  box.innerHTML = '<p>Cargando...</p>';
+  try{
+    const { ok, data } = await getJson(ENDPOINTS.membresias.porUsuario(me.id), { headers: { ...authHeaders() }});
+    if(!ok){ box.innerHTML = '<p style="color:#dc3545">No se pudo obtener la membresía.</p>'; return; }
+    window._membresiaUsuario = data;
+
+    const diasRest = data.fechaFin ? Math.max(0, Math.ceil((new Date(data.fechaFin) - new Date())/(1000*60*60*24))) : '—';
+    box.innerHTML = `
+      <p><b>Plan:</b> <span class="badge badge-info">${data.tipoPlan || '—'}</span></p>
+      <p><b>Precio:</b> S/ ${data.precio ?? '—'}</p>
+      <p><b>Inicio:</b> ${data.fechaInicio? new Date(data.fechaInicio).toLocaleString():'—'}</p>
+      <p><b>Fin:</b> ${data.fechaFin? new Date(data.fechaFin).toLocaleString():'—'} ${diasRest!=='—' ? `(<b>${diasRest} días restantes</b>)` : ''}</p>
+      <p><b>Estado:</b> <span class="badge ${data.estado==='ACTIVO'?'badge-success':'badge-warning'}">${data.estado||'—'}</span></p>
+    `;
+    document.getElementById('btnActivarMembresia').style.display = 'inline-block';
+    document.getElementById('btnCancelarMembresia').style.display = (data.estado==='ACTIVO') ? 'inline-block':'none';
+    document.getElementById('chkAutoRenov').checked = !!data.renovacionAutomatica;
+  }catch{
+    box.innerHTML = '<p style="color:#dc3545">Error de conexión.</p>';
+  }
+}
+async function activarMembresia(){
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  const plan = prompt('Elige plan: BASICO | PREMIUM | ANUAL', 'BASICO');
+  if(!plan) return;
+  const payload = { usuarioId: me.id, tipoPlan: plan.toUpperCase(), renovacionAutomatica: true };
+  const { ok, data } = await sendJson(ENDPOINTS.membresias.crear, 'POST', payload, authHeaders());
+  if(ok){ alert('Membresía activada/renovada'); cargarMembresiaUsuario(); }
+  else { alert((data && data.mensaje) || 'No se pudo crear/renovar'); }
+}
+async function cancelarMembresiaUsuario(){
+  const m = window._membresiaUsuario; if(!m) return;
+  if(!confirm('¿Cancelar tu membresía actual?')) return;
+  const { ok, data } = await sendJson(ENDPOINTS.membresias.cancelar(m.id), 'PUT', {}, authHeaders());
+  if(ok){ alert('Membresía cancelada'); cargarMembresiaUsuario(); }
+  else { alert((data && data.mensaje) || 'No se pudo cancelar'); }
+}
+async function toggleAutoRenovacion(chk){
+  const m = window._membresiaUsuario; if(!m) return;
+  const payload = { renovacionAutomatica: !!chk.checked };
+  const { ok } = await sendJson(ENDPOINTS.membresias.update(m.id), 'PUT', payload, authHeaders());
+  if(!ok){ alert('No se pudo actualizar la auto-renovación'); chk.checked = !chk.checked; }
+}
+
+/* ===== PAGOS (Perfil) ===== */
+async function cargarPagosUsuario(){
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  const { ok, data } = await getJson(ENDPOINTS.pagos.porUsuario(me.id), { headers: { ...authHeaders() }});
+  window._pagosUsuario = ok ? data : [];
+  renderPagosUsuario();
+}
+function renderPagosUsuario(){
+  const cont = document.getElementById('tablaPagosUsuario');
+  const q = (document.getElementById('filtroPagosUsuario')?.value||'').toLowerCase();
+  const arr = (window._pagosUsuario||[]).filter(p=>{
+    const f = `${p.idTransaccion||''} ${p.metodoPago||''} ${p.estadoPago||''} ${p.monto||''} ${p.fechaPago||''}`.toLowerCase();
+    return f.includes(q);
+  });
+  cont.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Transacción</th><th>Fecha</th><th>Monto</th><th>Método</th><th>Estado</th>
+      </tr></thead>
+      <tbody>
+        ${arr.map(p=>`
+          <tr>
+            <td>${p.idTransaccion || '—'}</td>
+            <td>${p.fechaPago ? new Date(p.fechaPago).toLocaleString() : '—'}</td>
+            <td>S/ ${p.monto ?? '—'}</td>
+            <td>${p.metodoPago || '—'}</td>
+            <td><span class="badge ${p.estadoPago==='COMPLETADO'?'badge-success':(p.estadoPago==='PENDIENTE'?'badge-warning':'badge-danger')}">${p.estadoPago||'—'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+async function descargarPagosUsuarioPDF(){ descargarTablaComoPDF('tablaPagosUsuario', 'Pagos_Mi_Perfil'); }
+async function descargarPagosUsuarioExcel(){ descargarTablaComoExcel('tablaPagosUsuario', 'Pagos_Mi_Perfil'); }
+
+/* ===== CLASES (Perfil) ===== */
+async function cargarClasesUsuario(){
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  const { ok, data } = await getJson(ENDPOINTS.clases.porUsuario(me.id), { headers: { ...authHeaders() }});
+  window._clasesUsuario = ok ? data : [];
+  renderClasesUsuario();
+}
+function renderClasesUsuario(){
+  const cont = document.getElementById('tablaClasesUsuario');
+  const tipo = document.getElementById('filtroClasesTipo')?.value || 'proximas';
+  const ahora = new Date();
+
+  const arr = (window._clasesUsuario||[]).filter(c=>{
+    const d = c.horario && !isNaN(Date.parse(c.horario)) ? new Date(c.horario) : null;
+    if (!d) return tipo === 'todas';
+    if (tipo === 'proximas') return d >= ahora;
+    if (tipo === 'pasadas')  return d <  ahora;
+    return true;
+  });
+
+  cont.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Clase</th><th>Instructor</th><th>Horario</th><th>Duración</th><th>Cupos</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${arr.map(c=>{
+          const inscritos = (c.usuariosInscritos?.length)||0;
+          const cap = c.capacidadMaxima ?? 0;
+          const llena = cap>0 && inscritos>=cap;
+          let horarioTxt = '—';
+          if (c.horario) {
+            if (!isNaN(Date.parse(c.horario))) { horarioTxt = new Date(c.horario).toLocaleString(); }
+            else { horarioTxt = String(c.horario); }
+          }
+          return `
+          <tr>
+            <td>${c.nombreClase||'—'}</td>
+            <td>${c.nombreInstructor||'—'}</td>
+            <td>${horarioTxt}</td>
+            <td>${c.duracionMinutos? c.duracionMinutos+' min':'—'}</td>
+            <td>${inscritos}/${cap} ${llena?'<span class="badge badge-warning">Completa</span>':''}</td>
+            <td><button class="action-btn btn-delete" onclick="cancelarInscripcionClase(${c.id})">Cancelar inscripción</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+async function cancelarInscripcionClase(claseId) {
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const token = localStorage.getItem('token');
+
+  if (!usuario || !usuario.usuarioId) {
+    alert("No se encontró el usuario actual.");
+    return;
+  }
+
+  console.log("Cancelando inscripción de clase:", claseId, "Usuario:", usuario.usuarioId);
+
+  try {
+    const res = await fetch(`${API_URL}/clases/${claseId}/cancelar-inscripcion`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ usuarioId: Number(usuario.usuarioId) })
+    });
+
+    const data = await res.json();
+    console.log("Respuesta:", data);
+
+    if (!res.ok) {
+      alert(data.mensaje || "Error al cancelar inscripción");
+    } else {
+      alert(data.mensaje || "Inscripción cancelada con éxito");
+    }
+  } catch (error) {
+    console.error("Error al cancelar inscripción:", error);
+    alert("Error de conexión con el servidor");
+  }
+}
+
+/* ===== Preferencias (Perfil) ===== */
+async function cargarPreferencias(){
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  try{
+    const { ok, data } = await getJson(ENDPOINTS.usuarios.prefs(me.id), { headers: { ...authHeaders() }});
+    if(ok){
+      document.getElementById('prefEmailNoti').checked = !!data.emailNotificaciones;
+      document.getElementById('prefRecordatorios').value = data.recordatorios || 'none';
+    }
+  }catch{}
+}
+async function guardarPreferencias(e){
+  e.preventDefault();
+  const me = window._perfilUsuario || usuarioActualLS(); if(!me) return;
+  const payload = {
+    emailNotificaciones: document.getElementById('prefEmailNoti').checked,
+    recordatorios: document.getElementById('prefRecordatorios').value
+  };
+  const { ok } = await sendJson(ENDPOINTS.usuarios.prefs(me.id),'PUT',payload,authHeaders());
+  alert(ok? 'Preferencias guardadas' : 'No se pudo guardar');
+}
+
+/* ===== Utilidad para abrir Perfil directamente ===== */
+function irPerfil(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('perfil').classList.add('active');
+  cambiarTabPerfil('info', document.querySelector('[data-perfil-tab="info"]'));
+  cargarPerfil();
+}
 
 /* ================== MODALES ================== */
 function abrirModal(id){ document.getElementById(id).classList.add('show'); }
 function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ================== MAPA (Leaflet) ================== */
+/* ===== CAMBIO: sección de mapa reescrita para SPA con Leaflet ===== */
+let map;
+let markers = [];
+let selectedLocationIndex = null;
+
+/** Asegura que el contenedor del mapa tenga altura y que nada bloquee los clics */
+function prepararContenedorMapa() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+
+  // Altura mínima para que Leaflet calcule tamaño
+  if (!mapEl.style.height && !mapEl.style.minHeight) {
+    mapEl.style.minHeight = '380px';
+  }
+  mapEl.style.width = '100%';
+
+  // El overlay visual no debe bloquear la interacción
+  const dim = document.querySelector('.map-dim');
+  const overlay = document.querySelector('.map-overlay');
+  if (dim) dim.style.pointerEvents = 'none';
+  if (overlay) overlay.style.pointerEvents = 'none';
+}
+
+function initMap() {
+  if (map) return;
+
+  prepararContenedorMapa();
+
+  map = L.map('map', {
+    zoomControl: true,
+    attributionControl: true,
+  }).setView([-12.0464, -77.0428], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Si las ubicaciones ya están en caché, pinto marcadores
+  pintarMarcadores(window._ubicacionesCache || []);
+
+  // Pequeño retraso para recalcular tamaño al montar
+  setTimeout(() => map.invalidateSize(), 80);
+}
+
+/** Icono para marcador (seleccionado vs normal) */
+function getMarkerIcon(selected = false) {
+  const color = selected ? '#ff4500' : '#2e7d32';
+  return L.divIcon({
+    html: `<div style="
+      background:${color};
+      width:30px;height:30px;border-radius:50%;
+      border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3)
+    "></div>`,
+    className: '',
+    iconSize: [30, 30]
+  });
+}
+
+/** Dibuja marcadores desde lista de ubicaciones */
+function pintarMarcadores(ubicaciones) {
+  if (!map) return;
+
+  // Limpia anteriores
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  const visibles = (ubicaciones || []).filter(u => u.latitud && u.longitud);
+
+  visibles.forEach((u, idx) => {
+    const marker = L
+      .marker([u.latitud, u.longitud], { icon: getMarkerIcon(selectedLocationIndex === idx) })
+      .addTo(map)
+      .bindPopup(`
+        <div style="padding: 0.5rem;">
+          <strong style="color:#ff4500;font-size:1.05rem;">${u.nombreUbicacion || 'FitZone'}</strong><br/>
+          ${u.direccion ? `📍 ${u.direccion}<br/>` : ''}
+          ${u.distrito ? `🏙️ ${u.distrito}<br/>` : ''}
+          ${u.horario ? `⏰ ${u.horario}<br/>` : ''}
+          ${u.numeroTelefono ? `📞 ${u.numeroTelefono}` : ''}
+        </div>
+      `);
+
+    marker.on('click', () => seleccionarUbicacion(idx));
+    markers.push(marker);
+  });
+
+  if (markers.length) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.1));
+  }
+}
+
+/** Actualiza estado seleccionado y re-pinta iconos */
+function actualizarMarcadores() {
+  if (!map) return;
+  pintarMarcadores(window._ubicacionesCache || []);
+}
+
+/** Seleccionar una ubicación desde la lista */
+function seleccionarUbicacion(index) {
+  selectedLocationIndex = index;
+  const u = (window._ubicacionesCache || [])[index];
+  if (!u || !u.latitud || !u.longitud || !map) return;
+
+  map.setView([u.latitud, u.longitud], 16, { animate: true, duration: 1 });
+  actualizarMarcadores();
+  if (markers[index]) markers[index].openPopup();
+
+  if (typeof renderUbicacionesPublicas === 'function') renderUbicacionesPublicas();
+}
 </script>
 
 </body>

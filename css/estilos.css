@@ -379,3 +379,280 @@ td .chip{
   .filters{ width:100%; }
   .filters input, .filters select{ flex:1; min-width:unset; width:100%; }
 }
+/* ===== PERFIL (PC) ===== */
+#perfil .auth-container{
+  max-width: 980px;           /* más ancho en escritorio */
+}
+
+#perfil .auth-form{
+  border-radius: 18px;
+  padding: 2.25rem 2.25rem 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* Tabs del perfil más “desktop” */
+#perfil .admin-tabs{
+  justify-content: center;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+#perfil .admin-tab{
+  min-width: 170px;
+  text-align: center;
+  border-radius: 12px;
+  padding: .75rem 1rem;
+}
+
+/* Grupo de botones de acciones (PDF/Excel) ordenados a la derecha en PC */
+#perfil .perfil-actions{
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: .75rem;
+}
+#perfil .perfil-actions .btn{
+  border-radius: 999px;
+  padding: .7rem 1rem;
+}
+
+/* Caja de datos (tablas) con buen padding y sombras */
+#perfil .data-table{
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(0,0,0,.35);
+}
+
+/* Inputs del perfil más grandes en escritorio */
+#perfil .form-group input{
+  height: 44px;
+  font-size: 1rem;
+}
+
+/* Botones de guardar/cambiar/cerrar mejor espaciados */
+#perfil .form-group .btn{
+  margin-right: .5rem;
+  margin-bottom: .5rem;
+}
+
+/* Responsive fino */
+@media (min-width: 1100px){
+  #perfil .auth-form{
+    padding: 2.5rem 3rem 2rem;
+  }
+}
+.btn-view-location {
+  background: linear-gradient(135deg, #ff4500, #ff6b35);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.btn-view-location:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 69, 0, 0.3);
+}
+
+.btn-view-location:active {
+  transform: translateY(0);
+}
+
+/* ===== UBICACIONES (como la imagen) ===== */
+.loc-title{
+  text-align:center;
+  color:#ff4500;
+  margin-bottom:2rem;
+  font-weight:700;
+}
+
+/* Contenedor del mapa: limpio, sin overlay ni padding */
+.map-container-full{
+  position:relative;
+  background:#161616;
+  border:1px solid #2b2b2b;
+  border-radius:14px;
+  min-height:420px;         /* más alto, como la referencia */
+  overflow:hidden;
+  padding:0;                /* importante: sin padding para que el mapa ocupe todo */
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+
+/* El mapa debe llenar el contenedor por completo */
+#map,
+.leaflet-map{               /* por si en algún lado usas esta clase */
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  filter:none;
+}
+
+/* Elimina cualquier overlay o texto centrado anterior */
+.map-empty,
+.map-empty-icon,
+.map-empty-title,
+.map-empty-sub{
+  display:none !important;
+  visibility:hidden !important;
+  height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+
+/* Opcional: estilos del popup/marker para estética similar */
+.leaflet-popup-content-wrapper{
+  border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+}
+.leaflet-popup-tip{
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+}
+.leaflet-popup-content{
+  font-size:0.95rem;
+  color:#ddd;
+}
+.leaflet-popup-content strong{
+  color:#ff4500;
+}
+
+/* Tarjetas */
+.locations-grid{
+  margin-top:1.5rem;
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:1.25rem;
+}
+@media (max-width:1024px){
+  .locations-grid{ grid-template-columns:repeat(2, 1fr); }
+}
+@media (max-width:680px){
+  .locations-grid{ grid-template-columns:1fr; }
+}
+
+.location-card{
+  background:#141414;
+  border:1px solid #2b2b2b;
+  border-radius:14px;
+  padding:1.1rem 1.25rem;
+  box-shadow:0 0 0 1px rgba(255,69,0,0);
+  transition:border-color .2s, box-shadow .2s, transform .15s;
+}
+.location-card.selected,
+.location-card:hover{
+  border-color:#3a3a3a;
+  box-shadow:0 0 0 2px rgba(255,69,0,.15);
+  transform:translateY(-1px);
+}
+.location-card h3{
+  color:#ff6b35;
+  margin-bottom:.75rem;
+}
+.location-card p{
+  margin:.35rem 0;
+  color:#dcdcdc;
+}
+.location-card strong{ color:#fff; }
+
+.btn-view-location{
+  margin-top:1rem;
+  width:max-content;
+  background:#ff4500;
+  color:#fff;
+  border:none;
+  padding:.7rem 1.1rem;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-view-location:hover{ filter:brightness(1.05); }
+
+/* Contenedor sin fondo gris ni rellenos extra */
+.map-container-full{
+  position:relative;
+  background:transparent;
+  border:1px solid #2b2b2b;
+  border-radius:14px;
+  height:600px;      /* clave */
+  overflow:hidden;
+  padding:0;
+}
+#map{ position:absolute; inset:0; width:100%; height:100%; }
+/* Quita el gris por defecto de Leaflet */
+.leaflet-container,
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-overlay-pane{
+  background: transparent !important;
+}
+/* Popup oscuro global */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #111 !important;   /* negro moderno */
+  color: #eaeaea !important;      /* texto claro */
+  box-shadow: 0 10px 30px rgba(0,0,0,.6) !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.leaflet-popup-content {
+  margin: 14px 16px !important;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #dcdcdc; /* cuerpo de texto */
+}
+
+/* Título del popup (tu <strong> con color naranja) */
+.leaflet-popup-content strong {
+  color: #ff4500;        /* tu acento */
+  font-weight: 700;
+}
+
+/* Enlaces y spans dentro del popup */
+.leaflet-popup-content a,
+.leaflet-popup-content em,
+.leaflet-popup-content p {
+  color: #cfcfcf;
+}
+
+/* Botón de cerrar */
+.leaflet-container a.leaflet-popup-close-button {
+  color: #bbb !important;
+  font-weight: 700;
+  background: transparent;
+}
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+/* Si usas emojis/íconos, dales un toque */
+.leaflet-popup-content p {
+  margin: .35rem 0;
+}
+
+/* ======= Clases: contador / estados ======= */
+.badge-chip{
+  display:inline-block; padding:.35rem .65rem; border-radius:999px;
+  font-weight:700; font-size:.82rem; letter-spacing:.2px;
+  border:1px solid #2b2b2b; background:#111; color:#eaeaea;
+}
+.badge-chip.live{ background:#0f2d39; color:#67e8f9; border-color:#0b212a; }
+.badge-chip.soon{ background:#3a2b0a; color:#ffd166; border-color:#2b1f07; }
+.badge-chip.past{ background:#3a0e12; color:#ff7b86; border-color:#2a0a0d; }
+
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight:800;
+}
+.countdown.pulse { animation:pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%{opacity:.9} 50%{opacity:.4} 100%{opacity:.9} }
+
+.btn[disabled]{
+  opacity:.6; cursor:not-allowed !important; filter:grayscale(.2);
+}
