@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit - Inicio</title>
+  <link rel="stylesheet" href="/css/estilos.css" />
+</head>
+<body>
+  <nav>
+    <ul>
+      <li class="logo">SMARTFIT</li>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      <div class="nav-links" id="navLinks">
+        <li><a href="/html/index.html">Inicio</a></li>
+        <li><a href="/html/precios.html">Precios</a></li>
+        <li><a href="/html/ubicaciones.html">Ubicaciones</a></li>
+        <li><a href="/html/clases.html">Clases</a></li>
+        <li><a href="/html/contacto.html">Contacto</a></li>
+        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
+        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
+        <li class="user-info" id="userInfo">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </li>
+        <li id="authLink"><a href="login.html">Login</a></li>
+      </div>
+    </ul>
+  </nav>
+
+  <!-- HOME -->
+  <div class="page active" id="home">
+    <div class="hero">
+      <h1>Transforma tu <span class="highlight">Vida</span></h1>
+      <p>Acceso 24/7 a más de 50 ubicaciones. Equipamiento de última generación. Clases ilimitadas.</p>
+      <div>
+        <a class="btn" href="pricing.html">Únete Ahora</a>
+        <a class="btn btn-secondary" href="pricing.html">Ver Precios</a>
+      </div>
+    </div>
+
+    <div class="features">
+      <h2>¿Por Qué Elegir Smart Fit?</h2>
+      <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon">🏋️</div><h3>Equipamiento Premium</h3><p>Las mejores máquinas y equipos del mercado.</p></div>
+        <div class="feature-card"><div class="feature-icon">🕐</div><h3>Acceso 24/7</h3><p>Entrena cuando quieras, donde quieras.</p></div>
+        <div class="feature-card"><div class="feature-icon">👥</div><h3>Clases Grupales</h3><p>Yoga, spinning, crossfit y más.</p></div>
+        <div class="feature-card"><div class="feature-icon">📍</div><h3>+50 Ubicaciones</h3><p>Un solo plan, múltiples sedes.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="successMsg" class="success-message"></div>
+  <div id="errorMsg" class="error-message"></div>
+
+<script>
+/* ====== CONFIG COMÚN ====== */
+const API_URL = 'http://localhost:8080/api';
+const ENDPOINTS = {
+  usuarios: { me: `${API_URL}/usuarios/me` }
+};
+
+const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
+
+function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+
+function verificarSesion(){
+  const u = localStorage.getItem('usuario');
+  const t = localStorage.getItem('token');
+  if (u && t) {
+    window.usuarioActual = JSON.parse(u);
+  } else {
+    window.usuarioActual = null;
+  }
+}
+
+function actualizarUIUsuario() {
+  const isLogged = !!window.usuarioActual;
+  const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+
+  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
+  document.getElementById('userInfo').classList.toggle('active', isLogged);
+  document.getElementById('userName').textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
+  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
+  document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  window.usuarioActual = null;
+  actualizarUIUsuario();
+  mostrarMensaje('Sesión cerrada','success');
+}
+
+function mostrarMensaje(msg,tipo){
+  const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
+  if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
+  else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  verificarSesion();
+  actualizarUIUsuario();
+});
+</script>
+</body>
+</html>

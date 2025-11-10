@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Administración - SmartFit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- tu CSS global -->
+  <link rel="stylesheet" href="/css/estilos.css" />
+
+  <!-- librerías que usa el admin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- NAVBAR (el mismo estilo que tu index) -->
+  <nav>
+    <ul>
+      <li class="logo">SMARTFIT</li>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      <div class="nav-links" id="navLinks">
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="precios.html">Precios</a></li>
+        <li><a href="ubicaciones.html">Ubicaciones</a></li>
+        <li><a href="clases.html">Clases</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
+        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
+        <li class="user-info" id="userInfo">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </li>
+        <li id="authLink"><a href="login.html">Login</a></li>
+      </div>
+    </ul>
+  </nav>
+
+  <!-- mensajes -->
+  <div id="successMsg" class="success-message"></div>
+  <div id="errorMsg" class="error-message"></div>
+
+  <!-- ================= ADMIN ================= -->
+  <div id="admin" class="page active" style="padding-top:80px;">
+    <div class="admin-container">
+      <div class="admin-header">
+        <h1>Panel de Administración</h1>
+        <p>Gestión completa del gimnasio</p>
+      </div>
+
+      <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab active" data-tab="dashboard" onclick="cambiarTabAdmin('dashboard', this)">Dashboard</button>
+        <button class="admin-tab" data-tab="usuarios" onclick="cambiarTabAdmin('usuarios', this)">Usuarios</button>
+        <button class="admin-tab" data-tab="membresias" onclick="cambiarTabAdmin('membresias', this)">Membresías</button>
+        <button class="admin-tab" data-tab="clases-admin" onclick="cambiarTabAdmin('clases-admin', this)">Clases</button>
+        <button class="admin-tab" data-tab="ubicaciones-admin" onclick="cambiarTabAdmin('ubicaciones-admin', this)">Ubicaciones</button>
+        <button class="admin-tab" data-tab="pagos-admin" onclick="cambiarTabAdmin('pagos-admin', this)">Pagos</button>
+        <button class="admin-tab" data-tab="reportes" onclick="cambiarTabAdmin('reportes', this)">Reportes</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="tab-dashboard" class="admin-content active">
+        <h2 class="section-title">Estadísticas Generales</h2>
+        <div class="loading" id="loadingDashboard">
+          <div class="spinner"></div>
+          <p>Cargando estadísticas...</p>
+        </div>
+        <div class="dashboard-grid" id="dashboardStats"></div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div id="tab-usuarios" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Gestión de Usuarios</h2>
+          <div class="section-actions">
+            <button class="btn-create" onclick="abrirModalCrearUsuario()">+ Crear Usuario</button>
+            <div class="filters">
+              <input type="text" id="filtroUsuariosTexto" placeholder="Buscar por nombre o email" oninput="renderUsuariosFiltrados()"/>
+              <select id="filtroUsuariosRol" onchange="renderUsuariosFiltrados()">
+                <option value="">Todos los roles</option>
+                <option value="USUARIO">Usuario</option>
+                <option value="ENTRENADOR">Entrenador</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+              </select>
+              <select id="filtroUsuariosEstado" onchange="renderUsuariosFiltrados()">
+                <option value="">Todos</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="loadingUsuarios"><div class="spinner"></div><p>Cargando usuarios...</p></div>
+        <div class="data-table" id="usuariosTable"></div>
+      </div>
+
+      <!-- MEMBRESÍAS -->
+      <div id="tab-membresias" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Gestión de Membresías</h2>
+          <div class="section-actions">
+            <button class="btn-create" onclick="abrirModalCrearMembresia()">+ Crear Membresía (Presencial)</button>
+            <div class="filters">
+              <input type="text" id="filtroMembresiasTexto" placeholder="Buscar por usuario o plan" oninput="renderMembresiasFiltradas()"/>
+              <select id="filtroMembresiasEstado" onchange="renderMembresiasFiltradas()">
+                <option value="">Estado: Todos</option>
+                <option value="ACTIVO">Activo</option>
+                <option value="PAUSADO">Pausado</option>
+                <option value="CANCELADO">Cancelado</option>
+                <option value="EXPIRADO">Expirado</option>
+              </select>
+              <select id="filtroMembresiasPlan" onchange="renderMembresiasFiltradas()">
+                <option value="">Plan: Todos</option>
+                <option value="BASICO">Básico</option>
+                <option value="PREMIUM">Premium</option>
+                <option value="ANUAL">Anual</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="loadingMembresias"><div class="spinner"></div><p>Cargando membresías...</p></div>
+        <div class="data-table" id="membresiasTable"></div>
+      </div>
+
+      <!-- CLASES -->
+      <div id="tab-clases-admin" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Gestión de Clases</h2>
+          <div class="section-actions">
+            <button class="btn-create" onclick="abrirModalCrearClase()">+ Crear Nueva Clase</button>
+            <div class="filters">
+              <input type="text" id="filtroClasesTexto" placeholder="Buscar por nombre o instructor" oninput="renderClasesAdminFiltradas()"/>
+              <select id="filtroClasesEstado" onchange="renderClasesAdminFiltradas()">
+                <option value="">Todos</option>
+                <option value="true">Activas</option>
+                <option value="false">Inactivas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="loadingClasesAdmin"><div class="spinner"></div><p>Cargando clases...</p></div>
+        <div class="data-table" id="clasesAdminTable"></div>
+      </div>
+
+      <!-- UBICACIONES -->
+      <div id="tab-ubicaciones-admin" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Gestión de Ubicaciones</h2>
+          <div class="section-actions">
+            <button class="btn-create" onclick="abrirModalCrearUbicacion()">+ Crear Nueva Ubicación</button>
+            <div class="filters">
+              <input type="text" id="filtroUbicacionesTexto" placeholder="Buscar por nombre, distrito o ciudad" oninput="renderUbicacionesFiltradas()"/>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="loadingUbicacionesAdmin"><div class="spinner"></div><p>Cargando ubicaciones...</p></div>
+        <div class="data-table" id="ubicacionesAdminTable"></div>
+      </div>
+
+      <!-- PAGOS -->
+      <div id="tab-pagos-admin" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Historial de Pagos</h2>
+          <div class="section-actions">
+            <div class="filters">
+              <input type="text" id="filtroPagosTexto" placeholder="Buscar por usuario o transacción" oninput="renderPagosFiltrados()"/>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="loadingPagosAdmin"><div class="spinner"></div><p>Cargando pagos...</p></div>
+        <div class="data-table" id="pagosAdminTable"></div>
+      </div>
+
+      <!-- REPORTES -->
+      <div id="tab-reportes" class="admin-content">
+        <h2 class="section-title">Reportes y Análisis</h2>
+
+        <div class="section-actions" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+          <button class="btn" onclick="descargarReportesExcel()">⬇️ Descargar reportes (Excel)</button>
+          <button class="btn btn-secondary" onclick="descargarReportesPDF()">⬇️ Descargar reportes (PDF)</button>
+        </div>
+
+        <div class="chart-container">
+          <h3>Reporte de Membresías</h3>
+          <div class="loading" id="loadingReporteMembresias"><div class="spinner"></div></div>
+          <div id="reporteMembresiaContent"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Reporte de Ingresos</h3>
+          <select id="periodoIngresos" onchange="cargarReporteIngresos()" class="select-dark">
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+          <div class="loading" id="loadingReporteIngresos"><div class="spinner"></div></div>
+          <div id="reporteIngresosContent"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Reporte de Clases (Ocupación)</h3>
+          <div class="loading" id="loadingReporteClases"><div class="spinner"></div></div>
+          <div id="reporteClasesContent"></div>
+        </div>
+
+        <!-- AQUÍ VA TU GRÁFICO LINEAL QUE TENÍAS -->
+        <div class="chart-container">
+          <h3>Evolución Mensual de Suscripciones</h3>
+          <canvas id="graficoSuscripciones"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODALES ADMIN ===== -->
+  <!-- Usuario -->
+  <div id="modalUsuario" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h3 id="usuarioModalTitulo">Crear Usuario</h3><button class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</button></div>
+      <form id="formUsuario" onsubmit="guardarUsuario(event)">
+        <input type="hidden" id="usuarioEditId"/>
+        <div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioEditNombre" required/></div>
+        <div class="form-group"><label>Correo</label><input type="email" id="usuarioEditCorreo" required/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="usuarioEditTelefono"/></div>
+        <div class="form-group"><label>Rol</label>
+          <select id="usuarioEditRol"><option value="USUARIO">Usuario</option><option value="ENTRENADOR">Entrenador</option><option value="ADMINISTRADOR">Administrador</option></select>
+        </div>
+        <div class="form-group"><label>Estado</label>
+          <select id="usuarioEditActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select>
+        </div>
+        <div class="form-group" id="usuarioPwdWrap"><label>Contraseña</label><input type="password" id="usuarioEditPwd" placeholder="••••••"/></div>
+        <button type="submit" class="btn" style="width:100%;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Membresía -->
+  <div id="modalMembresia" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h3>Crear Membresía (Presencial)</h3><button class="close-modal" onclick="cerrarModal('modalMembresia')">&times;</button></div>
+      <form id="formMembresia" onsubmit="guardarMembresiaPresencial(event)">
+        <div class="form-group"><label>ID Usuario</label><input type="number" id="membUsuarioId" required/></div>
+        <div class="form-group"><label>Plan</label>
+          <select id="membPlan"><option value="BASICO">Básico</option><option value="PREMIUM">Premium</option><option value="ANUAL">Anual</option></select>
+        </div>
+        <div class="form-group"><label>Renovación Automática</label>
+          <select id="membAuto"><option value="true">Sí</option><option value="false">No</option></select>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Crear</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Clase -->
+  <div id="modalClase" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h3 id="modalClaseTitle">Crear Nueva Clase</h3><button class="close-modal" onclick="cerrarModal('modalClase')">&times;</button></div>
+      <form id="formClase" onsubmit="guardarClase(event)">
+        <input type="hidden" id="claseId"/>
+        <div class="form-group"><label>Nombre</label><input type="text" id="claseNombre" required/></div>
+        <div class="form-group"><label>Descripción</label><textarea id="claseDescripcion" style="min-height:80px;"></textarea></div>
+        <div class="form-group"><label>Horario</label><input type="text" id="claseHorario" required/></div>
+        <div class="form-group"><label>Instructor</label><input type="text" id="claseInstructor" required/></div>
+        <div class="form-group"><label>Capacidad</label><input type="number" id="claseCapacidad" required min="1"/></div>
+        <div class="form-group"><label>Duración (min)</label><input type="number" id="claseDuracion" required min="15"/></div>
+        <button type="submit" class="btn" style="width:100%;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ubicación -->
+  <div id="modalUbicacion" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h3 id="modalUbicacionTitle">Crear Nueva Ubicación</h3><button class="close-modal" onclick="cerrarModal('modalUbicacion')">&times;</button></div>
+      <form id="formUbicacion" onsubmit="guardarUbicacion(event)">
+        <input type="hidden" id="ubicacionId"/>
+        <div class="form-group"><label>Nombre</label><input type="text" id="ubicacionNombre" required/></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="ubicacionDireccion" required/></div>
+        <div class="form-group"><label>Distrito</label><input type="text" id="ubicacionDistrito" required/></div>
+        <div class="form-group"><label>Ciudad</label><input type="text" id="ubicacionCiudad" required/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="ubicacionTelefono" required/></div>
+        <div class="form-group"><label>Horario</label><input type="text" id="ubicacionHorario" required value="24/7"/></div>
+        <div class="form-group"><label>Latitud</label><input type="number" step="0.0001" id="ubicacionLatitud"/></div>
+        <div class="form-group"><label>Longitud</label><input type="number" step="0.0001" id="ubicacionLongitud"/></div>
+        <button class="btn" style="width:100%;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ===================== NAVBAR / SESIÓN (como en tu index) ===================== */
+    const API_URL = "http://localhost:8080/api";
+
+    function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+
+    function verificarSesion(){
+      const u = localStorage.getItem('usuario');
+      const t = localStorage.getItem('token');
+      if (u && t){
+        window.usuarioActual = JSON.parse(u);
+      } else {
+        window.usuarioActual = null;
+      }
+    }
+
+    function actualizarUIUsuario() {
+      const isLogged = !!window.usuarioActual;
+      const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+
+      const authLink = document.getElementById('authLink');
+      const userInfo = document.getElementById('userInfo');
+      const userName = document.getElementById('userName');
+      const perfilLink = document.getElementById('perfilLink');
+      const adminLink = document.getElementById('adminLink');
+
+      if (authLink) authLink.style.display = isLogged ? 'none' : 'block';
+      if (userInfo) userInfo.classList.toggle('active', isLogged);
+      if (userName) userName.textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
+      if (perfilLink) perfilLink.style.display = isLogged ? 'block' : 'none';
+      if (adminLink) adminLink.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    function cerrarSesion() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.usuarioActual = null;
+      actualizarUIUsuario();
+      mostrarMensaje('Sesión cerrada','success');
+      // si quieres, redirige:
+      // window.location.href = 'login.html';
+    }
+
+    function mostrarMensaje(msg,tipo){
+      const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
+      if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
+      else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
+    }
+
+    /* ========== ENDPOINTS ========== */
+    const ENDPOINTS = {
+      admin: {
+        dashboard: API_URL + "/admin/dashboard",
+        usuarios: API_URL + "/admin/usuarios",
+        usuarioId: (id) => API_URL + "/admin/usuarios/" + id,
+        membresias: API_URL + "/admin/membresias",
+        clases: API_URL + "/admin/clases",
+        claseId: (id) => API_URL + "/admin/clases/" + id,
+        ubicaciones: API_URL + "/admin/ubicaciones",
+        ubicacionId: (id) => API_URL + "/admin/ubicaciones/" + id,
+        pagos: API_URL + "/admin/pagos",
+        reporteMembresias: API_URL + "/admin/reportes/membresias",
+        reporteIngresos: (periodo) => API_URL + "/admin/reportes/ingresos?periodo=" + periodo,
+        reporteClases: API_URL + "/admin/reportes/clases",
+        reporteSuscripciones: API_URL + "/admin/reportes/suscripciones-mensuales",
+      },
+      clases: {
+        listar: API_URL + "/clases"
+      },
+      ubicaciones: {
+        listar: API_URL + "/ubicaciones"
+      },
+      membresias: {
+        crear: API_URL + "/membresias",
+        cancelar: (id) => API_URL + "/membresias/" + id + "/cancelar"
+      }
+    };
+
+    function authHeaders() {
+      const t = localStorage.getItem('token') || '';
+      return t ? { 'Authorization': 'Bearer ' + t } : {};
+    }
+
+    async function getJson(url, opts = {}) {
+      const res = await fetch(url, {
+        ...opts,
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+          ...(opts.headers || {})
+        }
+      });
+      const data = await res.json().catch(() => null);
+      return { ok: res.ok, data, status: res.status };
+    }
+
+    async function sendJson(url, method = 'POST', body = null, extraHeaders = {}) {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+          ...extraHeaders
+        },
+        body: body ? JSON.stringify(body) : null
+      });
+      const data = await res.json().catch(() => null);
+      return { ok: res.ok, data, status: res.status };
+    }
+
+    function safeUsuarioNombre(obj = {}) {
+      return obj.usuarioNombre || (obj.usuario && obj.usuario.nombreCompleto) || obj.nombreCompleto || "—";
+    }
+
+    /* ================== MODALES ================== */
+    function abrirModal(id){ document.getElementById(id).classList.add('show'); }
+    function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
+
+    /* ================== ADMIN: Tabs y permisos ================== */
+    function configurarTabsAdminPorRol(rol) {
+      const isAdmin = rol === 'ADMINISTRADOR';
+      const isTrainer = rol === 'ENTRENADOR';
+
+      const tabs = [
+        { key:'dashboard',        sel:'[data-tab="dashboard"]' },
+        { key:'usuarios',         sel:'[data-tab="usuarios"]' },
+        { key:'membresias',       sel:'[data-tab="membresias"]' },
+        { key:'clases-admin',     sel:'[data-tab="clases-admin"]' },
+        { key:'ubicaciones-admin',sel:'[data-tab="ubicaciones-admin"]' },
+        { key:'pagos-admin',      sel:'[data-tab="pagos-admin"]' },
+        { key:'reportes',         sel:'[data-tab="reportes"]' }
+      ];
+
+      tabs.forEach(t => {
+        const btn = document.querySelector(t.sel);
+        const pane = document.getElementById(`tab-${t.key}`);
+        if (!btn || !pane) return;
+
+        if (isAdmin) {
+          btn.style.display = '';
+          pane.style.display = '';
+        } else if (isTrainer) {
+          const allowed = (t.key === 'clases-admin');
+          btn.style.display = allowed ? '' : 'none';
+          pane.style.display = allowed ? '' : 'none';
+          if (!allowed) pane.classList.remove('active');
+        }
+      });
+
+      if (isTrainer) {
+        document.querySelectorAll('.btn-create, .btn-edit, .btn-delete').forEach(b=> b.style.display='none');
+      }
+    }
+
+    function cambiarTabAdmin(tab, elBtn){
+      const rol = window.usuarioActual?.rol;
+      const isAdmin = rol === 'ADMINISTRADOR';
+      const isTrainer = rol === 'ENTRENADOR';
+
+      if (isTrainer && tab !== 'clases-admin') {
+        alert('Tu rol solo permite ver Clases.');
+        return;
+      }
+
+      document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active'));
+      if (elBtn) elBtn.classList.add('active');
+      const area = document.getElementById(`tab-${tab}`);
+      if (area) area.classList.add('active');
+
+      switch(tab){
+        case 'dashboard': if(isAdmin) cargarDashboard(); break;
+        case 'usuarios':  if(isAdmin) cargarUsuariosAdmin(); break;
+        case 'membresias':if(isAdmin) cargarMembresiasAdmin(); break;
+        case 'clases-admin': cargarClasesAdmin(); break;
+        case 'ubicaciones-admin': if(isAdmin) cargarUbicacionesAdmin(); break;
+        case 'pagos-admin': if(isAdmin) cargarPagosAdmin(); break;
+        case 'reportes': if(isAdmin) cargarReportes(); break;
+      }
+    }
+
+    /* ================== ADMIN: Dashboard ================== */
+    async function cargarDashboard(){
+      const loading=document.getElementById('loadingDashboard'); const container=document.getElementById('dashboardStats');
+      loading.classList.add('show');
+      try{
+        const { ok, data } = await getJson(ENDPOINTS.admin.dashboard, { headers:{...authHeaders()} });
+        if (ok && data){
+          container.innerHTML = `
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${data.totalUsuarios}</div><div class="stat-label">Total Usuarios</div><div style="color:#28a745; margin-top:.5rem;">✓ ${data.usuariosActivos} activos</div></div>
+            <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value">${data.totalMembresias}</div><div class="stat-label">Total Membresías</div><div style="color:#28a745; margin-top:.5rem;">✓ ${data.membresiasActivas} activas</div></div>
+            <div class="stat-card"><div class="stat-icon">🏋️</div><div class="stat-value">${data.totalClases}</div><div class="stat-label">Clases Disponibles</div></div>
+            <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-value">${data.totalUbicaciones}</div><div class="stat-label">Ubicaciones</div></div>
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${Number(data.ingresosMensuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Mensuales</div></div>
+            <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value">${Number(data.ingresosAnuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Anuales</div></div>
+          `;
+        } else { container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>'; }
+      }catch(e){ container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+
+    /* ================== ADMIN: Usuarios ================== */
+    function abrirModalCrearUsuario(){
+      document.getElementById('usuarioModalTitulo').textContent='Crear Usuario';
+      document.getElementById('formUsuario').reset();
+      document.getElementById('usuarioEditId').value='';
+      document.getElementById('usuarioPwdWrap').style.display='block';
+      abrirModal('modalUsuario');
+    }
+    function editarUsuario(id, nombre, correo, telefono, rol, activo){
+      document.getElementById('usuarioModalTitulo').textContent='Editar Usuario';
+      document.getElementById('usuarioEditId').value=id;
+      document.getElementById('usuarioEditNombre').value=nombre||'';
+      document.getElementById('usuarioEditCorreo').value=correo||'';
+      document.getElementById('usuarioEditTelefono').value=telefono||'';
+      document.getElementById('usuarioEditRol').value=rol||'USUARIO';
+      document.getElementById('usuarioEditActivo').value=String(!!activo);
+      document.getElementById('usuarioPwdWrap').style.display='none';
+      abrirModal('modalUsuario');
+    }
+    async function guardarUsuario(e){
+      e.preventDefault();
+      const id=document.getElementById('usuarioEditId').value;
+      const payload={
+        nombreCompleto: usuarioEditNombre.value,
+        correoElectronico: usuarioEditCorreo.value,
+        numeroTelefono: usuarioEditTelefono.value || null,
+        rol: usuarioEditRol.value,
+        estaActivo: usuarioEditActivo.value==='true'
+      };
+      if (!id && usuarioEditPwd.value) payload.contrasena = usuarioEditPwd.value;
+      const url = id? ENDPOINTS.admin.usuarioId(id): ENDPOINTS.admin.usuarios;
+      const method = id? 'PUT':'POST';
+      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if (ok){ cerrarModal('modalUsuario'); cargarUsuariosAdmin(); } else alert('No se pudo guardar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function eliminarUsuario(id){
+      if(!confirm('¿Eliminar usuario?')) return;
+      try{ const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id),'DELETE',null,authHeaders()); if (ok) cargarUsuariosAdmin(); else alert('No se pudo eliminar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function cargarUsuariosAdmin(){
+      const loading=document.getElementById('loadingUsuarios'); const container=document.getElementById('usuariosTable');
+      loading.classList.add('show');
+      try{
+        const { ok, data } = await getJson(ENDPOINTS.admin.usuarios, { headers:{...authHeaders()} });
+        window._usuariosCache = Array.isArray(data)?data:[];
+        renderUsuariosFiltrados();
+      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar usuarios</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    function renderUsuariosFiltrados(){
+      const container=document.getElementById('usuariosTable');
+      const q=(document.getElementById('filtroUsuariosTexto')?.value||'').toLowerCase();
+      const r=document.getElementById('filtroUsuariosRol')?.value||'';
+      const e=document.getElementById('filtroUsuariosEstado')?.value||'';
+      const arr=(window._usuariosCache||[]).filter(u=>{
+        const txt=`${u.nombreCompleto||''} ${u.correoElectronico||''}`.toLowerCase().includes(q);
+        const rol=!r || (u.rol===r);
+        const est=!e || (String(!!u.estaActivo)===e);
+        return txt && rol && est;
+      });
+      container.innerHTML = `
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${arr.map(u=>`
+              <tr>
+                <td>${u.id}</td>
+                <td>${u.nombreCompleto}</td>
+                <td>${u.correoElectronico}</td>
+                <td>${u.numeroTelefono||'—'}</td>
+                <td><span class="badge badge-info">${u.rol}</span></td>
+                <td><span class="badge ${u.estaActivo?'badge-success':'badge-danger'}">${u.estaActivo?'Activo':'Inactivo'}</span></td>
+                <td>${u.fechaCreacion? new Date(u.fechaCreacion).toLocaleDateString():'—'}</td>
+                <td>
+                  <button class="action-btn btn-edit" onclick="editarUsuario(${u.id}, '${(u.nombreCompleto||'').replace(/'/g,"\\'")}', '${u.correoElectronico||''}', '${u.numeroTelefono||''}', '${u.rol}', ${!!u.estaActivo})">Editar</button>
+                  <button class="action-btn btn-delete" onclick="eliminarUsuario(${u.id})">Eliminar</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ================== ADMIN: Membresías ================== */
+    function abrirModalCrearMembresia(){ document.getElementById('formMembresia').reset(); abrirModal('modalMembresia'); }
+    async function guardarMembresiaPresencial(e){
+      e.preventDefault();
+      const payload={ usuarioId: Number(document.getElementById('membUsuarioId').value), tipoPlan: document.getElementById('membPlan').value, renovacionAutomatica: document.getElementById('membAuto').value==='true' };
+      try{
+        const { ok, data } = await sendJson(ENDPOINTS.membresias.crear,'POST',payload,authHeaders());
+        if (ok){ cerrarModal('modalMembresia'); cargarMembresiasAdmin(); alert('Membresía creada'); }
+        else alert(data?.mensaje||data?.error||'No se pudo crear');
+      }catch{ alert('Error de conexión'); }
+    }
+    async function cancelarMembresia(id){
+      if(!confirm('¿Cancelar membresía?')) return;
+      try{
+        const { ok } = await sendJson(ENDPOINTS.membresias.cancelar(id),'PUT',null,authHeaders());
+        if (ok){ cargarMembresiasAdmin(); } else alert('No se pudo cancelar');
+      }catch{ alert('Error de conexión'); }
+    }
+    async function cargarMembresiasAdmin(){
+      const loading=document.getElementById('loadingMembresias'); const container=document.getElementById('membresiasTable');
+      loading.classList.add('show');
+      try{
+        const { ok, data } = await getJson(ENDPOINTS.admin.membresias, { headers:{...authHeaders()} });
+        window._membresiasCache = Array.isArray(data)?data:[]; 
+        renderMembresiasFiltradas();
+      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar membresías</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    function renderMembresiasFiltradas(){
+      const container=document.getElementById('membresiasTable');
+      const q=(document.getElementById('filtroMembresiasTexto')?.value||'').toLowerCase();
+      const estado=document.getElementById('filtroMembresiasEstado')?.value||'';
+      const plan=document.getElementById('filtroMembresiasPlan')?.value||'';
+      const arr=(window._membresiasCache||[]).filter(m=>{
+        const usuario = (m.usuario?.nombreCompleto||'').toLowerCase();
+        const matchesTxt = `${usuario} ${m.tipoPlan||''}`.toLowerCase().includes(q);
+        const matchesEstado = !estado || m.estado===estado;
+        const matchesPlan = !plan || m.tipoPlan===plan;
+        return matchesTxt && matchesEstado && matchesPlan;
+      });
+      container.innerHTML = `
+        <table>
+          <thead><tr><th>ID</th><th>Usuario</th><th>Plan</th><th>Precio</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Auto-Renov</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${arr.map(m=>`
+              <tr>
+                <td>${m.id}</td>
+                <td>${safeUsuarioNombre(m)}<br><small>ID: ${m.usuarioId ?? '—'}</small></td>
+                <td><span class="badge badge-info">${m.tipoPlan}</span></td>
+                <td>${m.precio ?? '—'}</td>
+                <td>${m.fechaInicio? new Date(m.fechaInicio).toLocaleDateString() : '—'}</td>
+                <td>${m.fechaFin? new Date(m.fechaFin).toLocaleDateString() : '—'}</td>
+                <td><span class="badge ${m.estado==='ACTIVO'?'badge-success':'badge-warning'}">${m.estado}</span></td>
+                <td>${m.renovacionAutomatica ? '✓' : '—'}</td>
+                <td>${m.estado==='ACTIVO' ? `<button class="action-btn btn-delete" onclick="cancelarMembresia(${m.id})">Cancelar</button>` : '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ================== ADMIN: Clases ================== */
+    function abrirModalCrearClase(){
+      document.getElementById('modalClaseTitle').textContent='Crear Nueva Clase';
+      document.getElementById('formClase').reset();
+      document.getElementById('claseId').value='';
+      abrirModal('modalClase');
+    }
+    function editarClase(c){
+      document.getElementById('modalClaseTitle').textContent='Editar Clase';
+      document.getElementById('claseId').value=c.id||'';
+      claseNombre.value=c.nombreClase||''; claseDescripcion.value=c.descripcion||''; claseHorario.value=c.horario||'';
+      claseInstructor.value=c.nombreInstructor||''; claseCapacidad.value=c.capacidadMaxima||1; claseDuracion.value=c.duracionMinutos||60;
+      abrirModal('modalClase');
+    }
+    async function guardarClase(e){
+      e.preventDefault();
+      const id=claseId.value;
+      const payload={ nombreClase:claseNombre.value, descripcion:claseDescripcion.value, horario:claseHorario.value, nombreInstructor:claseInstructor.value, capacidadMaxima:Number(claseCapacidad.value), duracionMinutos:Number(claseDuracion.value), estaActivo:true };
+      const url = id? ENDPOINTS.admin.claseId(id): ENDPOINTS.admin.clases; const method=id?'PUT':'POST';
+      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if(ok){ cerrarModal('modalClase'); cargarClasesAdmin(); } else alert('No se pudo guardar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function eliminarClase(id){
+      if(!confirm('¿Eliminar clase?')) return;
+      try{ const { ok } = await sendJson(ENDPOINTS.admin.claseId(id),'DELETE',null,authHeaders()); if(ok) cargarClasesAdmin(); else alert('No se pudo eliminar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function cargarClasesAdmin(){
+      const loading=document.getElementById('loadingClasesAdmin'); const container=document.getElementById('clasesAdminTable');
+      loading.classList.add('show');
+      try{
+        const { ok, data } = await getJson(ENDPOINTS.clases.listar);
+        window._clasesAdminCache = Array.isArray(data)?data:[]; 
+        renderClasesAdminFiltradas();
+      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar clases</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    function renderClasesAdminFiltradas(){
+      const container=document.getElementById('clasesAdminTable');
+      const q=(document.getElementById('filtroClasesTexto')?.value||'').toLowerCase();
+      const est=(document.getElementById('filtroClasesEstado')?.value||'');
+      const arr=(window._clasesAdminCache||[]).filter(c=>{
+        const txt=`${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q);
+        const estado=!est || String(!!c.estaActivo)===est;
+        return txt && estado;
+      });
+      container.innerHTML=`
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Instructor</th><th>Horario</th><th>Capacidad</th><th>Inscritos</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${arr.map(c=>`
+              <tr>
+                <td>${c.id}</td><td>${c.nombreClase}</td><td>${c.nombreInstructor}</td><td>${c.horario}</td>
+                <td>${c.capacidadMaxima}</td><td>${Array.isArray(c.usuariosInscritos)?c.usuariosInscritos.length:(c.inscritos||0)}</td>
+                <td>${c.duracionMinutos} min</td>
+                <td><span class="badge ${c.estaActivo ? 'badge-success':'badge-danger'}">${c.estaActivo?'Activo':'Inactivo'}</span></td>
+                <td>
+                  <button class="action-btn btn-edit" onclick='editarClase(${JSON.stringify(c).replace(/'/g,"&apos;")})'>Editar</button>
+                  <button class="action-btn btn-delete" onclick="eliminarClase(${c.id})">Eliminar</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ================== ADMIN: Ubicaciones ================== */
+    function abrirModalCrearUbicacion() {
+      const rol = (window.usuarioActual?.rol)||'USUARIO';
+      if (rol !== 'ADMINISTRADOR') {
+        alert('Solo un administrador puede crear ubicaciones.');
+        return;
+      }
+      const form = document.getElementById('formUbicacion');
+      if (form) form.reset();
+      document.getElementById('ubicacionId').value = '';
+      document.getElementById('modalUbicacionTitle').textContent = 'Crear Nueva Ubicación';
+      abrirModal('modalUbicacion');
+    }
+
+    function editarUbicacion(u){
+      document.getElementById('modalUbicacionTitle').textContent='Editar Ubicación';
+      ubicacionId.value=u.id||''; ubicacionNombre.value=u.nombreUbicacion||''; ubicacionDireccion.value=u.direccion||'';
+      ubicacionDistrito.value=u.distrito||''; ubicacionCiudad.value=u.ciudad||''; ubicacionTelefono.value=u.numeroTelefono||'';
+      ubicacionHorario.value=u.horario||'24/7'; ubicacionLatitud.value=u.latitud||''; ubicacionLongitud.value=u.longitud||'';
+      abrirModal('modalUbicacion');
+    }
+    async function guardarUbicacion(e){
+      e.preventDefault();
+      const id=ubicacionId.value;
+      const payload={ nombreUbicacion:ubicacionNombre.value, direccion:ubicacionDireccion.value, distrito:ubicacionDistrito.value, ciudad:ubicacionCiudad.value, numeroTelefono:ubicacionTelefono.value, horario:ubicacionHorario.value, latitud:parseFloat(ubicacionLatitud.value||0), longitud:parseFloat(ubicacionLongitud.value||0) };
+      const url=id? ENDPOINTS.admin.ubicacionId(id): ENDPOINTS.admin.ubicaciones; const method=id?'PUT':'POST';
+      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if(ok){ cerrarModal('modalUbicacion'); cargarUbicacionesAdmin(); } else alert('No se pudo guardar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function eliminarUbicacion(id){
+      if(!confirm('¿Eliminar ubicación?')) return;
+      try{ const { ok } = await sendJson(ENDPOINTS.admin.ubicacionId(id),'DELETE',null,authHeaders()); if(ok) cargarUbicacionesAdmin(); else alert('No se pudo eliminar'); }
+      catch{ alert('Error de conexión'); }
+    }
+    async function cargarUbicacionesAdmin(){
+      const loading=document.getElementById('loadingUbicacionesAdmin'); const container=document.getElementById('ubicacionesAdminTable');
+      loading.classList.add('show');
+      try{
+        const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
+        window._ubicacionesAdminCache = Array.isArray(data)?data:[]; 
+        renderUbicacionesFiltradas();
+      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar ubicaciones</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    function renderUbicacionesFiltradas(){
+      const container=document.getElementById('ubicacionesAdminTable');
+      const q=(document.getElementById('filtroUbicacionesTexto')?.value||'').toLowerCase();
+      const arr=(window._ubicacionesAdminCache||[]).filter(u=>{
+        return `${u.nombreUbicacion||''} ${u.distrito||''} ${u.ciudad||''}`.toLowerCase().includes(q);
+      });
+      container.innerHTML=`
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Distrito</th><th>Ciudad</th><th>Teléfono</th><th>Horario</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${arr.map(u=>`
+              <tr>
+                <td>${u.id}</td><td>${u.nombreUbicacion}</td><td>${u.direccion}</td><td>${u.distrito}</td>
+                <td>${u.ciudad||'—'}</td><td>${u.numeroTelefono}</td><td>${u.horario}</td>
+                <td>
+                  <button class="action-btn btn-edit" onclick='editarUbicacion(${JSON.stringify(u).replace(/'/g,"&apos;")})'>Editar</button>
+                  <button class="action-btn btn-delete" onclick="eliminarUbicacion(${u.id})">Eliminar</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ================== ADMIN: Pagos ================== */
+    async function cargarPagosAdmin() {
+      const loading = document.getElementById('loadingPagosAdmin');
+      const container = document.getElementById('pagosAdminTable');
+      loading.classList.add('show');
+      try {
+        const { ok, data } = await getJson(ENDPOINTS.admin.pagos, { headers: { ...authHeaders() } });
+        window._pagosCache = ok && Array.isArray(data) ? data : [];
+        renderPagosFiltrados();
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar pagos</p>';
+      } finally {
+        loading.classList.remove('show');
+      }
+    }
+    function renderPagosFiltrados() {
+      const container = document.getElementById('pagosAdminTable');
+      const q = (document.getElementById('filtroPagosTexto')?.value || '').toLowerCase();
+      const arr = (window._pagosCache || []).filter(p => {
+        const usuarioTxt = (safeUsuarioNombre(p) + ' ' + (p.usuarioId ?? '')).toLowerCase();
+        const idTx = (p.idTransaccion || '').toLowerCase();
+        return usuarioTxt.includes(q) || idTx.includes(q);
+      });
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Membresía</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Transacción</th>
+              <th>Método</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${arr.map(p => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${safeUsuarioNombre(p)}<br><small>ID: ${p.usuarioId ?? '—'}</small></td>
+                <td>${p.membresiaId ?? '—'}</td>
+                <td>S/${Number(p.monto || 0).toFixed(2)}</td>
+                <td>${p.fechaPago ? new Date(p.fechaPago).toLocaleString() : '—'}</td>
+                <td>${p.idTransaccion || '—'}</td>
+                <td>${p.metodoPago || '—'}</td>
+                <td><span class="badge ${p.estadoPago==='COMPLETADO' ? 'badge-success' : 'badge-warning'}">${p.estadoPago || '—'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ================== ADMIN: Reportes ================== */
+    function cargarReportes() {
+      const rol = window.usuarioActual?.rol;
+      if (rol !== 'ADMINISTRADOR') {
+        const container = document.getElementById('tab-reportes');
+        if (container) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:3rem;">
+              <h2 style="color:#ff4500;">Acceso restringido</h2>
+              <p>Solo los administradores pueden visualizar las estadísticas globales y los reportes.</p>
+            </div>`;
+        }
+        return;
+      }
+      cargarReporteMembresias();
+      cargarReporteIngresos();
+      cargarReporteClases();
+      cargarReporteSuscripcionesMensuales(); // 👈 tu gráfico lineal
+    }
+
+    async function ensureAdminCaches() {
+      const peticiones = [];
+
+      if (!Array.isArray(window._usuariosCache)) {
+        peticiones.push(getJson(ENDPOINTS.admin.usuarios, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._usuariosCache = r.data; }));
+      }
+      if (!Array.isArray(window._membresiasCache)) {
+        peticiones.push(getJson(ENDPOINTS.admin.membresias, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._membresiasCache = r.data; }));
+      }
+      if (!Array.isArray(window._clasesAdminCache)) {
+        peticiones.push(getJson(ENDPOINTS.clases.listar, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._clasesAdminCache = r.data; }));
+      }
+      if (!Array.isArray(window._ubicacionesAdminCache)) {
+        peticiones.push(getJson(ENDPOINTS.ubicaciones.listar, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._ubicacionesAdminCache = r.data; }));
+      }
+      if (!Array.isArray(window._pagosCache)) {
+        peticiones.push(getJson(ENDPOINTS.admin.pagos, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._pagosCache = r.data; }));
+      }
+
+      if (!window._reporteMembresias) {
+        peticiones.push(getJson(ENDPOINTS.admin.reporteMembresias, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._reporteMembresias = r.data; }));
+      }
+      if (!window._reporteIngresos) {
+        const periodo = document.getElementById('periodoIngresos')?.value || 'mensual';
+        peticiones.push(getJson(ENDPOINTS.admin.reporteIngresos(periodo), { headers: authHeaders() })
+          .then(r => { if (r.ok) window._reporteIngresos = r.data; }));
+      }
+      if (!Array.isArray(window._reporteClases)) {
+        peticiones.push(getJson(ENDPOINTS.admin.reporteClases, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._reporteClases = r.data; }));
+      }
+      if (!window._suscripcionesMensuales) {
+        peticiones.push(getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() })
+          .then(r => { if (r.ok) window._suscripcionesMensuales = r.data; }));
+      }
+
+      await Promise.allSettled(peticiones);
+    }
+    function nowSlug() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+    }
+    function mapUsuariosExcel(data=[]) {
+      return data.map(u => ({
+        ID: u.id,'Nombre completo': u.nombreCompleto,'Email': u.correoElectronico,'Teléfono': u.numeroTelefono || '',
+        'Rol': u.rol,'Activo': u.estaActivo ? 'Sí' : 'No','Fecha registro': u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleString() : ''
+      }));
+    }
+    function mapMembresiasExcel(data=[]) {
+      return data.map(m => ({
+        ID: m.id,'Usuario ID': m.usuarioId ?? (m.usuario?.id ?? ''),'Usuario': m.usuarioNombre ?? (m.usuario?.nombreCompleto ?? ''),
+        'Plan': m.tipoPlan,'Precio': m.precio ?? '','Inicio': m.fechaInicio ? new Date(m.fechaInicio).toLocaleString() : '',
+        'Fin': m.fechaFin ? new Date(m.fechaFin).toLocaleString() : '','Estado': m.estado,'Auto-renovación': m.renovacionAutomatica ? 'Sí' : 'No',
+      }));
+    }
+    function mapClasesExcel(data=[]) {
+      return data.map(c => ({
+        ID: c.id,'Nombre': c.nombreClase,'Instructor': c.nombreInstructor,'Horario': c.horario,
+        'Capacidad': c.capacidadMaxima ?? '','Inscritos': Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos ?? 0),
+        'Duración (min)': c.duracionMinutos ?? '','Activo': c.estaActivo ? 'Sí' : 'No',
+      }));
+    }
+    function mapUbicacionesExcel(data=[]) {
+      return data.map(u => ({
+        ID: u.id,'Nombre': u.nombreUbicacion,'Dirección': u.direccion,'Distrito': u.distrito,'Ciudad': u.ciudad ?? '',
+        'Teléfono': u.numeroTelefono ?? '','Horario': u.horario ?? '','Latitud': u.latitud ?? '','Longitud': u.longitud ?? '',
+      }));
+    }
+    function mapPagosExcel(data=[]) {
+      return data.map(p => ({
+        ID: p.id,'Usuario ID': p.usuarioId ?? (p.usuario?.id ?? ''),'Usuario': p.usuarioNombre ?? (p.usuario?.nombreCompleto ?? ''),
+        'Membresía ID': p.membresiaId ?? (p.membresia?.id ?? ''),'Monto': p.monto ?? '',
+        'Fecha pago': (p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '','Transacción': p.idTransaccion ?? '',
+        'Método': p.metodoPago ?? '','Estado': p.estadoPago ?? '',
+      }));
+    }
+    function mapReporteMembresiasExcel(r={}) {
+      return [
+        { Métrica: 'Total', Valor: r.totalMembresias ?? r.total ?? 0 },
+        { Métrica: 'Activas', Valor: r.membresiasActivas ?? r.activas ?? 0 },
+        { Métrica: 'Básico', Valor: r.membresiaBasico ?? 0 },
+        { Métrica: 'Premium', Valor: r.membresiaPremium ?? 0 },
+        { Métrica: 'Anual', Valor: r.membresiaAnual ?? 0 },
+        { Métrica: 'Pausadas', Valor: r.membresiasPausadas ?? 0 },
+        { Métrica: 'Canceladas', Valor: r.membresiasCanceladas ?? 0 },
+        { Métrica: 'Expiradas', Valor: r.membresiasExpiradas ?? r.vencidas ?? 0 },
+      ];
+    }
+    function mapReporteIngresosExcel(r={}) {
+      return [
+        { Métrica: 'Periodo', Valor: r.periodo ?? '' },
+        { Métrica: 'Total ingresos', Valor: r.totalIngresos ?? 0 },
+        { Métrica: 'Cantidad de pagos', Valor: r.cantidadPagos ?? 0 },
+        { Métrica: 'Promedio por pago', Valor: r.promedioIngreso ?? 0 },
+        { Métrica: 'Método más usado', Valor: r.metodoPagoMasUsado ?? 'N/A' },
+      ];
+    }
+    function mapReporteClasesExcel(list=[]) {
+      return list.map(x => ({
+        'Clase': x.nombreClase,'Instructor': x.nombreInstructor ?? '','Capacidad': x.capacidadMaxima ?? 0,
+        'Inscritos': x.usuariosInscritos ?? 0,'Ocupación %': typeof x.tasaOcupacion === 'number' ? x.tasaOcupacion.toFixed(1) : 0,
+      }));
+    }
+    function mapSuscripcionesMensualesExcel(obj={}) {
+      return Object.entries(obj)
+        .sort((a,b) => a[0].localeCompare(b[0]))
+        .map(([mes, total]) => ({ Mes: mes, 'Nuevas suscripciones': total }));
+    }
+
+    async function descargarReportesExcel() {
+      try {
+        await ensureAdminCaches();
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUsuariosExcel(window._usuariosCache || [])), 'Usuarios');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapMembresiasExcel(window._membresiasCache || [])), 'Membresias');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapClasesExcel(window._clasesAdminCache || [])), 'Clases');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUbicacionesExcel(window._ubicacionesAdminCache || [])), 'Ubicaciones');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapPagosExcel(window._pagosCache || [])), 'Pagos');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteMembresiasExcel(window._reporteMembresias || {})), 'Rpt_Membresias');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteIngresosExcel(window._reporteIngresos || {})), 'Rpt_Ingresos');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteClasesExcel(window._reporteClases || [])), 'Rpt_Clases');
+        if (window._suscripcionesMensuales) {
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapSuscripcionesMensualesExcel(window._suscripcionesMensuales)), 'Suscripciones_Mensuales');
+        }
+        const filename = `reportes_fitzone_${nowSlug()}.xlsx`;
+        XLSX.writeFile(wb, filename);
+      } catch (e) {
+        console.error(e);
+        alert('No se pudo generar el Excel');
+      }
+    }
+    async function descargarReportesPDF() {
+      try {
+        await ensureAdminCaches();
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt');
+        const margin = 36;
+        let y = margin;
+
+        const addTitle = (t) => {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(14);
+          doc.text(t, margin, y);
+          y += 8;
+          doc.setLineWidth(0.5);
+          doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+          y += 12;
+        };
+
+        const addTable = (head, body) => {
+          doc.autoTable({
+            startY: y,
+            head: [head],
+            body,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [255, 69, 0], textColor: 255 },
+            margin: { left: margin, right: margin },
+            theme: 'striped',
+            didDrawPage: (data) => { y = data.cursor.y + 18; }
+          });
+        };
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text('Reporte General - FitZone', margin, y);
+        y += 20;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.text(`Fecha: ${new Date().toLocaleString()}`, margin, y); y += 24;
+
+        addTitle('Resumen de Membresías');
+        const rm = window._reporteMembresias || {};
+        addTable(['Métrica', 'Valor'], mapReporteMembresiasExcel(rm).map(r => [r['Métrica'], String(r['Valor'])]));
+
+        addTitle('Resumen de Ingresos');
+        const ri = window._reporteIngresos || {};
+        addTable(['Métrica', 'Valor'], mapReporteIngresosExcel(ri).map(r => [r['Métrica'], String(r['Valor'])]));
+
+        addTitle('Clases (Ocupación)');
+        const rc = mapReporteClasesExcel(window._reporteClases || []);
+        addTable(['Clase', 'Instructor', 'Capacidad', 'Inscritos', 'Ocupación %'],
+          rc.map(x => [x['Clase'], x['Instructor'], x['Capacidad'], x['Inscritos'], x['Ocupación %']]));
+
+        if (window._suscripcionesMensuales) {
+          addTitle('Evolución Mensual de Suscripciones');
+          const sm = mapSuscripcionesMensualesExcel(window._suscripcionesMensuales);
+          addTable(['Mes', 'Nuevas suscripciones'], sm.map(r => [r['Mes'], r['Nuevas suscripciones']]));
+        }
+
+        addTitle('Usuarios (resumen)');
+        const u = mapUsuariosExcel((window._usuariosCache || [])).slice(0, 20);
+        addTable(['ID','Nombre','Email','Teléfono','Rol','Activo','Registro'],
+          u.map(r => [r['ID'], r['Nombre completo'], r['Email'], r['Teléfono'], r['Rol'], r['Activo'], r['Fecha registro']]));
+
+        addTitle('Membresías (resumen)');
+        const mm = mapMembresiasExcel((window._membresiasCache || [])).slice(0, 20);
+        addTable(['ID','Usuario','Plan','Precio','Inicio','Fin','Estado','Auto-renov'],
+          mm.map(r => [r['ID'], r['Usuario'], r['Plan'], r['Precio'], r['Inicio'], r['Fin'], r['Estado'], r['Auto-renovación']]));
+
+        const filename = `reportes_fitzone_${nowSlug()}.pdf`;
+        doc.save(filename);
+      } catch (e) {
+        console.error(e);
+        alert('No se pudo generar el PDF');
+      }
+    }
+
+    async function cargarReporteMembresias(){
+      const loading=document.getElementById('loadingReporteMembresias'); const content=document.getElementById('reporteMembresiaContent');
+      loading.classList.add('show');
+      try{
+        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteMembresias, { headers:{...authHeaders()} });
+        if (ok && d){
+          content.innerHTML = `
+            <p><strong>Total:</strong> ${d.totalMembresias ?? d.total ?? 0}</p>
+            <p><strong>Activas:</strong> ${d.membresiasActivas ?? d.activas ?? 0}</p>
+            <p><strong>Básico:</strong> ${d.membresiaBasico ?? 0} | <strong>Premium:</strong> ${d.membresiaPremium ?? 0} | <strong>Anual:</strong> ${d.membresiaAnual ?? 0}</p>
+          `;
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    async function cargarReporteIngresos(){
+      const loading=document.getElementById('loadingReporteIngresos'); const content=document.getElementById('reporteIngresosContent');
+      const periodo=document.getElementById('periodoIngresos').value;
+      loading.classList.add('show');
+      try{
+        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteIngresos(periodo), { headers:{...authHeaders()} });
+        if (ok && d){
+          content.innerHTML = `
+            <p><strong>Periodo:</strong> ${d.periodo||periodo}</p>
+            <p><strong>Total ingresos:</strong> S/${Number(d.totalIngresos||0).toFixed(2)}</p>
+            <p><strong>Cantidad de pagos:</strong> ${d.cantidadPagos||0}</p>
+            <p><strong>Promedio por pago:</strong> S/${Number(d.promedioIngreso||0).toFixed(2)}</p>
+          `;
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+    async function cargarReporteClases(){
+      const loading=document.getElementById('loadingReporteClases'); const content=document.getElementById('reporteClasesContent');
+      loading.classList.add('show');
+      try{
+        const { ok, data:lista } = await getJson(ENDPOINTS.admin.reporteClases, { headers:{...authHeaders()} });
+        if (ok && Array.isArray(lista)){
+          const rows = lista.map(r => `<li>${r.nombreClase}: ${Number(r.tasaOcupacion||r.porcentajeOcupacion||0).toFixed(1)}% (Inscritos: ${r.usuariosInscritos ?? r.inscritos ?? 0}/${r.capacidadMaxima ?? r.capacidad ?? 0})</li>`).join('');
+          content.innerHTML = rows ? `<ul>${rows}</ul>` : '<p>No hay datos</p>';
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
+      finally{ loading.classList.remove('show'); }
+    }
+
+    
+    /* ======= ESTE ES TU GRÁFICO LINEAL ORIGINAL ======= */
+    async function cargarReporteSuscripcionesMensuales() {
+    const canvas = document.getElementById('graficoSuscripciones');
+    const ctx = canvas.getContext('2d');
+    try {
+      const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() });
+      if (!ok) throw new Error("Error al obtener datos");
+
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      if (window.suscripcionesChart) window.suscripcionesChart.destroy();
+
+      window.suscripcionesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label:'Nuevas suscripciones por mes',
+            data: values,
+            borderColor:'#ff4500',
+            backgroundColor:'rgba(255,69,0,0.2)',
+            borderWidth:3,
+            tension:0.3,
+            fill:true,
+            pointRadius:5,
+            pointHoverRadius:7
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
+            x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#fff' } },
+            title: {
+              display: true,
+              text: 'Tendencia de Suscripciones Mensuales',
+              color: '#ff4500',
+              font: { size: 16 }
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo cargar el gráfico de suscripciones.');
+    }
+  }
+
+    /* ===== export util para tablas ===== */
+    function tablaDOMToArrays(tableEl){
+      const head = [...tableEl.querySelectorAll('thead th')].map(th=>th.innerText.trim());
+      const body = [...tableEl.querySelectorAll('tbody tr')].map(tr =>
+        [...tr.children].map(td => td.innerText.trim())
+      );
+      return { head, body };
+    }
+    function descargarTablaComoPDF(tableContainerId, filenameBase='Tabla'){
+      const table = document.querySelector(`#${tableContainerId} table`);
+      if(!table){ alert('No hay datos para exportar'); return; }
+      const { head, body } = tablaDOMToArrays(table);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p','pt');
+      doc.setFont('helvetica','bold'); doc.setFontSize(14);
+      doc.text(filenameBase, 36, 40);
+      doc.autoTable({ startY: 60, head: [head], body: body, styles: { fontSize: 9 }, headStyles: { fillColor: [255,69,0], textColor: 255 }, margin: { left: 36, right: 36 }, theme: 'striped' });
+      doc.save(`${filenameBase}_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+    function descargarTablaComoExcel(tableContainerId, filenameBase='Tabla'){
+      const table = document.querySelector(`#${tableContainerId} table`);
+      if(!table){ alert('No hay datos para exportar'); return; }
+      const { head, body } = tablaDOMToArrays(table);
+      const rows = body.map(r=>{ const obj = {}; head.forEach((h,i)=>{ obj[h] = r[i] ?? ''; }); return obj; });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Datos');
+      XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    /* ================== ONLOAD ================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      verificarSesion();
+      actualizarUIUsuario();
+      configurarTabsAdminPorRol(window.usuarioActual?.rol || 'ADMINISTRADOR');
+      cargarDashboard();
+    });
+  </script>
+</body>
+</html>

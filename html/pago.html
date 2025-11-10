@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit - Pago</title>
+  <link rel="stylesheet" href="/css/estilos.css" />
+</head>
+<body>
+  <nav class="navegacion">
+    <ul>
+      <li class="logo">SMARTFIT</li>
+      <button class="boton-menu-movil" onclick="toggleMenuMovil()">☰</button>
+      <div class="enlaces-navegacion" id="navLinks">
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="precios.html">Precios</a></li>
+        <li><a href="ubicaciones.html">Ubicaciones</a></li>
+        <li><a href="clases.html">Clases</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
+        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
+        <li class="info-usuario" id="userInfo">
+          <span class="nombre-usuario" id="userName"></span>
+          <button class="boton-cerrar-sesion" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </li>
+        <li id="authLink"><a href="login.html">Login</a></li>
+      </div>
+    </ul>
+  </nav>
+
+  <div class="pagina activa" id="payment">
+    <div class="contenedor-pago" style="max-width:800px; margin: 2rem auto;">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Completar Pago</h2>
+      <div class="resumen-pago">
+        <h3>Resumen de tu pedido</h3>
+        <p><strong>Plan seleccionado:</strong> <span id="selectedPlan">-</span></p>
+        <p><strong>Total:</strong> S/<span id="totalAmount">0</span></p>
+      </div>
+      <div class="formulario-autenticacion">
+        <h3 style="color:#ff4500;">Datos de Pago</h3>
+        <div id="paymentSuccessMsg" class="mensaje-exito"></div>
+        <div id="paymentErrorMsg" class="mensaje-error"></div>
+        <form onsubmit="procesarPago(event)">
+          <div class="grupo-campo"><label>Nombre en la Tarjeta</label><input type="text" id="nombreTarjeta" required /></div>
+          <div class="grupo-campo"><label>Número de Tarjeta</label><input type="text" id="numeroTarjeta" required maxlength="19" /></div>
+          <div class="grupo-campo"><label>Fecha de Expiración</label><input type="text" id="fechaExpiracion" required maxlength="5" /></div>
+          <div class="grupo-campo"><label>CVV</label><input type="text" id="cvv" required maxlength="4" /></div>
+          <button type="submit" class="boton" id="btnPayment" style="width:100%;">Confirmar Pago</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_URL = 'http://localhost:8080/api';
+const ENDPOINTS = {
+  membresias: {
+    crear: `${API_URL}/membresias`,
+    cancelar: (membresiaId) => `${API_URL}/membresias/${membresiaId}/cancelar`
+  },
+  pagos: {
+    crear: `${API_URL}/pagos`
+  }
+};
+
+let planSeleccionado = localStorage.getItem('planSeleccionado') || null;
+let precioSeleccionado = Number(localStorage.getItem('precioSeleccionado') || 0);
+let usuarioActual = null;
+
+function toggleMenuMovil(){ document.getElementById('navLinks').classList.toggle('activo'); }
+
+function verificarSesion(){
+  const u = localStorage.getItem('usuario');
+  const t = localStorage.getItem('token');
+  usuarioActual = (u && t) ? JSON.parse(u) : null;
+}
+
+function actualizarUIUsuario() {
+  const isLogged = !!usuarioActual;
+  const isAdminOTrainer = usuarioActual?.rol === 'ADMINISTRADOR' || usuarioActual?.rol === 'ENTRENADOR';
+
+  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
+  document.getElementById('userInfo').classList.toggle('activo', isLogged);
+  document.getElementById('userName').textContent = isLogged ? (usuarioActual.nombreCompleto || '') : '';
+  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
+  document.getElementById('adminLink').style.display = isAdminOTrainer ? 'block' : 'none';
+}
+
+function mostrarMensajeEnPagina(id,msg,tipo){
+  const el=document.getElementById(id); el.textContent=msg; el.classList.add('mostrar'); setTimeout(()=>el.classList.remove('mostrar'), tipo==='exito'?2500:4000);
+}
+
+async function procesarPago(event){
+  event.preventDefault();
+  const btn = document.getElementById('btnPayment'); btn.disabled=true; btn.textContent='Procesando...';
+  try{
+    if (!usuarioActual?.usuarioId) throw new Error('Usuario no autenticado');
+    if (!planSeleccionado || !precioSeleccionado) throw new Error('Plan inválido');
+
+    const resM = await fetch(ENDPOINTS.membresias.crear, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')||''}` },
+      body: JSON.stringify({ tipoPlan: planSeleccionado, usuarioId: usuarioActual.usuarioId, renovacionAutomatica: true })
+    });
+    const dM = await resM.json();
+    if (!resM.ok || !dM?.id) throw new Error('No se pudo crear la membresía');
+    const membId = dM.id;
+
+    const payloadPago = {
+      membresiaId: membId,
+      usuarioId: usuarioActual.usuarioId,
+      nombreTarjeta: document.getElementById('nombreTarjeta').value.trim(),
+      numeroTarjeta: document.getElementById('numeroTarjeta').value.replace(/\s/g,''),
+      fechaExpiracion: document.getElementById('fechaExpiracion').value.trim(),
+      cvv: document.getElementById('cvv').value.trim(),
+      monto: precioSeleccionado
+    };
+    const resP = await fetch(ENDPOINTS.pagos.crear, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')||''}` },
+      body: JSON.stringify(payloadPago)
+    });
+    const dP = await resP.json();
+    if (!resP.ok){
+      await fetch(ENDPOINTS.membresias.cancelar(membId),'PUT',{ headers:{ 'Authorization': `Bearer ${localStorage.getItem('token')||''}` }});
+      throw new Error(dP?.mensaje||dP?.error||'Pago rechazado');
+    }
+
+    mostrarMensajeEnPagina('paymentSuccessMsg',`¡Pago exitoso! ID Tx: ${dP?.idTransaccion||'—'}`,'exito');
+    setTimeout(()=>{ window.location.href='index.html'; },1500);
+  }catch(e){
+    mostrarMensajeEnPagina('paymentErrorMsg', e.message, 'error');
+  }finally{ btn.disabled=false; btn.textContent='Confirmar Pago'; }
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  usuarioActual = null;
+  actualizarUIUsuario();
+  alert('Sesión cerrada');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  verificarSesion();
+  actualizarUIUsuario();
+  document.getElementById('selectedPlan').textContent = planSeleccionado || '-';
+  document.getElementById('totalAmount').textContent = precioSeleccionado || 0;
+
+  const numeroTarjeta = document.getElementById('numeroTarjeta');
+  if (numeroTarjeta) numeroTarjeta.addEventListener('input', e => {
+    let v = e.target.value.replace(/\s/g,'').replace(/\D/g,''); e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
+  });
+  const fechaExp = document.getElementById('fechaExpiracion');
+  if (fechaExp) fechaExp.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g,''); if (v.length>=2) v = v.substring(0,2)+'/'+v.substring(2,4); e.target.value=v;
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartFit - Clases</title>
+  <link rel="stylesheet" href="/css/estilos.css" />
+</head>
+<body>
+  <nav>
+    <ul>
+      <li class="logo">SMARTFIT</li>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      <div class="nav-links" id="navLinks">
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="precios.html">Precios</a></li>
+        <li><a href="ubicaciones.html">Ubicaciones</a></li>
+        <li><a href="clases.html">Clases</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
+        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
+        <li class="user-info" id="userInfo">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </li>
+        <li id="authLink"><a href="login.html">Login</a></li>
+      </div>
+    </ul>
+  </nav>
+
+  <div class="page active" id="classes">
+    <div class="classes-container">
+      <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Clases y Horarios</h2>
+      <div class="section-top">
+        <div class="filters">
+          <input type="text" id="filtroPublicClasesTexto" placeholder="Buscar por nombre o instructor" oninput="renderClasesPublicas()"/>
+        </div>
+      </div>
+      <div class="loading" id="loadingClasses"><div class="spinner"></div><p>Cargando clases...</p></div>
+      <div class="classes-grid" id="classesList"></div>
+    </div>
+  </div>
+
+<script>
+const API_URL = 'http://localhost:8080/api';
+const ENDPOINTS = {
+  clases: {
+    listar: `${API_URL}/clases`,
+    inscribir: `${API_URL}/clases/inscribir`
+  }
+};
+
+function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+
+function verificarSesion(){
+  const u = localStorage.getItem('usuario');
+  const t = localStorage.getItem('token');
+  window.usuarioActual = (u && t) ? JSON.parse(u) : null;
+}
+
+function actualizarUIUsuario() {
+  const isLogged = !!window.usuarioActual;
+  const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+
+  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
+  document.getElementById('userInfo').classList.toggle('active', isLogged);
+  document.getElementById('userName').textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
+  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
+  document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
+}
+
+async function cargarClases(){
+  const loading=document.getElementById('loadingClasses'); const list=document.getElementById('classesList');
+  loading.classList.add('show');
+  try{
+    const res = await fetch(ENDPOINTS.clases.listar, { headers:{ Accept:'application/json' }});
+    const data = await res.json();
+    window._clasesCache = Array.isArray(data)?data:[];
+    renderClasesPublicas();
+  }catch{
+    list.innerHTML='<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
+  }finally{
+    loading.classList.remove('show');
+  }
+}
+function renderClasesPublicas(){
+  const list = document.getElementById('classesList');
+  const q = (document.getElementById('filtroPublicClasesTexto')?.value || '').toLowerCase();
+  const arr = (window._clasesCache || []).filter(c =>
+    `${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q)
+  );
+
+  list.innerHTML = arr.length ? arr.map(c => {
+    const inscritos = (typeof c.usuariosInscritos === 'number')
+      ? c.usuariosInscritos
+      : (Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0));
+
+    const cap = Number(c.capacidadMaxima || 0);
+    const cupos = Math.max(cap - inscritos, 0);
+    const llena = cap > 0 && inscritos >= cap;
+
+    const horarioStr = (typeof c.horario === 'string' && c.horario.trim())
+      ? c.horario
+      : (c.horario ? String(c.horario) : '—');
+
+    return `
+      <div class="class-card">
+        <h3>${c.nombreClase || '—'}</h3>
+        <p>${c.descripcion || ''}</p>
+        <p style="margin:1rem 0;"><strong>📅 ${horarioStr}</strong></p>
+        <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor || '—'}</p>
+        <p class="spots">
+          🎯 Cupos: <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || '—'}
+          ${llena ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>' : ''}
+        </p>
+        <button class="btn" id="btn-insc-${c.id}" onclick="inscribirseEnClase(${c.id})" ${llena?'disabled':''}>
+          Inscribirme
+        </button>
+      </div>`;
+  }).join('') : '<p style="color:#ff4500; text-align:center;">No hay clases</p>';
+}
+
+async function inscribirseEnClase(claseId){
+  if (!window.usuarioActual){
+    alert('Debes iniciar sesión');
+    window.location.href = 'login.html';
+    return;
+  }
+  const btn = document.getElementById(`btn-insc-${claseId}`);
+  try{
+    btn && (btn.disabled = true);
+    const payload = { usuarioId: window.usuarioActual.usuarioId, claseId };
+    const res = await fetch(ENDPOINTS.clases.inscribir, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')||''}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.mensaje || 'No se pudo inscribir');
+
+    // actualizar DOM
+    const span = document.getElementById(`cupos-${claseId}`);
+    if (span){
+      const nuevo = Math.max(0, (parseInt(span.textContent||'0',10) - 1));
+      span.textContent = String(nuevo);
+      if (nuevo === 0 && btn) btn.disabled = true;
+    }
+    alert(data?.mensaje || 'Inscripción exitosa');
+  }catch(e){
+    alert('❌ ' + e.message);
+    if (btn) btn.disabled = false;
+  }
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  window.usuarioActual = null;
+  actualizarUIUsuario();
+  alert('Sesión cerrada');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  verificarSesion();
+  actualizarUIUsuario();
+  cargarClases();
+});
+</script>
+</body>
+</html>
