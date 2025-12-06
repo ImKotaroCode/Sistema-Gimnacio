@@ -347,7 +347,7 @@
         <div class="form-group"><label>Capacidad</label><input type="number" id="claseCapacidad" required min="1"/></div>
         <div class="form-group"><label>Duración (min)</label><input type="number" id="claseDuracion" required min="15"/></div>
 
-        <!-- NUEVO: Estado de la clase -->
+        <!-- Estado de la clase -->
         <div class="form-group">
           <label>Estado</label>
           <select id="claseEstado">
@@ -523,7 +523,7 @@
       return t ? { 'Authorization': 'Bearer ' + t } : {};
     }
 
-    // Detectar si el backend dijo que el token expiró
+    // Token expirado 
     function isTokenExpiredFromResponse(data) {
       if (!data) return false;
       const txt = (data.mensaje || data.message || '').toString().toLowerCase();
@@ -851,7 +851,7 @@
       document.getElementById('modalClaseTitle').textContent='Crear Nueva Clase';
       document.getElementById('formClase').reset();
       document.getElementById('claseId').value='';
-      document.getElementById('claseEstado').value = "true"; // por defecto activa
+      document.getElementById('claseEstado').value = "true"; 
       abrirModal('modalClase');
     }
 
@@ -866,7 +866,6 @@
       claseCapacidad.value = c.capacidadMaxima || 1;
       claseDuracion.value = c.duracionMinutos || 60;
 
-      // llenar estado desde el DTO
       document.getElementById('claseEstado').value = String(!!c.estaActivo);
 
       abrirModal('modalClase');
