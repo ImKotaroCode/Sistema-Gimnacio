@@ -31,12 +31,23 @@
   <div class="page active" id="classes">
     <div class="classes-container">
       <h2 style="text-align:center; color:#ff4500; margin-bottom:2rem;">Clases y Horarios</h2>
+
       <div class="section-top">
         <div class="filters">
-          <input type="text" id="filtroPublicClasesTexto" placeholder="Buscar por nombre o instructor" oninput="renderClasesPublicas()"/>
+          <input
+            type="text"
+            id="filtroPublicClasesTexto"
+            placeholder="Buscar por nombre o instructor"
+            oninput="renderClasesPublicas()"
+          />
         </div>
       </div>
-      <div class="loading" id="loadingClasses"><div class="spinner"></div><p>Cargando clases...</p></div>
+
+      <div class="loading" id="loadingClasses">
+        <div class="spinner"></div>
+        <p>Cargando clases...</p>
+      </div>
+
       <div class="classes-grid" id="classesList"></div>
     </div>
   </div>
@@ -50,7 +61,9 @@ const ENDPOINTS = {
   }
 };
 
-function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+function toggleMobileMenu(){
+  document.getElementById('navLinks').classList.toggle('active');
+}
 
 function verificarSesion(){
   const u = localStorage.getItem('usuario');
@@ -69,28 +82,61 @@ function actualizarUIUsuario() {
   document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
 }
 
+function authHeaders() {
+  const t = localStorage.getItem('token') || '';
+  return t ? { 'Authorization': 'Bearer ' + t } : {};
+}
+
+function isTokenExpiredFromResponse(data) {
+  if (!data) return false;
+  const txt = (data.mensaje || data.message || '').toString().toLowerCase();
+  return txt.includes('token_expirado') || txt.includes('token expirado');
+}
+
+function handleTokenExpiredLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  window.usuarioActual = null;
+  alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+  window.location.href = 'login.html';
+}
+
 async function cargarClases(){
-  const loading=document.getElementById('loadingClasses'); const list=document.getElementById('classesList');
+  const loading = document.getElementById('loadingClasses');
+  const list = document.getElementById('classesList');
   loading.classList.add('show');
   try{
-    const res = await fetch(ENDPOINTS.clases.listar, { headers:{ Accept:'application/json' }});
+    const res = await fetch(ENDPOINTS.clases.listar, {
+      headers:{ Accept:'application/json' }
+    });
     const data = await res.json();
-    window._clasesCache = Array.isArray(data)?data:[];
+    window._clasesCache = Array.isArray(data) ? data : [];
     renderClasesPublicas();
-  }catch{
-    list.innerHTML='<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
+  }catch(e){
+    console.error(e);
+    list.innerHTML = '<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
   }finally{
     loading.classList.remove('show');
   }
 }
+
 function renderClasesPublicas(){
   const list = document.getElementById('classesList');
   const q = (document.getElementById('filtroPublicClasesTexto')?.value || '').toLowerCase();
-  const arr = (window._clasesCache || []).filter(c =>
-    `${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q)
-  );
 
-  list.innerHTML = arr.length ? arr.map(c => {
+  const arr = (window._clasesCache || [])
+    // solo mostramos clases activas
+    .filter(c => c.estaActivo !== false)
+    .filter(c =>
+      `${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q)
+    );
+
+  if (!arr.length) {
+    list.innerHTML = '<p style="color:#ff4500; text-align:center;">No hay clases disponibles.</p>';
+    return;
+  }
+
+  list.innerHTML = arr.map(c => {
     const inscritos = (typeof c.usuariosInscritos === 'number')
       ? c.usuariosInscritos
       : (Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos||0));
@@ -103,6 +149,8 @@ function renderClasesPublicas(){
       ? c.horario
       : (c.horario ? String(c.horario) : '—');
 
+    const deshabilitar = llena || c.estaActivo === false;
+
     return `
       <div class="class-card">
         <h3>${c.nombreClase || '—'}</h3>
@@ -110,43 +158,73 @@ function renderClasesPublicas(){
         <p style="margin:1rem 0;"><strong>📅 ${horarioStr}</strong></p>
         <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor || '—'}</p>
         <p class="spots">
-          🎯 Cupos: <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || '—'}
-          ${llena ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>' : ''}
+          🎯 Cupos:
+          <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || '—'}
+          ${
+            llena
+              ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>'
+              : ''
+          }
         </p>
-        <button class="btn" id="btn-insc-${c.id}" onclick="inscribirseEnClase(${c.id})" ${llena?'disabled':''}>
+        <button
+          class="btn"
+          id="btn-insc-${c.id}"
+          onclick="inscribirseEnClase(${c.id})"
+          ${deshabilitar ? 'disabled' : ''}
+        >
           Inscribirme
         </button>
       </div>`;
-  }).join('') : '<p style="color:#ff4500; text-align:center;">No hay clases</p>';
+  }).join('');
 }
 
 async function inscribirseEnClase(claseId){
   if (!window.usuarioActual){
-    alert('Debes iniciar sesión');
+    alert('Debes iniciar sesión para inscribirte.');
     window.location.href = 'login.html';
     return;
   }
+
   const btn = document.getElementById(`btn-insc-${claseId}`);
+
   try{
-    btn && (btn.disabled = true);
-    const payload = { usuarioId: window.usuarioActual.usuarioId, claseId };
+    if (btn) btn.disabled = true;
+
+    // importante: usamos id del usuario, no usuarioId
+    const payload = {
+      usuarioId: window.usuarioActual.id,
+      claseId
+    };
+
     const res = await fetch(ENDPOINTS.clases.inscribir, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')||''}` },
+      headers:{
+        'Content-Type':'application/json',
+        'Accept':'application/json',
+        ...authHeaders()
+      },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.mensaje || 'No se pudo inscribir');
 
-    // actualizar DOM
-    const span = document.getElementById(`cupos-${claseId}`);
-    if (span){
-      const nuevo = Math.max(0, (parseInt(span.textContent||'0',10) - 1));
-      span.textContent = String(nuevo);
-      if (nuevo === 0 && btn) btn.disabled = true;
+    let data = null;
+    try { data = await res.json(); } catch(e) { data = null; }
+
+    // token expirado
+    if (res.status === 401 && isTokenExpiredFromResponse(data)) {
+      handleTokenExpiredLogout();
+      return;
     }
+
+    if (!res.ok) {
+      throw new Error(data?.mensaje || data?.error || 'No se pudo inscribir');
+    }
+
+    // recargamos las clases para actualizar cupos reales
+    await cargarClases();
+
     alert(data?.mensaje || 'Inscripción exitosa');
   }catch(e){
+    console.error(e);
     alert('❌ ' + e.message);
     if (btn) btn.disabled = false;
   }
@@ -158,6 +236,7 @@ function cerrarSesion() {
   window.usuarioActual = null;
   actualizarUIUsuario();
   alert('Sesión cerrada');
+  window.location.href = 'login.html';
 }
 
 window.addEventListener('DOMContentLoaded', () => {

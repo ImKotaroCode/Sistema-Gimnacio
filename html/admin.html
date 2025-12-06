@@ -5,17 +5,14 @@
   <title>Panel de Administración - SmartFit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- tu CSS global -->
   <link rel="stylesheet" href="/css/estilos.css" />
 
-  <!-- librerías que usa el admin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <!-- NAVBAR (el mismo estilo que tu index) -->
   <nav>
     <ul>
       <li class="logo">SMARTFIT</li>
@@ -37,11 +34,9 @@
     </ul>
   </nav>
 
-  <!-- mensajes -->
   <div id="successMsg" class="success-message"></div>
   <div id="errorMsg" class="error-message"></div>
 
-  <!-- ================= ADMIN ================= -->
   <div id="admin" class="page active" style="padding-top:80px;">
     <div class="admin-container">
       <div class="admin-header">
@@ -56,10 +51,11 @@
         <button class="admin-tab" data-tab="clases-admin" onclick="cambiarTabAdmin('clases-admin', this)">Clases</button>
         <button class="admin-tab" data-tab="ubicaciones-admin" onclick="cambiarTabAdmin('ubicaciones-admin', this)">Ubicaciones</button>
         <button class="admin-tab" data-tab="pagos-admin" onclick="cambiarTabAdmin('pagos-admin', this)">Pagos</button>
+        <button class="admin-tab" data-tab="maquinas" onclick="cambiarTabAdmin('maquinas', this)">Máquinas</button>
         <button class="admin-tab" data-tab="reportes" onclick="cambiarTabAdmin('reportes', this)">Reportes</button>
       </div>
 
-      <!-- DASHBOARD -->
+      <!-- ======================= TAB DASHBOARD ======================= -->
       <div id="tab-dashboard" class="admin-content active">
         <h2 class="section-title">Estadísticas Generales</h2>
         <div class="loading" id="loadingDashboard">
@@ -69,7 +65,7 @@
         <div class="dashboard-grid" id="dashboardStats"></div>
       </div>
 
-      <!-- USUARIOS -->
+      <!-- ======================= TAB USUARIOS ======================= -->
       <div id="tab-usuarios" class="admin-content">
         <div class="section-top">
           <h2 class="section-title">Gestión de Usuarios</h2>
@@ -95,7 +91,7 @@
         <div class="data-table" id="usuariosTable"></div>
       </div>
 
-      <!-- MEMBRESÍAS -->
+      <!-- ======================= TAB MEMBRESIAS ======================= -->
       <div id="tab-membresias" class="admin-content">
         <div class="section-top">
           <h2 class="section-title">Gestión de Membresías</h2>
@@ -123,7 +119,7 @@
         <div class="data-table" id="membresiasTable"></div>
       </div>
 
-      <!-- CLASES -->
+      <!-- ======================= TAB CLASES ======================= -->
       <div id="tab-clases-admin" class="admin-content">
         <div class="section-top">
           <h2 class="section-title">Gestión de Clases</h2>
@@ -143,7 +139,7 @@
         <div class="data-table" id="clasesAdminTable"></div>
       </div>
 
-      <!-- UBICACIONES -->
+      <!-- ======================= TAB UBICACIONES ======================= -->
       <div id="tab-ubicaciones-admin" class="admin-content">
         <div class="section-top">
           <h2 class="section-title">Gestión de Ubicaciones</h2>
@@ -158,7 +154,7 @@
         <div class="data-table" id="ubicacionesAdminTable"></div>
       </div>
 
-      <!-- PAGOS -->
+      <!-- ======================= TAB PAGOS ======================= -->
       <div id="tab-pagos-admin" class="admin-content">
         <div class="section-top">
           <h2 class="section-title">Historial de Pagos</h2>
@@ -172,7 +168,66 @@
         <div class="data-table" id="pagosAdminTable"></div>
       </div>
 
-      <!-- REPORTES -->
+      <!-- ======================= TAB MAQUINAS ======================= -->
+      <div id="tab-maquinas" class="admin-content">
+        <div class="section-top">
+          <h2 class="section-title">Gestión de Máquinas</h2>
+          <div class="section-actions">
+            <button class="btn-create" onclick="abrirModalCrearMaquina()">+ Registrar Máquina</button>
+
+            <div class="filters">
+              <select id="filtroMaquinaUbicacion" onchange="renderMaquinasFiltradas()">
+                <option value="">Todas las sedes</option>
+              </select>
+
+              <select id="filtroMaquinaCategoria" onchange="renderMaquinasFiltradas()">
+                <option value="">Todas las categorías</option>
+                <option value="CARDIO">Cardio</option>
+                <option value="FUERZA">Fuerza</option>
+                <option value="FUNCIONAL">Funcional</option>
+              </select>
+
+              <select id="filtroMaquinaEstado" onchange="renderMaquinasFiltradas()">
+                <option value="">Todos los estados</option>
+                <option value="OPERATIVA">Operativa</option>
+                <option value="MANTENIMIENTO">Mantenimiento</option>
+                <option value="FUERA_SERVICIO">Fuera de servicio</option>
+              </select>
+
+              <input 
+                type="text" 
+                id="filtroMaquinaTexto" 
+                placeholder="Buscar por nombre o descripción"
+                oninput="renderMaquinasFiltradas()"
+              />
+            </div>
+
+            <div class="section-actions">
+              <button class="btn" onclick="descargarTablaComoExcel('maquinasTableContainer','Maquinas')">⬇️ Excel</button>
+              <button class="btn btn-secondary" onclick="descargarTablaComoPDF('maquinasTableContainer','Maquinas')">⬇️ PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-table" id="maquinasTableContainer">
+          <table id="tablaMaquinas">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Ubicación</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ======================= TAB REPORTES ======================= -->
       <div id="tab-reportes" class="admin-content">
         <h2 class="section-title">Reportes y Análisis</h2>
 
@@ -203,7 +258,6 @@
           <div id="reporteClasesContent"></div>
         </div>
 
-        <!-- AQUÍ VA TU GRÁFICO LINEAL QUE TENÍAS -->
         <div class="chart-container">
           <h3>Evolución Mensual de Suscripciones</h3>
           <canvas id="graficoSuscripciones"></canvas>
@@ -212,49 +266,78 @@
     </div>
   </div>
 
-  <!-- ===== MODALES ADMIN ===== -->
-  <!-- Usuario -->
+  <!-- ======================= MODALES ======================= -->
+
   <div id="modalUsuario" class="modal">
     <div class="modal-content">
-      <div class="modal-header"><h3 id="usuarioModalTitulo">Crear Usuario</h3><button class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</button></div>
+      <div class="modal-header">
+        <h3 id="usuarioModalTitulo">Crear Usuario</h3>
+        <button class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</button>
+      </div>
       <form id="formUsuario" onsubmit="guardarUsuario(event)">
         <input type="hidden" id="usuarioEditId"/>
         <div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioEditNombre" required/></div>
         <div class="form-group"><label>Correo</label><input type="email" id="usuarioEditCorreo" required/></div>
         <div class="form-group"><label>Teléfono</label><input type="tel" id="usuarioEditTelefono"/></div>
-        <div class="form-group"><label>Rol</label>
-          <select id="usuarioEditRol"><option value="USUARIO">Usuario</option><option value="ENTRENADOR">Entrenador</option><option value="ADMINISTRADOR">Administrador</option></select>
+        <div class="form-group">
+          <label>Rol</label>
+          <select id="usuarioEditRol">
+            <option value="USUARIO">Usuario</option>
+            <option value="ENTRENADOR">Entrenador</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+          </select>
         </div>
-        <div class="form-group"><label>Estado</label>
-          <select id="usuarioEditActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="usuarioEditActivo">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
         </div>
-        <div class="form-group" id="usuarioPwdWrap"><label>Contraseña</label><input type="password" id="usuarioEditPwd" placeholder="••••••"/></div>
+        <div class="form-group" id="usuarioPwdWrap">
+          <label>Contraseña</label>
+          <input type="password" id="usuarioEditPwd" placeholder="••••••"/>
+        </div>
         <button type="submit" class="btn" style="width:100%;">Guardar</button>
       </form>
     </div>
   </div>
 
-  <!-- Membresía -->
   <div id="modalMembresia" class="modal">
     <div class="modal-content">
-      <div class="modal-header"><h3>Crear Membresía (Presencial)</h3><button class="close-modal" onclick="cerrarModal('modalMembresia')">&times;</button></div>
+      <div class="modal-header">
+        <h3>Crear Membresía (Presencial)</h3>
+        <button class="close-modal" onclick="cerrarModal('modalMembresia')">&times;</button>
+      </div>
       <form id="formMembresia" onsubmit="guardarMembresiaPresencial(event)">
         <div class="form-group"><label>ID Usuario</label><input type="number" id="membUsuarioId" required/></div>
-        <div class="form-group"><label>Plan</label>
-          <select id="membPlan"><option value="BASICO">Básico</option><option value="PREMIUM">Premium</option><option value="ANUAL">Anual</option></select>
+        <div class="form-group">
+          <label>Plan</label>
+          <select id="membPlan">
+            <option value="BASICO">Básico</option>
+            <option value="PREMIUM">Premium</option>
+            <option value="ANUAL">Anual</option>
+          </select>
         </div>
-        <div class="form-group"><label>Renovación Automática</label>
-          <select id="membAuto"><option value="true">Sí</option><option value="false">No</option></select>
+        <div class="form-group">
+          <label>Renovación Automática</label>
+          <select id="membAuto">
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
         </div>
         <button type="submit" class="btn" style="width:100%;">Crear</button>
       </form>
     </div>
   </div>
 
-  <!-- Clase -->
+  <!-- ===== MODAL CLASE (EDITA ESTADO) ===== -->
   <div id="modalClase" class="modal">
     <div class="modal-content">
-      <div class="modal-header"><h3 id="modalClaseTitle">Crear Nueva Clase</h3><button class="close-modal" onclick="cerrarModal('modalClase')">&times;</button></div>
+      <div class="modal-header">
+        <h3 id="modalClaseTitle">Crear Nueva Clase</h3>
+        <button class="close-modal" onclick="cerrarModal('modalClase')">&times;</button>
+      </div>
       <form id="formClase" onsubmit="guardarClase(event)">
         <input type="hidden" id="claseId"/>
         <div class="form-group"><label>Nombre</label><input type="text" id="claseNombre" required/></div>
@@ -263,15 +346,27 @@
         <div class="form-group"><label>Instructor</label><input type="text" id="claseInstructor" required/></div>
         <div class="form-group"><label>Capacidad</label><input type="number" id="claseCapacidad" required min="1"/></div>
         <div class="form-group"><label>Duración (min)</label><input type="number" id="claseDuracion" required min="15"/></div>
+
+        <!-- NUEVO: Estado de la clase -->
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="claseEstado">
+            <option value="true">Activa</option>
+            <option value="false">Inactiva</option>
+          </select>
+        </div>
+
         <button type="submit" class="btn" style="width:100%;">Guardar</button>
       </form>
     </div>
   </div>
 
-  <!-- Ubicación -->
   <div id="modalUbicacion" class="modal">
     <div class="modal-content">
-      <div class="modal-header"><h3 id="modalUbicacionTitle">Crear Nueva Ubicación</h3><button class="close-modal" onclick="cerrarModal('modalUbicacion')">&times;</button></div>
+      <div class="modal-header">
+        <h3 id="modalUbicacionTitle">Crear Nueva Ubicación</h3>
+        <button class="close-modal" onclick="cerrarModal('modalUbicacion')">&times;</button>
+      </div>
       <form id="formUbicacion" onsubmit="guardarUbicacion(event)">
         <input type="hidden" id="ubicacionId"/>
         <div class="form-group"><label>Nombre</label><input type="text" id="ubicacionNombre" required/></div>
@@ -287,8 +382,56 @@
     </div>
   </div>
 
+  <!-- ======================= MODAL MAQUINA ======================= -->
+  <div class="modal" id="modalMaquina">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="tituloModalMaquina">Nueva Máquina</h3>
+        <button class="close-modal" onclick="cerrarModalMaquina()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label>Nombre:</label>
+        <input type="text" id="maqNombre">
+      </div>
+
+      <div class="form-group">
+        <label>Descripción:</label>
+        <input type="text" id="maqDescripcion">
+      </div>
+
+      <div class="form-group">
+        <label>Categoría:</label>
+        <select id="maqCategoria">
+          <option value="CARDIO">Cardio</option>
+          <option value="FUERZA">Fuerza</option>
+          <option value="FUNCIONAL">Funcional</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Estado:</label>
+        <select id="maqEstado">
+          <option value="OPERATIVA">Operativa</option>
+          <option value="MANTENIMIENTO">Mantenimiento</option>
+          <option value="FUERA_SERVICIO">Fuera de Servicio</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Ubicación:</label>
+        <select id="maqUbicacion"></select>
+      </div>
+
+      <div class="modal-btns" style="display:flex; gap:1rem; margin-top:1rem;">
+        <button class="btn" onclick="guardarMaquina()">Guardar</button>
+        <button class="btn btn-secondary" onclick="cerrarModalMaquina()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= SCRIPT ======================= -->
   <script>
-    /* ===================== NAVBAR / SESIÓN (como en tu index) ===================== */
     const API_URL = "http://localhost:8080/api";
 
     function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
@@ -326,14 +469,18 @@
       window.usuarioActual = null;
       actualizarUIUsuario();
       mostrarMensaje('Sesión cerrada','success');
-      // si quieres, redirige:
-      // window.location.href = 'login.html';
+      window.location.href = 'login.html';
     }
 
     function mostrarMensaje(msg,tipo){
       const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
-      if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
-      else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
+      if (tipo==='success'){
+        s.textContent=msg; s.classList.add('show'); e.classList.remove('show');
+        setTimeout(()=>s.classList.remove('show'),2500);
+      } else {
+        e.textContent=msg; e.classList.add('show'); s.classList.remove('show');
+        setTimeout(()=>e.classList.remove('show'),4000);
+      }
     }
 
     /* ========== ENDPOINTS ========== */
@@ -362,12 +509,37 @@
       membresias: {
         crear: API_URL + "/membresias",
         cancelar: (id) => API_URL + "/membresias/" + id + "/cancelar"
+      },
+      maquinas: {
+        listar: `${API_URL}/admin/maquinas`,
+        crear: `${API_URL}/admin/maquinas`,
+        editar: id => `${API_URL}/admin/maquinas/${id}`,
+        eliminar: id => `${API_URL}/admin/maquinas/${id}`,
       }
     };
 
     function authHeaders() {
       const t = localStorage.getItem('token') || '';
       return t ? { 'Authorization': 'Bearer ' + t } : {};
+    }
+
+    // Detectar si el backend dijo que el token expiró
+    function isTokenExpiredFromResponse(data) {
+      if (!data) return false;
+      const txt = (data.mensaje || data.message || '').toString().toLowerCase();
+      return txt.includes('token_expirado') || txt.includes('token expirado');
+    }
+
+    function handleTokenExpiredLogout() {
+      if (window._loggingOutFor401) return;
+      window._loggingOutFor401 = true;
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.usuarioActual = null;
+
+      alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      window.location.href = 'login.html';
     }
 
     async function getJson(url, opts = {}) {
@@ -379,7 +551,14 @@
           ...(opts.headers || {})
         }
       });
-      const data = await res.json().catch(() => null);
+
+      let data = null;
+      try { data = await res.json(); } catch (e) { data = null; }
+
+      if (res.status === 401 && isTokenExpiredFromResponse(data)) {
+        handleTokenExpiredLogout();
+      }
+
       return { ok: res.ok, data, status: res.status };
     }
 
@@ -393,7 +572,14 @@
         },
         body: body ? JSON.stringify(body) : null
       });
-      const data = await res.json().catch(() => null);
+
+      let data = null;
+      try { data = await res.json(); } catch (e) { data = null; }
+
+      if (res.status === 401 && isTokenExpiredFromResponse(data)) {
+        handleTokenExpiredLogout();
+      }
+
       return { ok: res.ok, data, status: res.status };
     }
 
@@ -401,7 +587,7 @@
       return obj.usuarioNombre || (obj.usuario && obj.usuario.nombreCompleto) || obj.nombreCompleto || "—";
     }
 
-    /* ================== MODALES ================== */
+    /* ================== MODALES GENERALES ================== */
     function abrirModal(id){ document.getElementById(id).classList.add('show'); }
     function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
 
@@ -417,7 +603,8 @@
         { key:'clases-admin',     sel:'[data-tab="clases-admin"]' },
         { key:'ubicaciones-admin',sel:'[data-tab="ubicaciones-admin"]' },
         { key:'pagos-admin',      sel:'[data-tab="pagos-admin"]' },
-        { key:'reportes',         sel:'[data-tab="reportes"]' }
+        { key:'reportes',         sel:'[data-tab="reportes"]' },
+        { key:'maquinas',         sel:'[data-tab="maquinas"]' }
       ];
 
       tabs.forEach(t => {
@@ -464,6 +651,7 @@
         case 'clases-admin': cargarClasesAdmin(); break;
         case 'ubicaciones-admin': if(isAdmin) cargarUbicacionesAdmin(); break;
         case 'pagos-admin': if(isAdmin) cargarPagosAdmin(); break;
+        case 'maquinas': if(isAdmin) cargarMaquinas(); break;
         case 'reportes': if(isAdmin) cargarReportes(); break;
       }
     }
@@ -483,9 +671,14 @@
             <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${Number(data.ingresosMensuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Mensuales</div></div>
             <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value">${Number(data.ingresosAnuales||0).toFixed(2)}</div><div class="stat-label">Ingresos Anuales</div></div>
           `;
-        } else { container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>'; }
-      }catch(e){ container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>'; }
-      finally{ loading.classList.remove('show'); }
+        } else {
+          container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
+        }
+      }catch(e){
+        container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
 
     /* ================== ADMIN: Usuarios ================== */
@@ -520,13 +713,22 @@
       if (!id && usuarioEditPwd.value) payload.contrasena = usuarioEditPwd.value;
       const url = id? ENDPOINTS.admin.usuarioId(id): ENDPOINTS.admin.usuarios;
       const method = id? 'PUT':'POST';
-      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if (ok){ cerrarModal('modalUsuario'); cargarUsuariosAdmin(); } else alert('No se pudo guardar'); }
-      catch{ alert('Error de conexión'); }
+      try{
+        const { ok } = await sendJson(url,method,payload,authHeaders());
+        if (ok){
+          cerrarModal('modalUsuario');
+          cargarUsuariosAdmin();
+        } else alert('No se pudo guardar');
+      } catch{
+        alert('Error de conexión');
+      }
     }
     async function eliminarUsuario(id){
       if(!confirm('¿Eliminar usuario?')) return;
-      try{ const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id),'DELETE',null,authHeaders()); if (ok) cargarUsuariosAdmin(); else alert('No se pudo eliminar'); }
-      catch{ alert('Error de conexión'); }
+      try{
+        const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id),'DELETE',null,authHeaders());
+        if (ok) cargarUsuariosAdmin(); else alert('No se pudo eliminar');
+      }catch{ alert('Error de conexión'); }
     }
     async function cargarUsuariosAdmin(){
       const loading=document.getElementById('loadingUsuarios'); const container=document.getElementById('usuariosTable');
@@ -535,8 +737,11 @@
         const { ok, data } = await getJson(ENDPOINTS.admin.usuarios, { headers:{...authHeaders()} });
         window._usuariosCache = Array.isArray(data)?data:[];
         renderUsuariosFiltrados();
-      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar usuarios</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        container.innerHTML='<p style="color:#dc3545;">Error al cargar usuarios</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
     function renderUsuariosFiltrados(){
       const container=document.getElementById('usuariosTable');
@@ -575,11 +780,18 @@
     function abrirModalCrearMembresia(){ document.getElementById('formMembresia').reset(); abrirModal('modalMembresia'); }
     async function guardarMembresiaPresencial(e){
       e.preventDefault();
-      const payload={ usuarioId: Number(document.getElementById('membUsuarioId').value), tipoPlan: document.getElementById('membPlan').value, renovacionAutomatica: document.getElementById('membAuto').value==='true' };
+      const payload={
+        usuarioId: Number(document.getElementById('membUsuarioId').value),
+        tipoPlan: document.getElementById('membPlan').value,
+        renovacionAutomatica: document.getElementById('membAuto').value==='true'
+      };
       try{
         const { ok, data } = await sendJson(ENDPOINTS.membresias.crear,'POST',payload,authHeaders());
-        if (ok){ cerrarModal('modalMembresia'); cargarMembresiasAdmin(); alert('Membresía creada'); }
-        else alert(data?.mensaje||data?.error||'No se pudo crear');
+        if (ok){
+          cerrarModal('modalMembresia');
+          cargarMembresiasAdmin();
+          alert('Membresía creada');
+        } else alert(data?.mensaje||data?.error||'No se pudo crear');
       }catch{ alert('Error de conexión'); }
     }
     async function cancelarMembresia(id){
@@ -596,8 +808,11 @@
         const { ok, data } = await getJson(ENDPOINTS.admin.membresias, { headers:{...authHeaders()} });
         window._membresiasCache = Array.isArray(data)?data:[]; 
         renderMembresiasFiltradas();
-      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar membresías</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        container.innerHTML='<p style="color:#dc3545;">Error al cargar membresías</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
     function renderMembresiasFiltradas(){
       const container=document.getElementById('membresiasTable');
@@ -636,38 +851,80 @@
       document.getElementById('modalClaseTitle').textContent='Crear Nueva Clase';
       document.getElementById('formClase').reset();
       document.getElementById('claseId').value='';
+      document.getElementById('claseEstado').value = "true"; // por defecto activa
       abrirModal('modalClase');
     }
+
     function editarClase(c){
       document.getElementById('modalClaseTitle').textContent='Editar Clase';
-      document.getElementById('claseId').value=c.id||'';
-      claseNombre.value=c.nombreClase||''; claseDescripcion.value=c.descripcion||''; claseHorario.value=c.horario||'';
-      claseInstructor.value=c.nombreInstructor||''; claseCapacidad.value=c.capacidadMaxima||1; claseDuracion.value=c.duracionMinutos||60;
+
+      document.getElementById('claseId').value = c.id || '';
+      claseNombre.value = c.nombreClase || '';
+      claseDescripcion.value = c.descripcion || '';
+      claseHorario.value = c.horario || '';
+      claseInstructor.value = c.nombreInstructor || '';
+      claseCapacidad.value = c.capacidadMaxima || 1;
+      claseDuracion.value = c.duracionMinutos || 60;
+
+      // llenar estado desde el DTO
+      document.getElementById('claseEstado').value = String(!!c.estaActivo);
+
       abrirModal('modalClase');
     }
+
     async function guardarClase(e){
       e.preventDefault();
-      const id=claseId.value;
-      const payload={ nombreClase:claseNombre.value, descripcion:claseDescripcion.value, horario:claseHorario.value, nombreInstructor:claseInstructor.value, capacidadMaxima:Number(claseCapacidad.value), duracionMinutos:Number(claseDuracion.value), estaActivo:true };
-      const url = id? ENDPOINTS.admin.claseId(id): ENDPOINTS.admin.clases; const method=id?'PUT':'POST';
-      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if(ok){ cerrarModal('modalClase'); cargarClasesAdmin(); } else alert('No se pudo guardar'); }
-      catch{ alert('Error de conexión'); }
+      const id = claseId.value;
+
+      const payload = {
+        nombreClase: claseNombre.value,
+        descripcion: claseDescripcion.value,
+        horario: claseHorario.value,
+        nombreInstructor: claseInstructor.value,
+        capacidadMaxima: Number(claseCapacidad.value),
+        duracionMinutos: Number(claseDuracion.value),
+        estaActivo: document.getElementById('claseEstado').value === "true"
+      };
+
+      const url = id ? ENDPOINTS.admin.claseId(id) : ENDPOINTS.admin.clases;
+      const method = id ? 'PUT' : 'POST';
+
+      try{
+        const { ok } = await sendJson(url, method, payload, authHeaders());
+        if(ok){
+          cerrarModal('modalClase');
+          cargarClasesAdmin();
+        } else alert('No se pudo guardar');
+      } catch{
+        alert('Error de conexión');
+      }
     }
+
     async function eliminarClase(id){
       if(!confirm('¿Eliminar clase?')) return;
-      try{ const { ok } = await sendJson(ENDPOINTS.admin.claseId(id),'DELETE',null,authHeaders()); if(ok) cargarClasesAdmin(); else alert('No se pudo eliminar'); }
-      catch{ alert('Error de conexión'); }
+      try{
+        const { ok } = await sendJson(ENDPOINTS.admin.claseId(id),'DELETE',null,authHeaders());
+        if(ok) cargarClasesAdmin(); else alert('No se pudo eliminar');
+      } catch{
+        alert('Error de conexión');
+      }
     }
+
     async function cargarClasesAdmin(){
       const loading=document.getElementById('loadingClasesAdmin'); const container=document.getElementById('clasesAdminTable');
       loading.classList.add('show');
       try{
-        const { ok, data } = await getJson(ENDPOINTS.clases.listar);
+        // IMPORTANTE: usar endpoint admin para ver activas + inactivas
+        const { ok, data } = await getJson(ENDPOINTS.admin.clases, { headers: authHeaders() });
         window._clasesAdminCache = Array.isArray(data)?data:[]; 
         renderClasesAdminFiltradas();
-      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar clases</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        container.innerHTML='<p style="color:#dc3545;">Error al cargar clases</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
+
     function renderClasesAdminFiltradas(){
       const container=document.getElementById('clasesAdminTable');
       const q=(document.getElementById('filtroClasesTexto')?.value||'').toLowerCase();
@@ -683,8 +940,12 @@
           <tbody>
             ${arr.map(c=>`
               <tr>
-                <td>${c.id}</td><td>${c.nombreClase}</td><td>${c.nombreInstructor}</td><td>${c.horario}</td>
-                <td>${c.capacidadMaxima}</td><td>${Array.isArray(c.usuariosInscritos)?c.usuariosInscritos.length:(c.inscritos||0)}</td>
+                <td>${c.id}</td>
+                <td>${c.nombreClase}</td>
+                <td>${c.nombreInstructor}</td>
+                <td>${c.horario}</td>
+                <td>${c.capacidadMaxima}</td>
+                <td>${Array.isArray(c.usuariosInscritos)?c.usuariosInscritos.length:(c.usuariosInscritos ?? c.inscritos ?? 0)}</td>
                 <td>${c.duracionMinutos} min</td>
                 <td><span class="badge ${c.estaActivo ? 'badge-success':'badge-danger'}">${c.estaActivo?'Activo':'Inactivo'}</span></td>
                 <td>
@@ -694,6 +955,178 @@
               </tr>`).join('')}
           </tbody>
         </table>`;
+    }
+
+    /* ================== ADMIN: Máquinas ================== */
+    let maquinaEditandoId = null;
+
+    async function cargarMaquinas() {
+      const { ok, data } = await getJson(ENDPOINTS.maquinas.listar, { headers: authHeaders() });
+      if (!ok) {
+        alert("No se pudieron cargar las máquinas");
+        return;
+      }
+
+      window._maquinasCache = Array.isArray(data) ? data : [];
+
+      await cargarUbicacionesFiltroMaquinas();
+      renderMaquinasFiltradas();
+    }
+
+    function renderMaquinasFiltradas() {
+      const tbody = document.querySelector("#tablaMaquinas tbody");
+      if (!tbody) return;
+
+      const texto = (document.getElementById("filtroMaquinaTexto")?.value || "").toLowerCase();
+      const ubicacionId = (document.getElementById("filtroMaquinaUbicacion")?.value || "");
+      const categoria = (document.getElementById("filtroMaquinaCategoria")?.value || "");
+      const estado = (document.getElementById("filtroMaquinaEstado")?.value || "");
+
+      const lista = (window._maquinasCache || []).filter(m => {
+        const matchTexto = !texto || `${m.nombre || ""} ${m.descripcion || ""}`.toLowerCase().includes(texto);
+        const matchUbic = !ubicacionId || String(m.ubicacionId) === String(ubicacionId);
+        const matchCat = !categoria || m.categoria === categoria;
+        const matchEstado = !estado || m.estado === estado;
+        return matchTexto && matchUbic && matchCat && matchEstado;
+      });
+
+      tbody.innerHTML = lista.map(m => `
+        <tr>
+          <td>${m.id}</td>
+          <td>${m.nombre}</td>
+          <td>${m.categoria}</td>
+          <td>${m.estado}</td>
+          <td>${m.nombreUbicacion || "—"}</td>
+          <td>${m.descripcion || "—"}</td>
+          <td>
+            <button class="action-btn btn-edit" onclick="editarMaquina(${m.id})">EDITAR</button>
+            <button class="action-btn btn-delete" onclick="eliminarMaquina(${m.id})">ELIMINAR</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function abrirModalCrearMaquina() {
+      maquinaEditandoId = null;
+      document.getElementById("tituloModalMaquina").textContent = "Nueva Máquina";
+
+      document.getElementById("maqNombre").value = "";
+      document.getElementById("maqDescripcion").value = "";
+      document.getElementById("maqCategoria").value = "CARDIO";
+      document.getElementById("maqEstado").value = "OPERATIVA";
+
+      await cargarUbicacionesEnSelect("maqUbicacion");
+
+      document.getElementById("modalMaquina").classList.add('show');
+    }
+
+    async function editarMaquina(id) {
+      maquinaEditandoId = id;
+
+      const lista = window._maquinasCache || [];
+      const m = lista.find(x => x.id === id);
+
+      if (!m) {
+        alert("No se encontró la máquina en memoria. Vuelve a abrir el tab o recarga la página.");
+        return;
+      }
+
+      document.getElementById("tituloModalMaquina").textContent = "Editar Máquina";
+
+      document.getElementById("maqNombre").value = m.nombre || "";
+      document.getElementById("maqDescripcion").value = m.descripcion || "";
+      document.getElementById("maqCategoria").value = m.categoria || "CARDIO";
+      document.getElementById("maqEstado").value = m.estado || "OPERATIVA";
+
+      await cargarUbicacionesEnSelect("maqUbicacion");
+      if (m.ubicacionId) {
+        document.getElementById("maqUbicacion").value = m.ubicacionId;
+      }
+
+      document.getElementById("modalMaquina").classList.add('show');
+    }
+
+    async function guardarMaquina() {
+      const body = {
+        nombre: document.getElementById("maqNombre").value,
+        descripcion: document.getElementById("maqDescripcion").value,
+        categoria: document.getElementById("maqCategoria").value,
+        estado: document.getElementById("maqEstado").value,
+        ubicacionId: Number(document.getElementById("maqUbicacion").value)
+      };
+
+      const url = maquinaEditandoId
+        ? ENDPOINTS.maquinas.editar(maquinaEditandoId)
+        : ENDPOINTS.maquinas.crear;
+
+      const method = maquinaEditandoId ? "PUT" : "POST";
+
+      const { ok } = await sendJson(url, method, body, authHeaders());
+
+      if (!ok) {
+        alert("Error guardando la máquina");
+        return;
+      }
+
+      cerrarModalMaquina();
+      cargarMaquinas();
+    }
+
+    async function eliminarMaquina(id) {
+      if (!confirm("¿Eliminar máquina?")) return;
+
+      const { ok } = await sendJson(ENDPOINTS.maquinas.eliminar(id), "DELETE", null, authHeaders());
+      if (!ok) {
+        alert("No se pudo eliminar");
+        return;
+      }
+
+      cargarMaquinas();
+    }
+
+    function cerrarModalMaquina() {
+      document.getElementById("modalMaquina").classList.remove('show');
+    }
+
+    async function cargarUbicacionesEnSelect(selectId) {
+      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
+
+      if (!ok || !Array.isArray(data)) {
+        alert("No se pudieron cargar las ubicaciones");
+        return;
+      }
+
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+
+      data.forEach(u => {
+        select.innerHTML += `<option value="${u.id}">
+          ${u.nombreUbicacion} - ${u.distrito}
+        </option>`;
+      });
+    }
+
+    async function cargarUbicacionesFiltroMaquinas() {
+      const select = document.getElementById("filtroMaquinaUbicacion");
+      if (!select) return;
+
+      if (select.dataset.loaded === "1") return;
+
+      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
+      if (!ok || !Array.isArray(data)) {
+        return;
+      }
+
+      select.innerHTML = `
+        <option value="">Todas las sedes</option>
+        ${data.map(u => `
+          <option value="${u.id}">
+            ${u.nombreUbicacion} - ${u.distrito}
+          </option>
+        `).join("")}
+      `;
+
+      select.dataset.loaded = "1";
     }
 
     /* ================== ADMIN: Ubicaciones ================== */
@@ -720,15 +1153,36 @@
     async function guardarUbicacion(e){
       e.preventDefault();
       const id=ubicacionId.value;
-      const payload={ nombreUbicacion:ubicacionNombre.value, direccion:ubicacionDireccion.value, distrito:ubicacionDistrito.value, ciudad:ubicacionCiudad.value, numeroTelefono:ubicacionTelefono.value, horario:ubicacionHorario.value, latitud:parseFloat(ubicacionLatitud.value||0), longitud:parseFloat(ubicacionLongitud.value||0) };
-      const url=id? ENDPOINTS.admin.ubicacionId(id): ENDPOINTS.admin.ubicaciones; const method=id?'PUT':'POST';
-      try{ const { ok } = await sendJson(url,method,payload,authHeaders()); if(ok){ cerrarModal('modalUbicacion'); cargarUbicacionesAdmin(); } else alert('No se pudo guardar'); }
-      catch{ alert('Error de conexión'); }
+      const payload={
+        nombreUbicacion:ubicacionNombre.value,
+        direccion:ubicacionDireccion.value,
+        distrito:ubicacionDistrito.value,
+        ciudad:ubicacionCiudad.value,
+        numeroTelefono:ubicacionTelefono.value,
+        horario:ubicacionHorario.value,
+        latitud:parseFloat(ubicacionLatitud.value||0),
+        longitud:parseFloat(ubicacionLongitud.value||0)
+      };
+      const url=id? ENDPOINTS.admin.ubicacionId(id): ENDPOINTS.admin.ubicaciones;
+      const method=id?'PUT':'POST';
+      try{
+        const { ok } = await sendJson(url,method,payload,authHeaders());
+        if(ok){
+          cerrarModal('modalUbicacion');
+          cargarUbicacionesAdmin();
+        } else alert('No se pudo guardar');
+      } catch{
+        alert('Error de conexión');
+      }
     }
     async function eliminarUbicacion(id){
       if(!confirm('¿Eliminar ubicación?')) return;
-      try{ const { ok } = await sendJson(ENDPOINTS.admin.ubicacionId(id),'DELETE',null,authHeaders()); if(ok) cargarUbicacionesAdmin(); else alert('No se pudo eliminar'); }
-      catch{ alert('Error de conexión'); }
+      try{
+        const { ok } = await sendJson(ENDPOINTS.admin.ubicacionId(id),'DELETE',null,authHeaders());
+        if(ok) cargarUbicacionesAdmin(); else alert('No se pudo eliminar');
+      } catch{
+        alert('Error de conexión');
+      }
     }
     async function cargarUbicacionesAdmin(){
       const loading=document.getElementById('loadingUbicacionesAdmin'); const container=document.getElementById('ubicacionesAdminTable');
@@ -737,8 +1191,11 @@
         const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
         window._ubicacionesAdminCache = Array.isArray(data)?data:[]; 
         renderUbicacionesFiltradas();
-      }catch{ container.innerHTML='<p style="color:#dc3545;">Error al cargar ubicaciones</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        container.innerHTML='<p style="color:#dc3545;">Error al cargar ubicaciones</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
     function renderUbicacionesFiltradas(){
       const container=document.getElementById('ubicacionesAdminTable');
@@ -835,7 +1292,7 @@
       cargarReporteMembresias();
       cargarReporteIngresos();
       cargarReporteClases();
-      cargarReporteSuscripcionesMensuales(); // 👈 tu gráfico lineal
+      cargarReporteSuscripcionesMensuales();
     }
 
     async function ensureAdminCaches() {
@@ -850,7 +1307,7 @@
           .then(r => { if (r.ok) window._membresiasCache = r.data; }));
       }
       if (!Array.isArray(window._clasesAdminCache)) {
-        peticiones.push(getJson(ENDPOINTS.clases.listar, { headers: authHeaders() })
+        peticiones.push(getJson(ENDPOINTS.admin.clases, { headers: authHeaders() })
           .then(r => { if (r.ok) window._clasesAdminCache = r.data; }));
       }
       if (!Array.isArray(window._ubicacionesAdminCache)) {
@@ -1065,8 +1522,11 @@
             <p><strong>Básico:</strong> ${d.membresiaBasico ?? 0} | <strong>Premium:</strong> ${d.membresiaPremium ?? 0} | <strong>Anual:</strong> ${d.membresiaAnual ?? 0}</p>
           `;
         } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
     async function cargarReporteIngresos(){
       const loading=document.getElementById('loadingReporteIngresos'); const content=document.getElementById('reporteIngresosContent');
@@ -1082,8 +1542,11 @@
             <p><strong>Promedio por pago:</strong> S/${Number(d.promedioIngreso||0).toFixed(2)}</p>
           `;
         } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
     async function cargarReporteClases(){
       const loading=document.getElementById('loadingReporteClases'); const content=document.getElementById('reporteClasesContent');
@@ -1094,62 +1557,64 @@
           const rows = lista.map(r => `<li>${r.nombreClase}: ${Number(r.tasaOcupacion||r.porcentajeOcupacion||0).toFixed(1)}% (Inscritos: ${r.usuariosInscritos ?? r.inscritos ?? 0}/${r.capacidadMaxima ?? r.capacidad ?? 0})</li>`).join('');
           content.innerHTML = rows ? `<ul>${rows}</ul>` : '<p>No hay datos</p>';
         } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{ content.innerHTML='<p style="color:#dc3545;">Error</p>'; }
-      finally{ loading.classList.remove('show'); }
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
     }
 
-    
-    /* ======= ESTE ES TU GRÁFICO LINEAL ORIGINAL ======= */
+    /* ======= GRÁFICO LINEAL SUSCRIPCIONES ======= */
     async function cargarReporteSuscripcionesMensuales() {
-    const canvas = document.getElementById('graficoSuscripciones');
-    const ctx = canvas.getContext('2d');
-    try {
-      const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() });
-      if (!ok) throw new Error("Error al obtener datos");
+      const canvas = document.getElementById('graficoSuscripciones');
+      const ctx = canvas.getContext('2d');
+      try {
+        const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() });
+        if (!ok) throw new Error("Error al obtener datos");
 
-      const labels = Object.keys(data);
-      const values = Object.values(data);
+        const labels = Object.keys(data);
+        const values = Object.values(data);
 
-      if (window.suscripcionesChart) window.suscripcionesChart.destroy();
+        if (window.suscripcionesChart) window.suscripcionesChart.destroy();
 
-      window.suscripcionesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label:'Nuevas suscripciones por mes',
-            data: values,
-            borderColor:'#ff4500',
-            backgroundColor:'rgba(255,69,0,0.2)',
-            borderWidth:3,
-            tension:0.3,
-            fill:true,
-            pointRadius:5,
-            pointHoverRadius:7
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
-            x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
+        window.suscripcionesChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label:'Nuevas suscripciones por mes',
+              data: values,
+              borderColor:'#ff4500',
+              backgroundColor:'rgba(255,69,0,0.2)',
+              borderWidth:3,
+              tension:0.3,
+              fill:true,
+              pointRadius:5,
+              pointHoverRadius:7
+            }]
           },
-          plugins: {
-            legend: { labels: { color: '#fff' } },
-            title: {
-              display: true,
-              text: 'Tendencia de Suscripciones Mensuales',
-              color: '#ff4500',
-              font: { size: 16 }
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
+              x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
+            },
+            plugins: {
+              legend: { labels: { color: '#fff' } },
+              title: {
+                display: true,
+                text: 'Tendencia de Suscripciones Mensuales',
+                color: '#ff4500',
+                font: { size: 16 }
+              }
             }
           }
-        }
-      });
-    } catch (err) {
-      console.error(err);
-      alert('No se pudo cargar el gráfico de suscripciones.');
+        });
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo cargar el gráfico de suscripciones.');
+      }
     }
-  }
 
     /* ===== export util para tablas ===== */
     function tablaDOMToArrays(tableEl){
