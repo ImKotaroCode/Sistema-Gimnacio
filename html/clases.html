@@ -190,7 +190,6 @@ async function inscribirseEnClase(claseId){
   try{
     if (btn) btn.disabled = true;
 
-    // importante: usamos id del usuario, no usuarioId
     const payload = {
       usuarioId: window.usuarioActual.id,
       claseId
@@ -209,7 +208,6 @@ async function inscribirseEnClase(claseId){
     let data = null;
     try { data = await res.json(); } catch(e) { data = null; }
 
-    // token expirado
     if (res.status === 401 && isTokenExpiredFromResponse(data)) {
       handleTokenExpiredLogout();
       return;
@@ -219,7 +217,6 @@ async function inscribirseEnClase(claseId){
       throw new Error(data?.mensaje || data?.error || 'No se pudo inscribir');
     }
 
-    // recargamos las clases para actualizar cupos reales
     await cargarClases();
 
     alert(data?.mensaje || 'Inscripción exitosa');

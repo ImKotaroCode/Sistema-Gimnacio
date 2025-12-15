@@ -49,10 +49,20 @@
         <!-- Info -->
         <div id="perfil-info" class="admin-content active">
           <form id="formPerfil" onsubmit="guardarPerfil(event)">
+
             <div class="form-group">
-              <label>Nombre completo</label>
-              <input id="perfilNombre" type="text" required />
+              <label>Nombres</label>
+              <input id="perfilNombres" type="text" required />
             </div>
+            <div class="form-group">
+              <label>Apellido paterno</label>
+              <input id="perfilApellidoPaterno" type="text" required />
+            </div>
+            <div class="form-group">
+              <label>Apellido materno</label>
+              <input id="perfilApellidoMaterno" type="text" required />
+            </div>
+
             <div class="form-group">
               <label>Correo electrónico</label>
               <input id="perfilCorreo" type="email" readonly />
@@ -173,13 +183,12 @@
   <div id="errorMsg" class="error-message"></div>
 
 <script>
-/* ====== CONFIG COMÚN ====== */
 const API_URL = 'http://localhost:8080/api';
 const ENDPOINTS = {
   usuarios: {
     me: `${API_URL}/usuarios/me`,
     update: (id) => `${API_URL}/usuarios/${id}`,
-    password: (id) => `${API_URL}/usuarios/${id}/password`,
+    password: (id) => `${API_URL}/usuarios/${id}/contrasena`,
     prefs:    (id) => `${API_URL}/usuarios/${id}/preferencias`
   },
   membresias: {
@@ -188,9 +197,7 @@ const ENDPOINTS = {
     cancelar: (id) => `${API_URL}/membresias/${id}/cancelar`,
     update:   (id) => `${API_URL}/membresias/${id}`
   },
-  pagos: {
-    porUsuario: (id) => `${API_URL}/pagos/usuario/${id}`
-  },
+  pagos: { porUsuario: (id) => `${API_URL}/pagos/usuario/${id}` },
   clases: {
     porUsuario: (id) => `${API_URL}/clases/usuario/${id}`,
     cancelarInscripcion: (claseId) => `${API_URL}/clases/${claseId}/cancelar-inscripcion`
@@ -199,16 +206,21 @@ const ENDPOINTS = {
 
 const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
 
+function buildNombreCompleto(u){
+  const n  = (u?.nombres || '').trim();
+  const ap = (u?.apellidoPaterno || '').trim();
+  const am = (u?.apellidoMaterno || '').trim();
+  const combo = `${n} ${ap} ${am}`.trim();
+  return combo || (u?.nombreCompleto || '').trim();
+}
+
 function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
 
 function verificarSesion(){
   const u = localStorage.getItem('usuario');
   const t = localStorage.getItem('token');
-  if (u && t) {
-    window.usuarioActual = JSON.parse(u);
-  } else {
-    window.usuarioActual = null;
-  }
+  if (u && t) window.usuarioActual = JSON.parse(u);
+  else window.usuarioActual = null;
 }
 
 function actualizarUIUsuario() {
@@ -217,7 +229,7 @@ function actualizarUIUsuario() {
 
   document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
   document.getElementById('userInfo').classList.toggle('active', isLogged);
-  document.getElementById('userName').textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
+  document.getElementById('userName').textContent = isLogged ? buildNombreCompleto(window.usuarioActual) : '';
   document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
   document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
 }
@@ -232,8 +244,12 @@ function cerrarSesion() {
   localStorage.removeItem('token');
   localStorage.removeItem('usuario');
   window.usuarioActual = null;
+
   actualizarUIUsuario();
   mostrarMensaje('Sesión cerrada','success');
+
+  window.location.href = "index.html";
+
 }
 
 /* ===== fetch helpers ===== */
@@ -271,16 +287,17 @@ function cambiarTabPerfil(tab, btn){
 async function cargarPerfil(){
   let me = null;
 
-  // 1) intentar traer /usuarios/me
   try {
     const { ok, data } = await getJson(ENDPOINTS.usuarios.me, { headers: authHeaders() });
     if (ok) me = data;
   } catch (e) {}
 
-  // 2) fallback a lo del localStorage (lo mismo que tu index)
   if (!me && window.usuarioActual) {
     me = {
       id: window.usuarioActual.usuarioId || window.usuarioActual.id,
+      nombres: window.usuarioActual.nombres || '',
+      apellidoPaterno: window.usuarioActual.apellidoPaterno || '',
+      apellidoMaterno: window.usuarioActual.apellidoMaterno || '',
       nombreCompleto: window.usuarioActual.nombreCompleto || window.usuarioActual.nombre || '',
       correoElectronico: window.usuarioActual.correoElectronico || window.usuarioActual.correo || window.usuarioActual.email || '',
       numeroTelefono: window.usuarioActual.numeroTelefono || '',
@@ -294,7 +311,10 @@ async function cargarPerfil(){
     return;
   }
 
-  document.getElementById('perfilNombre').value = me.nombreCompleto || '';
+  document.getElementById('perfilNombres').value = me.nombres || '';
+  document.getElementById('perfilApellidoPaterno').value = me.apellidoPaterno || '';
+  document.getElementById('perfilApellidoMaterno').value = me.apellidoMaterno || '';
+
   document.getElementById('perfilCorreo').value = me.correoElectronico || '';
   document.getElementById('perfilTelefono').value = me.numeroTelefono || '';
   document.getElementById('perfilRol').value = me.rol || 'USUARIO';
@@ -306,27 +326,34 @@ async function cargarPerfil(){
 async function guardarPerfil(e){
   e.preventDefault();
   const me = window._perfilUsuario; if (!me) return;
-  const payload = {
-    nombreCompleto: document.getElementById('perfilNombre').value.trim(),
-    numeroTelefono: document.getElementById('perfilTelefono').value.trim(),
-    rol: me.rol,
-    estaActivo: me.estaActivo ?? true
-  };
-  const { ok } = await sendJson(ENDPOINTS.usuarios.update(me.id), 'PUT', payload, authHeaders());
-  if (ok) {
-    mostrarMensaje('Perfil actualizado','success');
 
-    // actualizar LS para que navbar muestre el nombre
+  const payload = {
+    nombres: document.getElementById('perfilNombres').value.trim(),
+    apellidoPaterno: document.getElementById('perfilApellidoPaterno').value.trim(),
+    apellidoMaterno: document.getElementById('perfilApellidoMaterno').value.trim(),
+    numeroTelefono: document.getElementById('perfilTelefono').value.trim(),
+
+  };
+
+  const { ok, data } = await sendJson(ENDPOINTS.usuarios.update(me.id), 'PUT', payload, authHeaders());
+
+  if (ok) {
+    mostrarMensaje((data && data.mensaje) || 'Perfil actualizado','success');
+
     const ls = JSON.parse(localStorage.getItem('usuario') || '{}');
-    ls.nombreCompleto = payload.nombreCompleto;
+    ls.nombres = payload.nombres;
+    ls.apellidoPaterno = payload.apellidoPaterno;
+    ls.apellidoMaterno = payload.apellidoMaterno;
+    ls.nombreCompleto = `${payload.nombres} ${payload.apellidoPaterno} ${payload.apellidoMaterno}`.trim();
     ls.numeroTelefono = payload.numeroTelefono;
+
     localStorage.setItem('usuario', JSON.stringify(ls));
     window.usuarioActual = ls;
     actualizarUIUsuario();
 
     cargarPerfil();
   } else {
-    mostrarMensaje('No se pudo guardar','error');
+    mostrarMensaje((data && data.mensaje) || 'No se pudo guardar','error');
   }
 }
 
@@ -485,10 +512,12 @@ async function cancelarInscripcionClase(claseId) {
   const usuario = JSON.parse(localStorage.getItem('usuario') || "{}");
   const token = localStorage.getItem('token');
 
-  if (!usuario || !usuario.usuarioId) {
+  if (!usuario || !usuario.usuarioId && !usuario.id) {
     alert("No se encontró el usuario actual.");
     return;
   }
+
+  const uid = Number(usuario.usuarioId || usuario.id);
 
   try {
     const res = await fetch(ENDPOINTS.clases.cancelarInscripcion(claseId), {
@@ -497,9 +526,9 @@ async function cancelarInscripcionClase(claseId) {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({ usuarioId: Number(usuario.usuarioId) })
+      body: JSON.stringify({ usuarioId: uid })
     });
-    const data = await res.json();
+    const data = await res.json().catch(()=> ({}));
     if (!res.ok) {
       alert(data.mensaje || "Error al cancelar inscripción");
     } else {
@@ -534,7 +563,7 @@ async function guardarPreferencias(e){
   mostrarMensaje(ok? 'Preferencias guardadas' : 'No se pudo guardar', ok? 'success':'error');
 }
 
-/* ======= UTILIDADES DE EXPORTAR (las que faltaban) ======= */
+/* ======= UTILIDADES DE EXPORTAR ======= */
 function tablaDOMToArrays(tableEl){
   const head = [...tableEl.querySelectorAll('thead th')].map(th=>th.innerText.trim());
   const body = [...tableEl.querySelectorAll('tbody tr')].map(tr =>
@@ -571,9 +600,12 @@ function descargarTablaComoExcel(tableContainerId, filenameBase='Tabla'){
   XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-/* ===== INIT ===== */
 window.addEventListener('DOMContentLoaded', async () => {
   verificarSesion();
+  if (!localStorage.getItem('token')) {
+    window.location.replace("login.html");
+    return;
+  }
   actualizarUIUsuario();
   await cargarPerfil();
 });

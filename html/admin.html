@@ -11,7 +11,23 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- mODifcacion de algunos diseños -->
+  <style>
+    .grid-2{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .grid-3{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .span-2{ grid-column:span 2; }
+    .span-3{ grid-column:span 3; }
+    @media (max-width:720px){
+      .grid-2,.grid-3{ grid-template-columns:1fr; }
+      .span-2,.span-3{ grid-column:span 1; }
+    }
+    .modal-content{ max-width:720px; }
+    .modal .form-group{ margin-bottom:10px; }
+    .help-mini{ font-size:12px; opacity:.8; margin-top:4px; }
+  </style>
 </head>
+
 <body>
   <nav>
     <ul>
@@ -72,7 +88,7 @@
           <div class="section-actions">
             <button class="btn-create" onclick="abrirModalCrearUsuario()">+ Crear Usuario</button>
             <div class="filters">
-              <input type="text" id="filtroUsuariosTexto" placeholder="Buscar por nombre o email" oninput="renderUsuariosFiltrados()"/>
+              <input type="text" id="filtroUsuariosTexto" placeholder="Buscar por nombre, apellidos, dni o email" oninput="renderUsuariosFiltrados()"/>
               <select id="filtroUsuariosRol" onchange="renderUsuariosFiltrados()">
                 <option value="">Todos los roles</option>
                 <option value="USUARIO">Usuario</option>
@@ -194,12 +210,7 @@
                 <option value="FUERA_SERVICIO">Fuera de servicio</option>
               </select>
 
-              <input 
-                type="text" 
-                id="filtroMaquinaTexto" 
-                placeholder="Buscar por nombre o descripción"
-                oninput="renderMaquinasFiltradas()"
-              />
+              <input type="text" id="filtroMaquinaTexto" placeholder="Buscar por nombre o descripción" oninput="renderMaquinasFiltradas()"/>
             </div>
 
             <div class="section-actions">
@@ -268,49 +279,94 @@
 
   <!-- ======================= MODALES ======================= -->
 
+  <!-- MODAL USUARIO  -->
   <div id="modalUsuario" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="usuarioModalTitulo">Crear Usuario</h3>
         <button class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</button>
       </div>
+
       <form id="formUsuario" onsubmit="guardarUsuario(event)">
         <input type="hidden" id="usuarioEditId"/>
-        <div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioEditNombre" required/></div>
-        <div class="form-group"><label>Correo</label><input type="email" id="usuarioEditCorreo" required/></div>
-        <div class="form-group"><label>Teléfono</label><input type="tel" id="usuarioEditTelefono"/></div>
-        <div class="form-group">
-          <label>Rol</label>
-          <select id="usuarioEditRol">
-            <option value="USUARIO">Usuario</option>
-            <option value="ENTRENADOR">Entrenador</option>
-            <option value="ADMINISTRADOR">Administrador</option>
-          </select>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Nombre(s)</label>
+            <input type="text" id="usuarioEditNombre" required/>
+          </div>
+
+          <div class="form-group">
+            <label>Apellido paterno</label>
+            <input type="text" id="usuarioEditApePat" required/>
+          </div>
+
+          <div class="form-group">
+            <label>Apellido materno</label>
+            <input type="text" id="usuarioEditApeMat" required/>
+          </div>
+
+          <div class="form-group">
+            <label>DNI</label>
+            <input type="text" id="usuarioEditDni" maxlength="8" required/>
+            <div class="help-mini">Ej: 8 dígitos (Perú)</div>
+          </div>
+
+          <div class="form-group span-2">
+            <label>Dirección</label>
+            <input type="text" id="usuarioEditDireccion" required/>
+          </div>
+
+          <div class="form-group span-2">
+            <label>Correo</label>
+            <input type="email" id="usuarioEditCorreo" required/>
+          </div>
+
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="usuarioEditTelefono" maxlength="9"/>
+          </div>
+
+          <div class="form-group">
+            <label>Rol</label>
+            <select id="usuarioEditRol">
+              <option value="USUARIO">Usuario</option>
+              <option value="ENTRENADOR">Entrenador</option>
+              <option value="ADMINISTRADOR">Administrador</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="usuarioEditActivo">
+              <option value="true">Activo</option>
+              <option value="false">Inactivo</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="usuarioPwdWrap">
+            <label>Contraseña</label>
+            <input type="password" id="usuarioEditPwd" placeholder="••••••"/>
+            <div class="help-mini">Solo al crear (o si tu API permite cambiar por admin).</div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Estado</label>
-          <select id="usuarioEditActivo">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
-        <div class="form-group" id="usuarioPwdWrap">
-          <label>Contraseña</label>
-          <input type="password" id="usuarioEditPwd" placeholder="••••••"/>
-        </div>
-        <button type="submit" class="btn" style="width:100%;">Guardar</button>
+
+        <button type="submit" class="btn" style="width:100%; margin-top:10px;">Guardar</button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL MEMBRESIA -->
   <div id="modalMembresia" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Crear Membresía (Presencial)</h3>
         <button class="close-modal" onclick="cerrarModal('modalMembresia')">&times;</button>
       </div>
+
       <form id="formMembresia" onsubmit="guardarMembresiaPresencial(event)">
         <div class="form-group"><label>ID Usuario</label><input type="number" id="membUsuarioId" required/></div>
+
         <div class="form-group">
           <label>Plan</label>
           <select id="membPlan">
@@ -319,6 +375,7 @@
             <option value="ANUAL">Anual</option>
           </select>
         </div>
+
         <div class="form-group">
           <label>Renovación Automática</label>
           <select id="membAuto">
@@ -326,34 +383,38 @@
             <option value="false">No</option>
           </select>
         </div>
+
         <button type="submit" class="btn" style="width:100%;">Crear</button>
       </form>
     </div>
   </div>
 
-  <!-- ===== MODAL CLASE (EDITA ESTADO) ===== -->
+  <!-- MODAL CLASE -->
   <div id="modalClase" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalClaseTitle">Crear Nueva Clase</h3>
         <button class="close-modal" onclick="cerrarModal('modalClase')">&times;</button>
       </div>
+
       <form id="formClase" onsubmit="guardarClase(event)">
         <input type="hidden" id="claseId"/>
-        <div class="form-group"><label>Nombre</label><input type="text" id="claseNombre" required/></div>
-        <div class="form-group"><label>Descripción</label><textarea id="claseDescripcion" style="min-height:80px;"></textarea></div>
-        <div class="form-group"><label>Horario</label><input type="text" id="claseHorario" required/></div>
-        <div class="form-group"><label>Instructor</label><input type="text" id="claseInstructor" required/></div>
-        <div class="form-group"><label>Capacidad</label><input type="number" id="claseCapacidad" required min="1"/></div>
-        <div class="form-group"><label>Duración (min)</label><input type="number" id="claseDuracion" required min="15"/></div>
 
-        <!-- Estado de la clase -->
-        <div class="form-group">
-          <label>Estado</label>
-          <select id="claseEstado">
-            <option value="true">Activa</option>
-            <option value="false">Inactiva</option>
-          </select>
+        <div class="grid-2">
+          <div class="form-group span-2"><label>Nombre</label><input type="text" id="claseNombre" required/></div>
+          <div class="form-group span-2"><label>Descripción</label><textarea id="claseDescripcion" style="min-height:80px;"></textarea></div>
+          <div class="form-group"><label>Horario</label><input type="text" id="claseHorario" required/></div>
+          <div class="form-group"><label>Instructor</label><input type="text" id="claseInstructor" required/></div>
+          <div class="form-group"><label>Capacidad</label><input type="number" id="claseCapacidad" required min="1"/></div>
+          <div class="form-group"><label>Duración (min)</label><input type="number" id="claseDuracion" required min="15"/></div>
+
+          <div class="form-group span-2">
+            <label>Estado</label>
+            <select id="claseEstado">
+              <option value="true">Activa</option>
+              <option value="false">Inactiva</option>
+            </select>
+          </div>
         </div>
 
         <button type="submit" class="btn" style="width:100%;">Guardar</button>
@@ -361,28 +422,34 @@
     </div>
   </div>
 
+  <!-- MODAL UBICACION -->
   <div id="modalUbicacion" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalUbicacionTitle">Crear Nueva Ubicación</h3>
         <button class="close-modal" onclick="cerrarModal('modalUbicacion')">&times;</button>
       </div>
+
       <form id="formUbicacion" onsubmit="guardarUbicacion(event)">
         <input type="hidden" id="ubicacionId"/>
-        <div class="form-group"><label>Nombre</label><input type="text" id="ubicacionNombre" required/></div>
-        <div class="form-group"><label>Dirección</label><input type="text" id="ubicacionDireccion" required/></div>
-        <div class="form-group"><label>Distrito</label><input type="text" id="ubicacionDistrito" required/></div>
-        <div class="form-group"><label>Ciudad</label><input type="text" id="ubicacionCiudad" required/></div>
-        <div class="form-group"><label>Teléfono</label><input type="tel" id="ubicacionTelefono" required/></div>
-        <div class="form-group"><label>Horario</label><input type="text" id="ubicacionHorario" required value="24/7"/></div>
-        <div class="form-group"><label>Latitud</label><input type="number" step="0.0001" id="ubicacionLatitud"/></div>
-        <div class="form-group"><label>Longitud</label><input type="number" step="0.0001" id="ubicacionLongitud"/></div>
+
+        <div class="grid-2">
+          <div class="form-group span-2"><label>Nombre</label><input type="text" id="ubicacionNombre" required/></div>
+          <div class="form-group span-2"><label>Dirección</label><input type="text" id="ubicacionDireccion" required/></div>
+          <div class="form-group"><label>Distrito</label><input type="text" id="ubicacionDistrito" required/></div>
+          <div class="form-group"><label>Ciudad</label><input type="text" id="ubicacionCiudad" required/></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="ubicacionTelefono" required/></div>
+          <div class="form-group"><label>Horario</label><input type="text" id="ubicacionHorario" required value="24/7"/></div>
+          <div class="form-group"><label>Latitud</label><input type="number" step="0.0001" id="ubicacionLatitud"/></div>
+          <div class="form-group"><label>Longitud</label><input type="number" step="0.0001" id="ubicacionLongitud"/></div>
+        </div>
+
         <button class="btn" style="width:100%;">Guardar</button>
       </form>
     </div>
   </div>
 
-  <!-- ======================= MODAL MAQUINA ======================= -->
+  <!-- MODAL MAQUINA -->
   <div class="modal" id="modalMaquina">
     <div class="modal-content">
       <div class="modal-header">
@@ -390,47 +457,48 @@
         <button class="close-modal" onclick="cerrarModalMaquina()">&times;</button>
       </div>
 
-      <div class="form-group">
-        <label>Nombre:</label>
-        <input type="text" id="maqNombre">
-      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input type="text" id="maqNombre">
+        </div>
 
-      <div class="form-group">
-        <label>Descripción:</label>
-        <input type="text" id="maqDescripcion">
-      </div>
+        <div class="form-group">
+          <label>Categoría:</label>
+          <select id="maqCategoria">
+            <option value="CARDIO">Cardio</option>
+            <option value="FUERZA">Fuerza</option>
+            <option value="FUNCIONAL">Funcional</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Categoría:</label>
-        <select id="maqCategoria">
-          <option value="CARDIO">Cardio</option>
-          <option value="FUERZA">Fuerza</option>
-          <option value="FUNCIONAL">Funcional</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Estado:</label>
+          <select id="maqEstado">
+            <option value="OPERATIVA">Operativa</option>
+            <option value="MANTENIMIENTO">Mantenimiento</option>
+            <option value="FUERA_SERVICIO">Fuera de Servicio</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Estado:</label>
-        <select id="maqEstado">
-          <option value="OPERATIVA">Operativa</option>
-          <option value="MANTENIMIENTO">Mantenimiento</option>
-          <option value="FUERA_SERVICIO">Fuera de Servicio</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Ubicación:</label>
+          <select id="maqUbicacion"></select>
+        </div>
 
-      <div class="form-group">
-        <label>Ubicación:</label>
-        <select id="maqUbicacion"></select>
+        <div class="form-group span-2">
+          <label>Descripción:</label>
+          <input type="text" id="maqDescripcion">
+        </div>
       </div>
 
       <div class="modal-btns" style="display:flex; gap:1rem; margin-top:1rem;">
-        <button class="btn" onclick="guardarMaquina()">Guardar</button>
-        <button class="btn btn-secondary" onclick="cerrarModalMaquina()">Cancelar</button>
+        <button class="btn" type="button" onclick="guardarMaquina()">Guardar</button>
+        <button class="btn btn-secondary" type="button" onclick="cerrarModalMaquina()">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- ======================= SCRIPT ======================= -->
   <script>
     const API_URL = "http://localhost:8080/api";
 
@@ -439,16 +507,21 @@
     function verificarSesion(){
       const u = localStorage.getItem('usuario');
       const t = localStorage.getItem('token');
-      if (u && t){
-        window.usuarioActual = JSON.parse(u);
-      } else {
-        window.usuarioActual = null;
-      }
+      window.usuarioActual = (u && t) ? JSON.parse(u) : null;
+    }
+
+    function buildNombreCompleto(u){
+      if (!u) return '';
+      const a = [
+        u.nombreCompleto,
+        [u.nombres, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(' ').trim()
+      ].filter(Boolean)[0];
+      return a || '';
     }
 
     function actualizarUIUsuario() {
       const isLogged = !!window.usuarioActual;
-      const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+      const isAdminOrTrainer = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
 
       const authLink = document.getElementById('authLink');
       const userInfo = document.getElementById('userInfo');
@@ -458,9 +531,9 @@
 
       if (authLink) authLink.style.display = isLogged ? 'none' : 'block';
       if (userInfo) userInfo.classList.toggle('active', isLogged);
-      if (userName) userName.textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
+      if (userName) userName.textContent = isLogged ? buildNombreCompleto(window.usuarioActual) : '';
       if (perfilLink) perfilLink.style.display = isLogged ? 'block' : 'none';
-      if (adminLink) adminLink.style.display = isAdmin ? 'block' : 'none';
+      if (adminLink) adminLink.style.display = isAdminOrTrainer ? 'block' : 'none';
     }
 
     function cerrarSesion() {
@@ -473,7 +546,8 @@
     }
 
     function mostrarMensaje(msg,tipo){
-      const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
+      const s=document.getElementById('successMsg');
+      const e=document.getElementById('errorMsg');
       if (tipo==='success'){
         s.textContent=msg; s.classList.add('show'); e.classList.remove('show');
         setTimeout(()=>s.classList.remove('show'),2500);
@@ -500,12 +574,7 @@
         reporteClases: API_URL + "/admin/reportes/clases",
         reporteSuscripciones: API_URL + "/admin/reportes/suscripciones-mensuales",
       },
-      clases: {
-        listar: API_URL + "/clases"
-      },
-      ubicaciones: {
-        listar: API_URL + "/ubicaciones"
-      },
+      ubicaciones: { listar: API_URL + "/ubicaciones" },
       membresias: {
         crear: API_URL + "/membresias",
         cancelar: (id) => API_URL + "/membresias/" + id + "/cancelar"
@@ -513,8 +582,8 @@
       maquinas: {
         listar: `${API_URL}/admin/maquinas`,
         crear: `${API_URL}/admin/maquinas`,
-        editar: id => `${API_URL}/admin/maquinas/${id}`,
-        eliminar: id => `${API_URL}/admin/maquinas/${id}`,
+        editar: (id) => `${API_URL}/admin/maquinas/${id}`,
+        eliminar: (id) => `${API_URL}/admin/maquinas/${id}`,
       }
     };
 
@@ -523,22 +592,14 @@
       return t ? { 'Authorization': 'Bearer ' + t } : {};
     }
 
-    // Token expirado 
-    function isTokenExpiredFromResponse(data) {
-      if (!data) return false;
-      const txt = (data.mensaje || data.message || '').toString().toLowerCase();
-      return txt.includes('token_expirado') || txt.includes('token expirado');
-    }
-
-    function handleTokenExpiredLogout() {
+    function handle401(status) {
+      if (status !== 401) return;
       if (window._loggingOutFor401) return;
       window._loggingOutFor401 = true;
-
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
       window.usuarioActual = null;
-
-      alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      alert('No autorizado o sesión expirada. Inicia sesión nuevamente.');
       window.location.href = 'login.html';
     }
 
@@ -553,12 +614,9 @@
       });
 
       let data = null;
-      try { data = await res.json(); } catch (e) { data = null; }
+      try { data = await res.json(); } catch { data = null; }
 
-      if (res.status === 401 && isTokenExpiredFromResponse(data)) {
-        handleTokenExpiredLogout();
-      }
-
+      handle401(res.status);
       return { ok: res.ok, data, status: res.status };
     }
 
@@ -574,37 +632,40 @@
       });
 
       let data = null;
-      try { data = await res.json(); } catch (e) { data = null; }
+      try { data = await res.json(); } catch { data = null; }
 
-      if (res.status === 401 && isTokenExpiredFromResponse(data)) {
-        handleTokenExpiredLogout();
-      }
-
+      handle401(res.status);
       return { ok: res.ok, data, status: res.status };
     }
 
     function safeUsuarioNombre(obj = {}) {
-      return obj.usuarioNombre || (obj.usuario && obj.usuario.nombreCompleto) || obj.nombreCompleto || "—";
+      const u = obj.usuario || obj;
+      return (
+        obj.usuarioNombre ||
+        u.nombreCompleto ||
+        [u.nombres, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(' ').trim() ||
+        "—"
+      );
     }
 
-    /* ================== MODALES GENERALES ================== */
+    /* ================== MODALES ================== */
     function abrirModal(id){ document.getElementById(id).classList.add('show'); }
     function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
 
-    /* ================== ADMIN: Tabs y permisos ================== */
+    /* ================== Tabs por rol ================== */
     function configurarTabsAdminPorRol(rol) {
       const isAdmin = rol === 'ADMINISTRADOR';
       const isTrainer = rol === 'ENTRENADOR';
 
       const tabs = [
-        { key:'dashboard',        sel:'[data-tab="dashboard"]' },
-        { key:'usuarios',         sel:'[data-tab="usuarios"]' },
-        { key:'membresias',       sel:'[data-tab="membresias"]' },
-        { key:'clases-admin',     sel:'[data-tab="clases-admin"]' },
-        { key:'ubicaciones-admin',sel:'[data-tab="ubicaciones-admin"]' },
-        { key:'pagos-admin',      sel:'[data-tab="pagos-admin"]' },
-        { key:'reportes',         sel:'[data-tab="reportes"]' },
-        { key:'maquinas',         sel:'[data-tab="maquinas"]' }
+        { key:'dashboard', sel:'[data-tab="dashboard"]' },
+        { key:'usuarios', sel:'[data-tab="usuarios"]' },
+        { key:'membresias', sel:'[data-tab="membresias"]' },
+        { key:'clases-admin', sel:'[data-tab="clases-admin"]' },
+        { key:'ubicaciones-admin', sel:'[data-tab="ubicaciones-admin"]' },
+        { key:'pagos-admin', sel:'[data-tab="pagos-admin"]' },
+        { key:'reportes', sel:'[data-tab="reportes"]' },
+        { key:'maquinas', sel:'[data-tab="maquinas"]' }
       ];
 
       tabs.forEach(t => {
@@ -641,13 +702,14 @@
       document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
       document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active'));
       if (elBtn) elBtn.classList.add('active');
+
       const area = document.getElementById(`tab-${tab}`);
       if (area) area.classList.add('active');
 
       switch(tab){
         case 'dashboard': if(isAdmin) cargarDashboard(); break;
-        case 'usuarios':  if(isAdmin) cargarUsuariosAdmin(); break;
-        case 'membresias':if(isAdmin) cargarMembresiasAdmin(); break;
+        case 'usuarios': if(isAdmin) cargarUsuariosAdmin(); break;
+        case 'membresias': if(isAdmin) cargarMembresiasAdmin(); break;
         case 'clases-admin': cargarClasesAdmin(); break;
         case 'ubicaciones-admin': if(isAdmin) cargarUbicacionesAdmin(); break;
         case 'pagos-admin': if(isAdmin) cargarPagosAdmin(); break;
@@ -656,12 +718,14 @@
       }
     }
 
-    /* ================== ADMIN: Dashboard ================== */
+    /* ================== Dashboard ================== */
     async function cargarDashboard(){
-      const loading=document.getElementById('loadingDashboard'); const container=document.getElementById('dashboardStats');
+      const loading=document.getElementById('loadingDashboard');
+      const container=document.getElementById('dashboardStats');
       loading.classList.add('show');
+
       try{
-        const { ok, data } = await getJson(ENDPOINTS.admin.dashboard, { headers:{...authHeaders()} });
+        const { ok, data } = await getJson(ENDPOINTS.admin.dashboard);
         if (ok && data){
           container.innerHTML = `
             <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${data.totalUsuarios}</div><div class="stat-label">Total Usuarios</div><div style="color:#28a745; margin-top:.5rem;">✓ ${data.usuariosActivos} activos</div></div>
@@ -675,13 +739,14 @@
           container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
         }
       }catch(e){
+        console.error(e);
         container.innerHTML = '<p style="color:#dc3545;">Error al cargar estadísticas</p>';
       } finally{
         loading.classList.remove('show');
       }
     }
 
-    /* ================== ADMIN: Usuarios ================== */
+    /* ================== Usuarios (con nuevos campos) ================== */
     function abrirModalCrearUsuario(){
       document.getElementById('usuarioModalTitulo').textContent='Crear Usuario';
       document.getElementById('formUsuario').reset();
@@ -689,52 +754,92 @@
       document.getElementById('usuarioPwdWrap').style.display='block';
       abrirModal('modalUsuario');
     }
-    function editarUsuario(id, nombre, correo, telefono, rol, activo){
+
+    function editarUsuarioPorId(id){
+      const u = (window._usuariosCache || []).find(x => String(x.id) === String(id));
+      if (!u) { alert('No se encontró el usuario. Recarga la lista.'); return; }
+
       document.getElementById('usuarioModalTitulo').textContent='Editar Usuario';
-      document.getElementById('usuarioEditId').value=id;
-      document.getElementById('usuarioEditNombre').value=nombre||'';
-      document.getElementById('usuarioEditCorreo').value=correo||'';
-      document.getElementById('usuarioEditTelefono').value=telefono||'';
-      document.getElementById('usuarioEditRol').value=rol||'USUARIO';
-      document.getElementById('usuarioEditActivo').value=String(!!activo);
+      document.getElementById('usuarioEditId').value = u.id;
+
+      document.getElementById('usuarioEditNombre').value = (u.nombres || (u.nombreCompleto || '')).toString().trim().split(' ')[0] || '';
+      document.getElementById('usuarioEditApePat').value = (u.apellidoPaterno || '').toString().trim();
+      document.getElementById('usuarioEditApeMat').value = (u.apellidoMaterno || '').toString().trim();
+      document.getElementById('usuarioEditDni').value = (u.dni || '').toString().trim();
+      document.getElementById('usuarioEditDireccion').value = (u.direccion || '').toString().trim();
+      document.getElementById('usuarioEditCorreo').value = (u.correoElectronico || u.email || '').toString().trim();
+      document.getElementById('usuarioEditTelefono').value = (u.numeroTelefono || '').toString().trim();
+      document.getElementById('usuarioEditRol').value = (u.rol || 'USUARIO');
+      document.getElementById('usuarioEditActivo').value = String(!!u.estaActivo);
+
       document.getElementById('usuarioPwdWrap').style.display='none';
       abrirModal('modalUsuario');
     }
+
     async function guardarUsuario(e){
       e.preventDefault();
-      const id=document.getElementById('usuarioEditId').value;
-      const payload={
-        nombreCompleto: usuarioEditNombre.value,
-        correoElectronico: usuarioEditCorreo.value,
-        numeroTelefono: usuarioEditTelefono.value || null,
-        rol: usuarioEditRol.value,
-        estaActivo: usuarioEditActivo.value==='true'
+      const id = document.getElementById('usuarioEditId').value;
+
+      const nombres = document.getElementById('usuarioEditNombre').value.trim();
+      const apPat = document.getElementById('usuarioEditApePat').value.trim();
+      const apMat = document.getElementById('usuarioEditApeMat').value.trim();
+      const nombreCompleto = `${nombres} ${apPat} ${apMat}`.replace(/\s+/g,' ').trim();
+
+      const payload = {
+        nombreCompleto,
+        nombres,
+        apellidoPaterno: apPat,
+        apellidoMaterno: apMat,
+        dni: document.getElementById('usuarioEditDni').value.trim(),
+        direccion: document.getElementById('usuarioEditDireccion').value.trim(),
+        correoElectronico: document.getElementById('usuarioEditCorreo').value.trim(),
+        numeroTelefono: document.getElementById('usuarioEditTelefono').value.trim() || null,
+        rol: document.getElementById('usuarioEditRol').value,
+        estaActivo: document.getElementById('usuarioEditActivo').value === 'true'
       };
-      if (!id && usuarioEditPwd.value) payload.contrasena = usuarioEditPwd.value;
-      const url = id? ENDPOINTS.admin.usuarioId(id): ENDPOINTS.admin.usuarios;
-      const method = id? 'PUT':'POST';
+
+      const pwd = (document.getElementById('usuarioEditPwd').value || '').trim();
+      if (!id && pwd) payload.contrasena = pwd; 
+
+      const url = id ? ENDPOINTS.admin.usuarioId(id) : ENDPOINTS.admin.usuarios;
+      const method = id ? 'PUT' : 'POST';
+
       try{
-        const { ok } = await sendJson(url,method,payload,authHeaders());
+        const { ok, data } = await sendJson(url, method, payload);
         if (ok){
           cerrarModal('modalUsuario');
-          cargarUsuariosAdmin();
-        } else alert('No se pudo guardar');
-      } catch{
+          await cargarUsuariosAdmin();
+          mostrarMensaje('Usuario guardado', 'success');
+        } else {
+          alert((data && (data.mensaje || data.error)) || 'No se pudo guardar (revisa backend)');
+        }
+      } catch (err){
+        console.error(err);
         alert('Error de conexión');
       }
     }
+
     async function eliminarUsuario(id){
       if(!confirm('¿Eliminar usuario?')) return;
       try{
-        const { ok } = await sendJson(ENDPOINTS.admin.usuarioId(id),'DELETE',null,authHeaders());
-        if (ok) cargarUsuariosAdmin(); else alert('No se pudo eliminar');
-      }catch{ alert('Error de conexión'); }
+        const { ok, data } = await sendJson(ENDPOINTS.admin.usuarioId(id),'DELETE',null);
+        if (ok) {
+          await cargarUsuariosAdmin();
+          mostrarMensaje('Usuario eliminado', 'success');
+        } else {
+          alert((data && (data.mensaje||data.error)) || 'No se pudo eliminar');
+        }
+      }catch{
+        alert('Error de conexión');
+      }
     }
+
     async function cargarUsuariosAdmin(){
-      const loading=document.getElementById('loadingUsuarios'); const container=document.getElementById('usuariosTable');
+      const loading=document.getElementById('loadingUsuarios');
+      const container=document.getElementById('usuariosTable');
       loading.classList.add('show');
       try{
-        const { ok, data } = await getJson(ENDPOINTS.admin.usuarios, { headers:{...authHeaders()} });
+        const { ok, data } = await getJson(ENDPOINTS.admin.usuarios);
         window._usuariosCache = Array.isArray(data)?data:[];
         renderUsuariosFiltrados();
       }catch{
@@ -743,41 +848,57 @@
         loading.classList.remove('show');
       }
     }
+
     function renderUsuariosFiltrados(){
       const container=document.getElementById('usuariosTable');
       const q=(document.getElementById('filtroUsuariosTexto')?.value||'').toLowerCase();
       const r=document.getElementById('filtroUsuariosRol')?.value||'';
       const e=document.getElementById('filtroUsuariosEstado')?.value||'';
+
       const arr=(window._usuariosCache||[]).filter(u=>{
-        const txt=`${u.nombreCompleto||''} ${u.correoElectronico||''}`.toLowerCase().includes(q);
-        const rol=!r || (u.rol===r);
-        const est=!e || (String(!!u.estaActivo)===e);
+        const full = `${u.nombreCompleto||''} ${u.nombres||''} ${u.apellidoPaterno||''} ${u.apellidoMaterno||''} ${u.dni||''} ${u.correoElectronico||''}`.toLowerCase();
+        const txt = full.includes(q);
+        const rol = !r || (u.rol===r);
+        const est = !e || (String(!!u.estaActivo)===e);
         return txt && rol && est;
       });
+
       container.innerHTML = `
         <table>
-          <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+          <thead>
+            <tr>
+              <th>ID</th><th>Nombre</th><th>Apellidos</th><th>DNI</th>
+              <th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             ${arr.map(u=>`
               <tr>
                 <td>${u.id}</td>
-                <td>${u.nombreCompleto}</td>
-                <td>${u.correoElectronico}</td>
-                <td>${u.numeroTelefono||'—'}</td>
-                <td><span class="badge badge-info">${u.rol}</span></td>
+                <td>${u.nombres || (u.nombreCompleto||'').split(' ')[0] || '—'}</td>
+                <td>${(u.apellidoPaterno||'')} ${(u.apellidoMaterno||'')}</td>
+                <td>${u.dni || '—'}</td>
+                <td>${u.correoElectronico || '—'}</td>
+                <td>${u.numeroTelefono || '—'}</td>
+                <td><span class="badge badge-info">${u.rol || 'USUARIO'}</span></td>
                 <td><span class="badge ${u.estaActivo?'badge-success':'badge-danger'}">${u.estaActivo?'Activo':'Inactivo'}</span></td>
-                <td>${u.fechaCreacion? new Date(u.fechaCreacion).toLocaleDateString():'—'}</td>
                 <td>
-                  <button class="action-btn btn-edit" onclick="editarUsuario(${u.id}, '${(u.nombreCompleto||'').replace(/'/g,"\\'")}', '${u.correoElectronico||''}', '${u.numeroTelefono||''}', '${u.rol}', ${!!u.estaActivo})">Editar</button>
+                  <button class="action-btn btn-edit" onclick="editarUsuarioPorId(${u.id})">Editar</button>
                   <button class="action-btn btn-delete" onclick="eliminarUsuario(${u.id})">Eliminar</button>
                 </td>
-              </tr>`).join('')}
+              </tr>
+            `).join('')}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    /* ================== ADMIN: Membresías ================== */
-    function abrirModalCrearMembresia(){ document.getElementById('formMembresia').reset(); abrirModal('modalMembresia'); }
+    /* ================== Membresías ================== */
+    function abrirModalCrearMembresia(){
+      document.getElementById('formMembresia').reset();
+      abrirModal('modalMembresia');
+    }
+
     async function guardarMembresiaPresencial(e){
       e.preventDefault();
       const payload={
@@ -786,7 +907,7 @@
         renovacionAutomatica: document.getElementById('membAuto').value==='true'
       };
       try{
-        const { ok, data } = await sendJson(ENDPOINTS.membresias.crear,'POST',payload,authHeaders());
+        const { ok, data } = await sendJson(ENDPOINTS.membresias.crear,'POST',payload);
         if (ok){
           cerrarModal('modalMembresia');
           cargarMembresiasAdmin();
@@ -794,19 +915,22 @@
         } else alert(data?.mensaje||data?.error||'No se pudo crear');
       }catch{ alert('Error de conexión'); }
     }
+
     async function cancelarMembresia(id){
       if(!confirm('¿Cancelar membresía?')) return;
       try{
-        const { ok } = await sendJson(ENDPOINTS.membresias.cancelar(id),'PUT',null,authHeaders());
+        const { ok } = await sendJson(ENDPOINTS.membresias.cancelar(id),'PUT',null);
         if (ok){ cargarMembresiasAdmin(); } else alert('No se pudo cancelar');
       }catch{ alert('Error de conexión'); }
     }
+
     async function cargarMembresiasAdmin(){
-      const loading=document.getElementById('loadingMembresias'); const container=document.getElementById('membresiasTable');
+      const loading=document.getElementById('loadingMembresias');
+      const container=document.getElementById('membresiasTable');
       loading.classList.add('show');
       try{
-        const { ok, data } = await getJson(ENDPOINTS.admin.membresias, { headers:{...authHeaders()} });
-        window._membresiasCache = Array.isArray(data)?data:[]; 
+        const { ok, data } = await getJson(ENDPOINTS.admin.membresias);
+        window._membresiasCache = Array.isArray(data)?data:[];
         renderMembresiasFiltradas();
       }catch{
         container.innerHTML='<p style="color:#dc3545;">Error al cargar membresías</p>';
@@ -814,18 +938,21 @@
         loading.classList.remove('show');
       }
     }
+
     function renderMembresiasFiltradas(){
       const container=document.getElementById('membresiasTable');
       const q=(document.getElementById('filtroMembresiasTexto')?.value||'').toLowerCase();
       const estado=document.getElementById('filtroMembresiasEstado')?.value||'';
       const plan=document.getElementById('filtroMembresiasPlan')?.value||'';
+
       const arr=(window._membresiasCache||[]).filter(m=>{
-        const usuario = (m.usuario?.nombreCompleto||'').toLowerCase();
+        const usuario = (m.usuario?.nombreCompleto || m.usuarioNombre || safeUsuarioNombre(m) || '').toLowerCase();
         const matchesTxt = `${usuario} ${m.tipoPlan||''}`.toLowerCase().includes(q);
         const matchesEstado = !estado || m.estado===estado;
         const matchesPlan = !plan || m.tipoPlan===plan;
         return matchesTxt && matchesEstado && matchesPlan;
       });
+
       container.innerHTML = `
         <table>
           <thead><tr><th>ID</th><th>Usuario</th><th>Plan</th><th>Precio</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Auto-Renov</th><th>Acciones</th></tr></thead>
@@ -841,31 +968,34 @@
                 <td><span class="badge ${m.estado==='ACTIVO'?'badge-success':'badge-warning'}">${m.estado}</span></td>
                 <td>${m.renovacionAutomatica ? '✓' : '—'}</td>
                 <td>${m.estado==='ACTIVO' ? `<button class="action-btn btn-delete" onclick="cancelarMembresia(${m.id})">Cancelar</button>` : '—'}</td>
-              </tr>`).join('')}
+              </tr>
+            `).join('')}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    /* ================== ADMIN: Clases ================== */
+    /* ================== Clases (edit por ID) ================== */
     function abrirModalCrearClase(){
       document.getElementById('modalClaseTitle').textContent='Crear Nueva Clase';
       document.getElementById('formClase').reset();
       document.getElementById('claseId').value='';
-      document.getElementById('claseEstado').value = "true"; 
+      document.getElementById('claseEstado').value = "true";
       abrirModal('modalClase');
     }
 
-    function editarClase(c){
+    function editarClasePorId(id){
+      const c = (window._clasesAdminCache || []).find(x => String(x.id) === String(id));
+      if (!c) { alert('No se encontró la clase. Recarga.'); return; }
+
       document.getElementById('modalClaseTitle').textContent='Editar Clase';
-
       document.getElementById('claseId').value = c.id || '';
-      claseNombre.value = c.nombreClase || '';
-      claseDescripcion.value = c.descripcion || '';
-      claseHorario.value = c.horario || '';
-      claseInstructor.value = c.nombreInstructor || '';
-      claseCapacidad.value = c.capacidadMaxima || 1;
-      claseDuracion.value = c.duracionMinutos || 60;
-
+      document.getElementById('claseNombre').value = c.nombreClase || '';
+      document.getElementById('claseDescripcion').value = c.descripcion || '';
+      document.getElementById('claseHorario').value = c.horario || '';
+      document.getElementById('claseInstructor').value = c.nombreInstructor || '';
+      document.getElementById('claseCapacidad').value = c.capacidadMaxima || 1;
+      document.getElementById('claseDuracion').value = c.duracionMinutos || 60;
       document.getElementById('claseEstado').value = String(!!c.estaActivo);
 
       abrirModal('modalClase');
@@ -873,15 +1003,15 @@
 
     async function guardarClase(e){
       e.preventDefault();
-      const id = claseId.value;
+      const id = document.getElementById('claseId').value;
 
       const payload = {
-        nombreClase: claseNombre.value,
-        descripcion: claseDescripcion.value,
-        horario: claseHorario.value,
-        nombreInstructor: claseInstructor.value,
-        capacidadMaxima: Number(claseCapacidad.value),
-        duracionMinutos: Number(claseDuracion.value),
+        nombreClase: document.getElementById('claseNombre').value,
+        descripcion: document.getElementById('claseDescripcion').value,
+        horario: document.getElementById('claseHorario').value,
+        nombreInstructor: document.getElementById('claseInstructor').value,
+        capacidadMaxima: Number(document.getElementById('claseCapacidad').value),
+        duracionMinutos: Number(document.getElementById('claseDuracion').value),
         estaActivo: document.getElementById('claseEstado').value === "true"
       };
 
@@ -889,11 +1019,11 @@
       const method = id ? 'PUT' : 'POST';
 
       try{
-        const { ok } = await sendJson(url, method, payload, authHeaders());
+        const { ok, data } = await sendJson(url, method, payload);
         if(ok){
           cerrarModal('modalClase');
           cargarClasesAdmin();
-        } else alert('No se pudo guardar');
+        } else alert((data && (data.mensaje||data.error)) || 'No se pudo guardar');
       } catch{
         alert('Error de conexión');
       }
@@ -902,20 +1032,22 @@
     async function eliminarClase(id){
       if(!confirm('¿Eliminar clase?')) return;
       try{
-        const { ok } = await sendJson(ENDPOINTS.admin.claseId(id),'DELETE',null,authHeaders());
-        if(ok) cargarClasesAdmin(); else alert('No se pudo eliminar');
+        const { ok, data } = await sendJson(ENDPOINTS.admin.claseId(id),'DELETE',null);
+        if(ok) cargarClasesAdmin();
+        else alert((data && (data.mensaje||data.error)) || 'No se pudo eliminar');
       } catch{
         alert('Error de conexión');
       }
     }
 
     async function cargarClasesAdmin(){
-      const loading=document.getElementById('loadingClasesAdmin'); const container=document.getElementById('clasesAdminTable');
+      const loading=document.getElementById('loadingClasesAdmin');
+      const container=document.getElementById('clasesAdminTable');
       loading.classList.add('show');
+
       try{
-        // IMPORTANTE: usar endpoint admin para ver activas + inactivas
-        const { ok, data } = await getJson(ENDPOINTS.admin.clases, { headers: authHeaders() });
-        window._clasesAdminCache = Array.isArray(data)?data:[]; 
+        const { ok, data } = await getJson(ENDPOINTS.admin.clases);
+        window._clasesAdminCache = Array.isArray(data)?data:[];
         renderClasesAdminFiltradas();
       }catch{
         container.innerHTML='<p style="color:#dc3545;">Error al cargar clases</p>';
@@ -928,11 +1060,13 @@
       const container=document.getElementById('clasesAdminTable');
       const q=(document.getElementById('filtroClasesTexto')?.value||'').toLowerCase();
       const est=(document.getElementById('filtroClasesEstado')?.value||'');
+
       const arr=(window._clasesAdminCache||[]).filter(c=>{
-        const txt=`${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q);
-        const estado=!est || String(!!c.estaActivo)===est;
+        const txt = `${c.nombreClase||''} ${c.nombreInstructor||''}`.toLowerCase().includes(q);
+        const estado = !est || String(!!c.estaActivo)===est;
         return txt && estado;
       });
+
       container.innerHTML=`
         <table>
           <thead><tr><th>ID</th><th>Nombre</th><th>Instructor</th><th>Horario</th><th>Capacidad</th><th>Inscritos</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -948,26 +1082,23 @@
                 <td>${c.duracionMinutos} min</td>
                 <td><span class="badge ${c.estaActivo ? 'badge-success':'badge-danger'}">${c.estaActivo?'Activo':'Inactivo'}</span></td>
                 <td>
-                  <button class="action-btn btn-edit" onclick='editarClase(${JSON.stringify(c).replace(/'/g,"&apos;")})'>Editar</button>
+                  <button class="action-btn btn-edit" onclick="editarClasePorId(${c.id})">Editar</button>
                   <button class="action-btn btn-delete" onclick="eliminarClase(${c.id})">Eliminar</button>
                 </td>
-              </tr>`).join('')}
+              </tr>
+            `).join('')}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    /* ================== ADMIN: Máquinas ================== */
+    /* ================== Máquinas ================== */
     let maquinaEditandoId = null;
 
     async function cargarMaquinas() {
-      const { ok, data } = await getJson(ENDPOINTS.maquinas.listar, { headers: authHeaders() });
-      if (!ok) {
-        alert("No se pudieron cargar las máquinas");
-        return;
-      }
-
+      const { ok, data } = await getJson(ENDPOINTS.maquinas.listar);
+      if (!ok) { alert("No se pudieron cargar las máquinas"); return; }
       window._maquinasCache = Array.isArray(data) ? data : [];
-
       await cargarUbicacionesFiltroMaquinas();
       renderMaquinasFiltradas();
     }
@@ -1008,40 +1139,26 @@
     async function abrirModalCrearMaquina() {
       maquinaEditandoId = null;
       document.getElementById("tituloModalMaquina").textContent = "Nueva Máquina";
-
       document.getElementById("maqNombre").value = "";
       document.getElementById("maqDescripcion").value = "";
       document.getElementById("maqCategoria").value = "CARDIO";
       document.getElementById("maqEstado").value = "OPERATIVA";
-
       await cargarUbicacionesEnSelect("maqUbicacion");
-
       document.getElementById("modalMaquina").classList.add('show');
     }
 
     async function editarMaquina(id) {
       maquinaEditandoId = id;
-
-      const lista = window._maquinasCache || [];
-      const m = lista.find(x => x.id === id);
-
-      if (!m) {
-        alert("No se encontró la máquina en memoria. Vuelve a abrir el tab o recarga la página.");
-        return;
-      }
+      const m = (window._maquinasCache || []).find(x => x.id === id);
+      if (!m) { alert("No se encontró la máquina. Reabre el tab o recarga."); return; }
 
       document.getElementById("tituloModalMaquina").textContent = "Editar Máquina";
-
       document.getElementById("maqNombre").value = m.nombre || "";
       document.getElementById("maqDescripcion").value = m.descripcion || "";
       document.getElementById("maqCategoria").value = m.categoria || "CARDIO";
       document.getElementById("maqEstado").value = m.estado || "OPERATIVA";
-
       await cargarUbicacionesEnSelect("maqUbicacion");
-      if (m.ubicacionId) {
-        document.getElementById("maqUbicacion").value = m.ubicacionId;
-      }
-
+      if (m.ubicacionId) document.getElementById("maqUbicacion").value = m.ubicacionId;
       document.getElementById("modalMaquina").classList.add('show');
     }
 
@@ -1054,16 +1171,12 @@
         ubicacionId: Number(document.getElementById("maqUbicacion").value)
       };
 
-      const url = maquinaEditandoId
-        ? ENDPOINTS.maquinas.editar(maquinaEditandoId)
-        : ENDPOINTS.maquinas.crear;
-
+      const url = maquinaEditandoId ? ENDPOINTS.maquinas.editar(maquinaEditandoId) : ENDPOINTS.maquinas.crear;
       const method = maquinaEditandoId ? "PUT" : "POST";
 
-      const { ok } = await sendJson(url, method, body, authHeaders());
-
+      const { ok, data } = await sendJson(url, method, body);
       if (!ok) {
-        alert("Error guardando la máquina");
+        alert((data && (data.mensaje||data.error)) || "Error guardando la máquina");
         return;
       }
 
@@ -1073,13 +1186,11 @@
 
     async function eliminarMaquina(id) {
       if (!confirm("¿Eliminar máquina?")) return;
-
-      const { ok } = await sendJson(ENDPOINTS.maquinas.eliminar(id), "DELETE", null, authHeaders());
+      const { ok, data } = await sendJson(ENDPOINTS.maquinas.eliminar(id), "DELETE", null);
       if (!ok) {
-        alert("No se pudo eliminar");
+        alert((data && (data.mensaje||data.error)) || "No se pudo eliminar");
         return;
       }
-
       cargarMaquinas();
     }
 
@@ -1088,107 +1199,104 @@
     }
 
     async function cargarUbicacionesEnSelect(selectId) {
-      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
-
-      if (!ok || !Array.isArray(data)) {
-        alert("No se pudieron cargar las ubicaciones");
-        return;
-      }
-
+      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar, { headers: {} }); // públicas
+      if (!ok || !Array.isArray(data)) { alert("No se pudieron cargar las ubicaciones"); return; }
       const select = document.getElementById(selectId);
       select.innerHTML = "";
-
       data.forEach(u => {
-        select.innerHTML += `<option value="${u.id}">
-          ${u.nombreUbicacion} - ${u.distrito}
-        </option>`;
+        select.innerHTML += `<option value="${u.id}">${u.nombreUbicacion} - ${u.distrito}</option>`;
       });
     }
 
     async function cargarUbicacionesFiltroMaquinas() {
       const select = document.getElementById("filtroMaquinaUbicacion");
       if (!select) return;
-
       if (select.dataset.loaded === "1") return;
 
-      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
-      if (!ok || !Array.isArray(data)) {
-        return;
-      }
+      const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar, { headers: {} }); // públicas
+      if (!ok || !Array.isArray(data)) return;
 
       select.innerHTML = `
         <option value="">Todas las sedes</option>
-        ${data.map(u => `
-          <option value="${u.id}">
-            ${u.nombreUbicacion} - ${u.distrito}
-          </option>
-        `).join("")}
+        ${data.map(u => `<option value="${u.id}">${u.nombreUbicacion} - ${u.distrito}</option>`).join("")}
       `;
-
       select.dataset.loaded = "1";
     }
 
-    /* ================== ADMIN: Ubicaciones ================== */
+    /* ================== Ubicaciones ================== */
     function abrirModalCrearUbicacion() {
       const rol = (window.usuarioActual?.rol)||'USUARIO';
-      if (rol !== 'ADMINISTRADOR') {
-        alert('Solo un administrador puede crear ubicaciones.');
-        return;
-      }
-      const form = document.getElementById('formUbicacion');
-      if (form) form.reset();
+      if (rol !== 'ADMINISTRADOR') { alert('Solo un administrador puede crear ubicaciones.'); return; }
+      document.getElementById('formUbicacion').reset();
       document.getElementById('ubicacionId').value = '';
       document.getElementById('modalUbicacionTitle').textContent = 'Crear Nueva Ubicación';
       abrirModal('modalUbicacion');
     }
 
-    function editarUbicacion(u){
+    function editarUbicacionPorId(id){
+      const u = (window._ubicacionesAdminCache || []).find(x => String(x.id) === String(id));
+      if(!u){ alert('No se encontró la ubicación.'); return; }
+
       document.getElementById('modalUbicacionTitle').textContent='Editar Ubicación';
-      ubicacionId.value=u.id||''; ubicacionNombre.value=u.nombreUbicacion||''; ubicacionDireccion.value=u.direccion||'';
-      ubicacionDistrito.value=u.distrito||''; ubicacionCiudad.value=u.ciudad||''; ubicacionTelefono.value=u.numeroTelefono||'';
-      ubicacionHorario.value=u.horario||'24/7'; ubicacionLatitud.value=u.latitud||''; ubicacionLongitud.value=u.longitud||'';
+      document.getElementById('ubicacionId').value=u.id||'';
+      document.getElementById('ubicacionNombre').value=u.nombreUbicacion||'';
+      document.getElementById('ubicacionDireccion').value=u.direccion||'';
+      document.getElementById('ubicacionDistrito').value=u.distrito||'';
+      document.getElementById('ubicacionCiudad').value=u.ciudad||'';
+      document.getElementById('ubicacionTelefono').value=u.numeroTelefono||'';
+      document.getElementById('ubicacionHorario').value=u.horario||'24/7';
+      document.getElementById('ubicacionLatitud').value=u.latitud||'';
+      document.getElementById('ubicacionLongitud').value=u.longitud||'';
+
       abrirModal('modalUbicacion');
     }
+
     async function guardarUbicacion(e){
       e.preventDefault();
-      const id=ubicacionId.value;
+      const id=document.getElementById('ubicacionId').value;
       const payload={
-        nombreUbicacion:ubicacionNombre.value,
-        direccion:ubicacionDireccion.value,
-        distrito:ubicacionDistrito.value,
-        ciudad:ubicacionCiudad.value,
-        numeroTelefono:ubicacionTelefono.value,
-        horario:ubicacionHorario.value,
-        latitud:parseFloat(ubicacionLatitud.value||0),
-        longitud:parseFloat(ubicacionLongitud.value||0)
+        nombreUbicacion: document.getElementById('ubicacionNombre').value,
+        direccion: document.getElementById('ubicacionDireccion').value,
+        distrito: document.getElementById('ubicacionDistrito').value,
+        ciudad: document.getElementById('ubicacionCiudad').value,
+        numeroTelefono: document.getElementById('ubicacionTelefono').value,
+        horario: document.getElementById('ubicacionHorario').value,
+        latitud: parseFloat(document.getElementById('ubicacionLatitud').value||0),
+        longitud: parseFloat(document.getElementById('ubicacionLongitud').value||0)
       };
+
       const url=id? ENDPOINTS.admin.ubicacionId(id): ENDPOINTS.admin.ubicaciones;
       const method=id?'PUT':'POST';
+
       try{
-        const { ok } = await sendJson(url,method,payload,authHeaders());
+        const { ok, data } = await sendJson(url,method,payload);
         if(ok){
           cerrarModal('modalUbicacion');
           cargarUbicacionesAdmin();
-        } else alert('No se pudo guardar');
+        } else alert((data && (data.mensaje||data.error)) || 'No se pudo guardar');
       } catch{
         alert('Error de conexión');
       }
     }
+
     async function eliminarUbicacion(id){
       if(!confirm('¿Eliminar ubicación?')) return;
       try{
-        const { ok } = await sendJson(ENDPOINTS.admin.ubicacionId(id),'DELETE',null,authHeaders());
-        if(ok) cargarUbicacionesAdmin(); else alert('No se pudo eliminar');
+        const { ok, data } = await sendJson(ENDPOINTS.admin.ubicacionId(id),'DELETE',null);
+        if(ok) cargarUbicacionesAdmin();
+        else alert((data && (data.mensaje||data.error)) || 'No se pudo eliminar');
       } catch{
         alert('Error de conexión');
       }
     }
+
     async function cargarUbicacionesAdmin(){
-      const loading=document.getElementById('loadingUbicacionesAdmin'); const container=document.getElementById('ubicacionesAdminTable');
+      const loading=document.getElementById('loadingUbicacionesAdmin');
+      const container=document.getElementById('ubicacionesAdminTable');
       loading.classList.add('show');
       try{
-        const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar);
-        window._ubicacionesAdminCache = Array.isArray(data)?data:[]; 
+        const { ok, data } = await getJson(ENDPOINTS.ubicaciones.listar, { headers: {} }); // públicas
+        window._ubicacionesAdminCache = Array.isArray(data)?data:[];
         renderUbicacionesFiltradas();
       }catch{
         container.innerHTML='<p style="color:#dc3545;">Error al cargar ubicaciones</p>';
@@ -1196,36 +1304,46 @@
         loading.classList.remove('show');
       }
     }
+
     function renderUbicacionesFiltradas(){
       const container=document.getElementById('ubicacionesAdminTable');
       const q=(document.getElementById('filtroUbicacionesTexto')?.value||'').toLowerCase();
+
       const arr=(window._ubicacionesAdminCache||[]).filter(u=>{
         return `${u.nombreUbicacion||''} ${u.distrito||''} ${u.ciudad||''}`.toLowerCase().includes(q);
       });
+
       container.innerHTML=`
         <table>
           <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Distrito</th><th>Ciudad</th><th>Teléfono</th><th>Horario</th><th>Acciones</th></tr></thead>
           <tbody>
             ${arr.map(u=>`
               <tr>
-                <td>${u.id}</td><td>${u.nombreUbicacion}</td><td>${u.direccion}</td><td>${u.distrito}</td>
-                <td>${u.ciudad||'—'}</td><td>${u.numeroTelefono}</td><td>${u.horario}</td>
+                <td>${u.id}</td>
+                <td>${u.nombreUbicacion}</td>
+                <td>${u.direccion}</td>
+                <td>${u.distrito}</td>
+                <td>${u.ciudad||'—'}</td>
+                <td>${u.numeroTelefono}</td>
+                <td>${u.horario}</td>
                 <td>
-                  <button class="action-btn btn-edit" onclick='editarUbicacion(${JSON.stringify(u).replace(/'/g,"&apos;")})'>Editar</button>
+                  <button class="action-btn btn-edit" onclick="editarUbicacionPorId(${u.id})">Editar</button>
                   <button class="action-btn btn-delete" onclick="eliminarUbicacion(${u.id})">Eliminar</button>
                 </td>
-              </tr>`).join('')}
+              </tr>
+            `).join('')}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    /* ================== ADMIN: Pagos ================== */
+    /* ================== Pagos ================== */
     async function cargarPagosAdmin() {
       const loading = document.getElementById('loadingPagosAdmin');
       const container = document.getElementById('pagosAdminTable');
       loading.classList.add('show');
       try {
-        const { ok, data } = await getJson(ENDPOINTS.admin.pagos, { headers: { ...authHeaders() } });
+        const { ok, data } = await getJson(ENDPOINTS.admin.pagos);
         window._pagosCache = ok && Array.isArray(data) ? data : [];
         renderPagosFiltrados();
       } catch (e) {
@@ -1235,26 +1353,23 @@
         loading.classList.remove('show');
       }
     }
+
     function renderPagosFiltrados() {
       const container = document.getElementById('pagosAdminTable');
       const q = (document.getElementById('filtroPagosTexto')?.value || '').toLowerCase();
+
       const arr = (window._pagosCache || []).filter(p => {
         const usuarioTxt = (safeUsuarioNombre(p) + ' ' + (p.usuarioId ?? '')).toLowerCase();
         const idTx = (p.idTransaccion || '').toLowerCase();
         return usuarioTxt.includes(q) || idTx.includes(q);
       });
+
       container.innerHTML = `
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Usuario</th>
-              <th>Membresía</th>
-              <th>Monto</th>
-              <th>Fecha</th>
-              <th>Transacción</th>
-              <th>Método</th>
-              <th>Estado</th>
+              <th>ID</th><th>Usuario</th><th>Membresía</th><th>Monto</th><th>Fecha</th>
+              <th>Transacción</th><th>Método</th><th>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -1271,10 +1386,11 @@
               </tr>
             `).join('')}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    /* ================== ADMIN: Reportes ================== */
+    /* ================== Reportes ================== */
     function cargarReportes() {
       const rol = window.usuarioActual?.rol;
       if (rol !== 'ADMINISTRADOR') {
@@ -1284,99 +1400,243 @@
             <div style="text-align:center; padding:3rem;">
               <h2 style="color:#ff4500;">Acceso restringido</h2>
               <p>Solo los administradores pueden visualizar las estadísticas globales y los reportes.</p>
-            </div>`;
+            </div>
+          `;
         }
         return;
       }
+
       cargarReporteMembresias();
       cargarReporteIngresos();
       cargarReporteClases();
       cargarReporteSuscripcionesMensuales();
     }
 
+    async function cargarReporteMembresias(){
+      const loading=document.getElementById('loadingReporteMembresias');
+      const content=document.getElementById('reporteMembresiaContent');
+      loading.classList.add('show');
+
+      try{
+        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteMembresias);
+        if (ok && d){
+          content.innerHTML = `
+            <p><strong>Total:</strong> ${d.totalMembresias ?? d.total ?? 0}</p>
+            <p><strong>Activas:</strong> ${d.membresiasActivas ?? d.activas ?? 0}</p>
+            <p><strong>Básico:</strong> ${d.membresiaBasico ?? 0} | <strong>Premium:</strong> ${d.membresiaPremium ?? 0} | <strong>Anual:</strong> ${d.membresiaAnual ?? 0}</p>
+          `;
+          window._reporteMembresias = d;
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
+    }
+
+    async function cargarReporteIngresos(){
+      const loading=document.getElementById('loadingReporteIngresos');
+      const content=document.getElementById('reporteIngresosContent');
+      const periodo=document.getElementById('periodoIngresos').value;
+      loading.classList.add('show');
+
+      try{
+        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteIngresos(periodo));
+        if (ok && d){
+          content.innerHTML = `
+            <p><strong>Periodo:</strong> ${d.periodo||periodo}</p>
+            <p><strong>Total ingresos:</strong> S/${Number(d.totalIngresos||0).toFixed(2)}</p>
+            <p><strong>Cantidad de pagos:</strong> ${d.cantidadPagos||0}</p>
+            <p><strong>Promedio por pago:</strong> S/${Number(d.promedioIngreso||0).toFixed(2)}</p>
+          `;
+          window._reporteIngresos = d;
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
+    }
+
+    async function cargarReporteClases(){
+      const loading=document.getElementById('loadingReporteClases');
+      const content=document.getElementById('reporteClasesContent');
+      loading.classList.add('show');
+
+      try{
+        const { ok, data:lista } = await getJson(ENDPOINTS.admin.reporteClases);
+        if (ok && Array.isArray(lista)){
+          window._reporteClases = lista;
+          const rows = lista.map(r => `
+            <li>${r.nombreClase}: ${Number(r.tasaOcupacion||r.porcentajeOcupacion||0).toFixed(1)}% (Inscritos: ${r.usuariosInscritos ?? r.inscritos ?? 0}/${r.capacidadMaxima ?? r.capacidad ?? 0})</li>
+          `).join('');
+          content.innerHTML = rows ? `<ul>${rows}</ul>` : '<p>No hay datos</p>';
+        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      }catch{
+        content.innerHTML='<p style="color:#dc3545;">Error</p>';
+      } finally{
+        loading.classList.remove('show');
+      }
+    }
+
+    async function cargarReporteSuscripcionesMensuales() {
+      const canvas = document.getElementById('graficoSuscripciones');
+      const ctx = canvas.getContext('2d');
+      try {
+        const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones);
+        if (!ok) throw new Error("Error al obtener datos");
+
+        window._suscripcionesMensuales = data;
+
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        if (window.suscripcionesChart) window.suscripcionesChart.destroy();
+
+        window.suscripcionesChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label:'Nuevas suscripciones por mes',
+              data: values,
+              borderColor:'#ff4500',
+              backgroundColor:'rgba(255,69,0,0.2)',
+              borderWidth:3,
+              tension:0.3,
+              fill:true,
+              pointRadius:5,
+              pointHoverRadius:7
+            }]
+          },
+          options: { responsive: true,
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
+              x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo cargar el gráfico de suscripciones.');
+      }
+    }
+
+    /* ================== EXPORT REPORTES ================== */
     async function ensureAdminCaches() {
       const peticiones = [];
 
       if (!Array.isArray(window._usuariosCache)) {
-        peticiones.push(getJson(ENDPOINTS.admin.usuarios, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._usuariosCache = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.usuarios).then(r => { if (r.ok) window._usuariosCache = r.data; }));
       }
       if (!Array.isArray(window._membresiasCache)) {
-        peticiones.push(getJson(ENDPOINTS.admin.membresias, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._membresiasCache = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.membresias).then(r => { if (r.ok) window._membresiasCache = r.data; }));
       }
       if (!Array.isArray(window._clasesAdminCache)) {
-        peticiones.push(getJson(ENDPOINTS.admin.clases, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._clasesAdminCache = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.clases).then(r => { if (r.ok) window._clasesAdminCache = r.data; }));
       }
       if (!Array.isArray(window._ubicacionesAdminCache)) {
-        peticiones.push(getJson(ENDPOINTS.ubicaciones.listar, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._ubicacionesAdminCache = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.ubicaciones.listar, { headers: {} }).then(r => { if (r.ok) window._ubicacionesAdminCache = r.data; }));
       }
       if (!Array.isArray(window._pagosCache)) {
-        peticiones.push(getJson(ENDPOINTS.admin.pagos, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._pagosCache = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.pagos).then(r => { if (r.ok) window._pagosCache = r.data; }));
       }
 
       if (!window._reporteMembresias) {
-        peticiones.push(getJson(ENDPOINTS.admin.reporteMembresias, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._reporteMembresias = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.reporteMembresias).then(r => { if (r.ok) window._reporteMembresias = r.data; }));
       }
       if (!window._reporteIngresos) {
         const periodo = document.getElementById('periodoIngresos')?.value || 'mensual';
-        peticiones.push(getJson(ENDPOINTS.admin.reporteIngresos(periodo), { headers: authHeaders() })
-          .then(r => { if (r.ok) window._reporteIngresos = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.reporteIngresos(periodo)).then(r => { if (r.ok) window._reporteIngresos = r.data; }));
       }
       if (!Array.isArray(window._reporteClases)) {
-        peticiones.push(getJson(ENDPOINTS.admin.reporteClases, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._reporteClases = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.reporteClases).then(r => { if (r.ok) window._reporteClases = r.data; }));
       }
       if (!window._suscripcionesMensuales) {
-        peticiones.push(getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() })
-          .then(r => { if (r.ok) window._suscripcionesMensuales = r.data; }));
+        peticiones.push(getJson(ENDPOINTS.admin.reporteSuscripciones).then(r => { if (r.ok) window._suscripcionesMensuales = r.data; }));
       }
 
       await Promise.allSettled(peticiones);
     }
+
     function nowSlug() {
       const d = new Date();
       const pad = n => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
     }
+
     function mapUsuariosExcel(data=[]) {
       return data.map(u => ({
-        ID: u.id,'Nombre completo': u.nombreCompleto,'Email': u.correoElectronico,'Teléfono': u.numeroTelefono || '',
-        'Rol': u.rol,'Activo': u.estaActivo ? 'Sí' : 'No','Fecha registro': u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleString() : ''
+        ID: u.id,
+        'Nombre completo': buildNombreCompleto(u),
+        'Nombres': u.nombres ?? '',
+        'Apellido paterno': u.apellidoPaterno ?? '',
+        'Apellido materno': u.apellidoMaterno ?? '',
+        'DNI': u.dni ?? '',
+        'Dirección': u.direccion ?? '',
+        'Email': u.correoElectronico ?? '',
+        'Teléfono': u.numeroTelefono ?? '',
+        'Rol': u.rol ?? '',
+        'Activo': u.estaActivo ? 'Sí' : 'No',
+        'Registro': u.fechaCreacion ? new Date(u.fechaCreacion).toLocaleString() : ''
       }));
     }
+
     function mapMembresiasExcel(data=[]) {
       return data.map(m => ({
-        ID: m.id,'Usuario ID': m.usuarioId ?? (m.usuario?.id ?? ''),'Usuario': m.usuarioNombre ?? (m.usuario?.nombreCompleto ?? ''),
-        'Plan': m.tipoPlan,'Precio': m.precio ?? '','Inicio': m.fechaInicio ? new Date(m.fechaInicio).toLocaleString() : '',
-        'Fin': m.fechaFin ? new Date(m.fechaFin).toLocaleString() : '','Estado': m.estado,'Auto-renovación': m.renovacionAutomatica ? 'Sí' : 'No',
+        ID: m.id,
+        'Usuario ID': m.usuarioId ?? (m.usuario?.id ?? ''),
+        'Usuario': m.usuarioNombre ?? safeUsuarioNombre(m),
+        'Plan': m.tipoPlan ?? '',
+        'Precio': m.precio ?? '',
+        'Inicio': m.fechaInicio ? new Date(m.fechaInicio).toLocaleString() : '',
+        'Fin': m.fechaFin ? new Date(m.fechaFin).toLocaleString() : '',
+        'Estado': m.estado ?? '',
+        'Auto-renovación': m.renovacionAutomatica ? 'Sí' : 'No',
       }));
     }
+
     function mapClasesExcel(data=[]) {
       return data.map(c => ({
-        ID: c.id,'Nombre': c.nombreClase,'Instructor': c.nombreInstructor,'Horario': c.horario,
-        'Capacidad': c.capacidadMaxima ?? '','Inscritos': Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.inscritos ?? 0),
-        'Duración (min)': c.duracionMinutos ?? '','Activo': c.estaActivo ? 'Sí' : 'No',
+        ID: c.id,
+        'Nombre': c.nombreClase ?? '',
+        'Instructor': c.nombreInstructor ?? '',
+        'Horario': c.horario ?? '',
+        'Capacidad': c.capacidadMaxima ?? '',
+        'Inscritos': Array.isArray(c.usuariosInscritos) ? c.usuariosInscritos.length : (c.usuariosInscritos ?? c.inscritos ?? 0),
+        'Duración (min)': c.duracionMinutos ?? '',
+        'Activo': c.estaActivo ? 'Sí' : 'No',
       }));
     }
+
     function mapUbicacionesExcel(data=[]) {
       return data.map(u => ({
-        ID: u.id,'Nombre': u.nombreUbicacion,'Dirección': u.direccion,'Distrito': u.distrito,'Ciudad': u.ciudad ?? '',
-        'Teléfono': u.numeroTelefono ?? '','Horario': u.horario ?? '','Latitud': u.latitud ?? '','Longitud': u.longitud ?? '',
+        ID: u.id,
+        'Nombre': u.nombreUbicacion ?? '',
+        'Dirección': u.direccion ?? '',
+        'Distrito': u.distrito ?? '',
+        'Ciudad': u.ciudad ?? '',
+        'Teléfono': u.numeroTelefono ?? '',
+        'Horario': u.horario ?? '',
+        'Latitud': u.latitud ?? '',
+        'Longitud': u.longitud ?? '',
       }));
     }
+
     function mapPagosExcel(data=[]) {
       return data.map(p => ({
-        ID: p.id,'Usuario ID': p.usuarioId ?? (p.usuario?.id ?? ''),'Usuario': p.usuarioNombre ?? (p.usuario?.nombreCompleto ?? ''),
-        'Membresía ID': p.membresiaId ?? (p.membresia?.id ?? ''),'Monto': p.monto ?? '',
-        'Fecha pago': (p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '','Transacción': p.idTransaccion ?? '',
-        'Método': p.metodoPago ?? '','Estado': p.estadoPago ?? '',
+        ID: p.id,
+        'Usuario ID': p.usuarioId ?? (p.usuario?.id ?? ''),
+        'Usuario': p.usuarioNombre ?? safeUsuarioNombre(p),
+        'Membresía ID': p.membresiaId ?? (p.membresia?.id ?? ''),
+        'Monto': p.monto ?? '',
+        'Fecha pago': (p.fechaPago || p.fecha) ? new Date(p.fechaPago || p.fecha).toLocaleString() : '',
+        'Transacción': p.idTransaccion ?? '',
+        'Método': p.metodoPago ?? '',
+        'Estado': p.estadoPago ?? '',
       }));
     }
+
     function mapReporteMembresiasExcel(r={}) {
       return [
         { Métrica: 'Total', Valor: r.totalMembresias ?? r.total ?? 0 },
@@ -1389,6 +1649,7 @@
         { Métrica: 'Expiradas', Valor: r.membresiasExpiradas ?? r.vencidas ?? 0 },
       ];
     }
+
     function mapReporteIngresosExcel(r={}) {
       return [
         { Métrica: 'Periodo', Valor: r.periodo ?? '' },
@@ -1398,12 +1659,17 @@
         { Métrica: 'Método más usado', Valor: r.metodoPagoMasUsado ?? 'N/A' },
       ];
     }
+
     function mapReporteClasesExcel(list=[]) {
       return list.map(x => ({
-        'Clase': x.nombreClase,'Instructor': x.nombreInstructor ?? '','Capacidad': x.capacidadMaxima ?? 0,
-        'Inscritos': x.usuariosInscritos ?? 0,'Ocupación %': typeof x.tasaOcupacion === 'number' ? x.tasaOcupacion.toFixed(1) : 0,
+        'Clase': x.nombreClase,
+        'Instructor': x.nombreInstructor ?? '',
+        'Capacidad': x.capacidadMaxima ?? 0,
+        'Inscritos': x.usuariosInscritos ?? x.inscritos ?? 0,
+        'Ocupación %': typeof x.tasaOcupacion === 'number' ? x.tasaOcupacion.toFixed(1) : Number(x.tasaOcupacion||x.porcentajeOcupacion||0).toFixed(1),
       }));
     }
+
     function mapSuscripcionesMensualesExcel(obj={}) {
       return Object.entries(obj)
         .sort((a,b) => a[0].localeCompare(b[0]))
@@ -1414,24 +1680,28 @@
       try {
         await ensureAdminCaches();
         const wb = XLSX.utils.book_new();
+
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUsuariosExcel(window._usuariosCache || [])), 'Usuarios');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapMembresiasExcel(window._membresiasCache || [])), 'Membresias');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapClasesExcel(window._clasesAdminCache || [])), 'Clases');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapUbicacionesExcel(window._ubicacionesAdminCache || [])), 'Ubicaciones');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapPagosExcel(window._pagosCache || [])), 'Pagos');
+
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteMembresiasExcel(window._reporteMembresias || {})), 'Rpt_Membresias');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteIngresosExcel(window._reporteIngresos || {})), 'Rpt_Ingresos');
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapReporteClasesExcel(window._reporteClases || [])), 'Rpt_Clases');
+
         if (window._suscripcionesMensuales) {
           XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapSuscripcionesMensualesExcel(window._suscripcionesMensuales)), 'Suscripciones_Mensuales');
         }
-        const filename = `reportes_fitzone_${nowSlug()}.xlsx`;
-        XLSX.writeFile(wb, filename);
+
+        XLSX.writeFile(wb, `reportes_fitzone_${nowSlug()}.xlsx`);
       } catch (e) {
         console.error(e);
         alert('No se pudo generar el Excel');
       }
     }
+
     async function descargarReportesPDF() {
       try {
         await ensureAdminCaches();
@@ -1468,150 +1738,46 @@
         doc.setFontSize(18);
         doc.text('Reporte General - FitZone', margin, y);
         y += 20;
+
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(11);
-        doc.text(`Fecha: ${new Date().toLocaleString()}`, margin, y); y += 24;
+        doc.text(`Fecha: ${new Date().toLocaleString()}`, margin, y);
+        y += 24;
 
         addTitle('Resumen de Membresías');
-        const rm = window._reporteMembresias || {};
-        addTable(['Métrica', 'Valor'], mapReporteMembresiasExcel(rm).map(r => [r['Métrica'], String(r['Valor'])]));
+        addTable(['Métrica', 'Valor'], mapReporteMembresiasExcel(window._reporteMembresias || {}).map(r => [r['Métrica'], String(r['Valor'])]));
 
         addTitle('Resumen de Ingresos');
-        const ri = window._reporteIngresos || {};
-        addTable(['Métrica', 'Valor'], mapReporteIngresosExcel(ri).map(r => [r['Métrica'], String(r['Valor'])]));
+        addTable(['Métrica', 'Valor'], mapReporteIngresosExcel(window._reporteIngresos || {}).map(r => [r['Métrica'], String(r['Valor'])]));
 
         addTitle('Clases (Ocupación)');
         const rc = mapReporteClasesExcel(window._reporteClases || []);
         addTable(['Clase', 'Instructor', 'Capacidad', 'Inscritos', 'Ocupación %'],
-          rc.map(x => [x['Clase'], x['Instructor'], x['Capacidad'], x['Inscritos'], x['Ocupación %']]));
+          rc.map(x => [x['Clase'], x['Instructor'], String(x['Capacidad']), String(x['Inscritos']), String(x['Ocupación %'])])
+        );
 
         if (window._suscripcionesMensuales) {
           addTitle('Evolución Mensual de Suscripciones');
           const sm = mapSuscripcionesMensualesExcel(window._suscripcionesMensuales);
-          addTable(['Mes', 'Nuevas suscripciones'], sm.map(r => [r['Mes'], r['Nuevas suscripciones']]));
+          addTable(['Mes', 'Nuevas suscripciones'], sm.map(r => [r['Mes'], String(r['Nuevas suscripciones'])]));
         }
 
         addTitle('Usuarios (resumen)');
         const u = mapUsuariosExcel((window._usuariosCache || [])).slice(0, 20);
-        addTable(['ID','Nombre','Email','Teléfono','Rol','Activo','Registro'],
-          u.map(r => [r['ID'], r['Nombre completo'], r['Email'], r['Teléfono'], r['Rol'], r['Activo'], r['Fecha registro']]));
+        addTable(['ID','Nombre completo','Email','Teléfono','Rol','Activo','Registro'],
+          u.map(r => [String(r['ID']), r['Nombre completo'], r['Email'], r['Teléfono'], r['Rol'], r['Activo'], r['Registro']])
+        );
 
         addTitle('Membresías (resumen)');
         const mm = mapMembresiasExcel((window._membresiasCache || [])).slice(0, 20);
-        addTable(['ID','Usuario','Plan','Precio','Inicio','Fin','Estado','Auto-renov'],
-          mm.map(r => [r['ID'], r['Usuario'], r['Plan'], r['Precio'], r['Inicio'], r['Fin'], r['Estado'], r['Auto-renovación']]));
+        addTable(['ID','Usuario','Plan','Precio','Inicio','Fin','Estado','Auto-renovación'],
+          mm.map(r => [String(r['ID']), r['Usuario'], r['Plan'], String(r['Precio']), r['Inicio'], r['Fin'], r['Estado'], r['Auto-renovación']])
+        );
 
-        const filename = `reportes_fitzone_${nowSlug()}.pdf`;
-        doc.save(filename);
+        doc.save(`reportes_fitzone_${nowSlug()}.pdf`);
       } catch (e) {
         console.error(e);
         alert('No se pudo generar el PDF');
-      }
-    }
-
-    async function cargarReporteMembresias(){
-      const loading=document.getElementById('loadingReporteMembresias'); const content=document.getElementById('reporteMembresiaContent');
-      loading.classList.add('show');
-      try{
-        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteMembresias, { headers:{...authHeaders()} });
-        if (ok && d){
-          content.innerHTML = `
-            <p><strong>Total:</strong> ${d.totalMembresias ?? d.total ?? 0}</p>
-            <p><strong>Activas:</strong> ${d.membresiasActivas ?? d.activas ?? 0}</p>
-            <p><strong>Básico:</strong> ${d.membresiaBasico ?? 0} | <strong>Premium:</strong> ${d.membresiaPremium ?? 0} | <strong>Anual:</strong> ${d.membresiaAnual ?? 0}</p>
-          `;
-        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{
-        content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      } finally{
-        loading.classList.remove('show');
-      }
-    }
-    async function cargarReporteIngresos(){
-      const loading=document.getElementById('loadingReporteIngresos'); const content=document.getElementById('reporteIngresosContent');
-      const periodo=document.getElementById('periodoIngresos').value;
-      loading.classList.add('show');
-      try{
-        const { ok, data:d } = await getJson(ENDPOINTS.admin.reporteIngresos(periodo), { headers:{...authHeaders()} });
-        if (ok && d){
-          content.innerHTML = `
-            <p><strong>Periodo:</strong> ${d.periodo||periodo}</p>
-            <p><strong>Total ingresos:</strong> S/${Number(d.totalIngresos||0).toFixed(2)}</p>
-            <p><strong>Cantidad de pagos:</strong> ${d.cantidadPagos||0}</p>
-            <p><strong>Promedio por pago:</strong> S/${Number(d.promedioIngreso||0).toFixed(2)}</p>
-          `;
-        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{
-        content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      } finally{
-        loading.classList.remove('show');
-      }
-    }
-    async function cargarReporteClases(){
-      const loading=document.getElementById('loadingReporteClases'); const content=document.getElementById('reporteClasesContent');
-      loading.classList.add('show');
-      try{
-        const { ok, data:lista } = await getJson(ENDPOINTS.admin.reporteClases, { headers:{...authHeaders()} });
-        if (ok && Array.isArray(lista)){
-          const rows = lista.map(r => `<li>${r.nombreClase}: ${Number(r.tasaOcupacion||r.porcentajeOcupacion||0).toFixed(1)}% (Inscritos: ${r.usuariosInscritos ?? r.inscritos ?? 0}/${r.capacidadMaxima ?? r.capacidad ?? 0})</li>`).join('');
-          content.innerHTML = rows ? `<ul>${rows}</ul>` : '<p>No hay datos</p>';
-        } else content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      }catch{
-        content.innerHTML='<p style="color:#dc3545;">Error</p>';
-      } finally{
-        loading.classList.remove('show');
-      }
-    }
-
-    /* ======= GRÁFICO LINEAL SUSCRIPCIONES ======= */
-    async function cargarReporteSuscripcionesMensuales() {
-      const canvas = document.getElementById('graficoSuscripciones');
-      const ctx = canvas.getContext('2d');
-      try {
-        const { ok, data } = await getJson(ENDPOINTS.admin.reporteSuscripciones, { headers: authHeaders() });
-        if (!ok) throw new Error("Error al obtener datos");
-
-        const labels = Object.keys(data);
-        const values = Object.values(data);
-
-        if (window.suscripcionesChart) window.suscripcionesChart.destroy();
-
-        window.suscripcionesChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              label:'Nuevas suscripciones por mes',
-              data: values,
-              borderColor:'#ff4500',
-              backgroundColor:'rgba(255,69,0,0.2)',
-              borderWidth:3,
-              tension:0.3,
-              fill:true,
-              pointRadius:5,
-              pointHoverRadius:7
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } },
-              x: { title: { display: true, text: 'Mes (yyyy-MM)' } }
-            },
-            plugins: {
-              legend: { labels: { color: '#fff' } },
-              title: {
-                display: true,
-                text: 'Tendencia de Suscripciones Mensuales',
-                color: '#ff4500',
-                font: { size: 16 }
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.error(err);
-        alert('No se pudo cargar el gráfico de suscripciones.');
       }
     }
 
@@ -1623,6 +1789,7 @@
       );
       return { head, body };
     }
+
     function descargarTablaComoPDF(tableContainerId, filenameBase='Tabla'){
       const table = document.querySelector(`#${tableContainerId} table`);
       if(!table){ alert('No hay datos para exportar'); return; }
@@ -1631,14 +1798,27 @@
       const doc = new jsPDF('p','pt');
       doc.setFont('helvetica','bold'); doc.setFontSize(14);
       doc.text(filenameBase, 36, 40);
-      doc.autoTable({ startY: 60, head: [head], body: body, styles: { fontSize: 9 }, headStyles: { fillColor: [255,69,0], textColor: 255 }, margin: { left: 36, right: 36 }, theme: 'striped' });
+      doc.autoTable({
+        startY: 60,
+        head: [head],
+        body: body,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [255,69,0], textColor: 255 },
+        margin: { left: 36, right: 36 },
+        theme: 'striped'
+      });
       doc.save(`${filenameBase}_${new Date().toISOString().slice(0,10)}.pdf`);
     }
+
     function descargarTablaComoExcel(tableContainerId, filenameBase='Tabla'){
       const table = document.querySelector(`#${tableContainerId} table`);
       if(!table){ alert('No hay datos para exportar'); return; }
       const { head, body } = tablaDOMToArrays(table);
-      const rows = body.map(r=>{ const obj = {}; head.forEach((h,i)=>{ obj[h] = r[i] ?? ''; }); return obj; });
+      const rows = body.map(r=>{
+        const obj = {};
+        head.forEach((h,i)=>{ obj[h] = r[i] ?? ''; });
+        return obj;
+      });
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Datos');
       XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1648,8 +1828,20 @@
     window.addEventListener('DOMContentLoaded', () => {
       verificarSesion();
       actualizarUIUsuario();
+
+      if (!window.usuarioActual || !localStorage.getItem('token')) {
+        alert('Inicia sesión primero.');
+        window.location.href = 'login.html';
+        return;
+      }
+
       configurarTabsAdminPorRol(window.usuarioActual?.rol || 'ADMINISTRADOR');
-      cargarDashboard();
+
+      if (window.usuarioActual?.rol === 'ENTRENADOR') {
+        cambiarTabAdmin('clases-admin', document.querySelector('[data-tab="clases-admin"]'));
+      } else {
+        cargarDashboard();
+      }
     });
   </script>
 </body>

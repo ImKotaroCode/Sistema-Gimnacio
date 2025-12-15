@@ -5,7 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartFit - Login</title>
   <link rel="stylesheet" href="/css/estilos.css" />
+
+  <style>
+    .auth-container{ display:flex; justify-content:center; padding:30px 12px; }
+    .auth-form{ max-width: 520px; width:100%; }
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 520px){
+      .grid-2{ grid-template-columns: 1fr; }
+    }
+
+    .form-group label{ display:block; margin-bottom:6px; font-weight:600; }
+    .auth-form h2{ margin-bottom: 14px; }
+    .success-message,.error-message{ display:none; margin:10px 0; padding:10px; border-radius:8px; }
+  </style>
 </head>
+
 <body>
   <nav>
     <ul>
@@ -32,22 +50,66 @@
     <div class="auth-container">
       <div class="auth-form">
         <h2 id="authTitle">Iniciar Sesión</h2>
+
         <div id="successMsg" class="success-message"></div>
         <div id="errorMsg" class="error-message"></div>
+
         <form id="authForm" onsubmit="manejarAutenticacion(event)">
-          <div class="form-group" id="nameGroup" style="display:none;">
-            <label>Nombre Completo</label><input type="text" id="nombreCompleto" placeholder="Tu nombre" />
+
+          <!-- REGISTRO (oculto en modo login) -->
+          <div id="registerFields" style="display:none;">
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Nombres</label>
+                <input type="text" id="nombres" placeholder="Ej: Alexander" />
+              </div>
+
+              <div class="form-group">
+                <label>DNI</label>
+                <input type="text" id="dni" placeholder="8 dígitos" maxlength="8" inputmode="numeric" />
+              </div>
+
+              <div class="form-group">
+                <label>Apellido Paterno</label>
+                <input type="text" id="apellidoPaterno" placeholder="Ej: Ferrua" />
+              </div>
+
+              <div class="form-group">
+                <label>Apellido Materno</label>
+                <input type="text" id="apellidoMaterno" placeholder="Ej: Rúa" />
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label>Dirección</label>
+              <input type="text" id="direccion" placeholder="Ej: Av. Los Olivos 123" />
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label>Teléfono</label>
+              <input type="tel" id="numeroTelefono" placeholder="+51 999 999 999" maxlength="9"/>
+            </div>
+
           </div>
-          <div class="form-group"><label>Correo</label><input type="email" id="correoElectronico" required /></div>
-          <div class="form-group" id="phoneGroup" style="display:none;">
-            <label>Teléfono</label><input type="tel" id="numeroTelefono" placeholder="+51 999 999 999" />
+
+          <!-- Comunes login/registro -->
+          <div class="form-group" style="margin-top:12px;">
+            <label>Correo</label>
+            <input type="email" id="correoElectronico" required />
           </div>
-          <div class="form-group"><label>Contraseña</label><input type="password" id="contrasena" required /></div>
+
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="contrasena" required />
+          </div>
+
           <button type="submit" class="btn" id="btnAuth" style="width:100%;">Continuar</button>
         </form>
+
         <div class="auth-links">
           <p id="toggleText">¿No tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Regístrate</a></p>
-          <p><a href="#" onclick="mostrarMensaje('Se ha enviado un enlace de recuperación a tu correo','success')">¿Olvidaste tu contraseña?</a></p>
+          <p><a href="#" onclick="mostrarMensaje('Función demo: recuperación no implementada','success')">¿Olvidaste tu contraseña?</a></p>
         </div>
       </div>
     </div>
@@ -83,35 +145,88 @@ function actualizarUIUsuario() {
 
 function mostrarMensaje(msg,tipo){
   const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
-  if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
-  else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
+  if (tipo==='success'){
+    s.textContent=msg; s.classList.add('show'); e.classList.remove('show');
+    setTimeout(()=>s.classList.remove('show'),2500);
+  } else {
+    e.textContent=msg; e.classList.add('show'); s.classList.remove('show');
+    setTimeout(()=>e.classList.remove('show'),4500);
+  }
+}
+
+function esModoRegistro(){
+  return document.getElementById('registerFields').style.display !== 'none';
+}
+
+function normalizarTelefono(raw){
+  if (!raw) return null;
+  let t = raw.trim().replace(/[^\d+]/g,'');
+  if (t && !t.startsWith('+')) t = '+51' + t;
+  return t || null;
+}
+
+function validarRegistroLocal(payload){
+  if (!payload.nombres || payload.nombres.trim().length < 2) return 'Nombres requeridos';
+  if (!payload.apellidoPaterno || payload.apellidoPaterno.trim().length < 2) return 'Apellido paterno requerido';
+  if (!payload.apellidoMaterno || payload.apellidoMaterno.trim().length < 2) return 'Apellido materno requerido';
+  if (!payload.dni || !/^\d{8}$/.test(payload.dni)) return 'DNI inválido (8 dígitos)';
+  if (!payload.direccion || payload.direccion.trim().length < 5) return 'Dirección requerida';
+  return null;
 }
 
 async function manejarAutenticacion(event){
   event.preventDefault();
+
   const correoElectronico = document.getElementById('correoElectronico').value.trim();
   const contrasena = document.getElementById('contrasena').value;
+
   const btnAuth = document.getElementById('btnAuth');
   btnAuth.disabled=true; btnAuth.textContent='Procesando...';
 
   try{
     let url, body;
-    if (document.getElementById('nameGroup').style.display==='none'){ // login
-      url = ENDPOINTS.auth.login; body = { correoElectronico, contrasena };
-    } else { // registro
-      const nombreCompleto = document.getElementById('nombreCompleto').value.trim();
-      let numeroTelefono = document.getElementById('numeroTelefono').value.trim();
-      if (numeroTelefono){ numeroTelefono = numeroTelefono.replace(/[^\d+]/g,''); if(!numeroTelefono.startsWith('+')) numeroTelefono = '+51'+numeroTelefono; }
-      else numeroTelefono=null;
-      url = ENDPOINTS.auth.register; body = { nombreCompleto, correoElectronico, contrasena, numeroTelefono };
+
+    if (!esModoRegistro()){
+      url = ENDPOINTS.auth.login;
+      body = { correoElectronico, contrasena };
+
+    } else {
+      const nombres = document.getElementById('nombres').value.trim();
+      const apellidoPaterno = document.getElementById('apellidoPaterno').value.trim();
+      const apellidoMaterno = document.getElementById('apellidoMaterno').value.trim();
+      const dni = document.getElementById('dni').value.trim();
+      const direccion = document.getElementById('direccion').value.trim();
+      const numeroTelefono = normalizarTelefono(document.getElementById('numeroTelefono').value);
+
+      url = ENDPOINTS.auth.register;
+      body = {
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        dni,
+        direccion,
+        correoElectronico,
+        contrasena,
+        numeroTelefono
+      };
+
+      const err = validarRegistroLocal(body);
+      if (err){
+        mostrarMensaje(err, 'error');
+        return;
+      }
     }
+
     const res = await fetch(url, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
       body: JSON.stringify(body)
     });
+
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
     if (res.ok && data?.token){
       localStorage.setItem('token', data.token);
       localStorage.setItem('usuario', JSON.stringify({
@@ -121,30 +236,42 @@ async function manejarAutenticacion(event){
         rol: data.rol || data.authority || (Array.isArray(data.roles)?data.roles[0]:'USUARIO')
       }));
       window.usuarioActual = JSON.parse(localStorage.getItem('usuario'));
-      mostrarMensaje('¡Bienvenido!','success');
+      mostrarMensaje('¡Bienvenido!', 'success');
       setTimeout(()=>{ window.location.href='index.html'; }, 700);
-    }else{
-      mostrarMensaje((data && (data.mensaje||data.error)) || 'Error en la autenticación','error');
+    } else {
+      const backendMsg =
+        (data && (data.mensaje || data.error || data.message)) ||
+        (text && text.length < 250 ? text : null) ||
+        'Error en la autenticación';
+
+      mostrarMensaje(backendMsg, 'error');
     }
-  }catch(e){
-    console.error(e); mostrarMensaje('Error de conexión','error');
-  }finally{
+
+  } catch(e){
+    console.error(e);
+    mostrarMensaje('Error de conexión', 'error');
+  } finally {
     btnAuth.disabled=false; btnAuth.textContent='Continuar';
   }
 }
 
 function cerrarSesion(){
   localStorage.removeItem('token'); localStorage.removeItem('usuario');
-  window.usuarioActual=null; actualizarUIUsuario(); mostrarMensaje('Sesión cerrada','success');
+  window.usuarioActual=null; actualizarUIUsuario();
+  mostrarMensaje('Sesión cerrada','success');
 }
 
 function cambiarModoAuth(e){
   e.preventDefault();
-  const loginMode = document.getElementById('nameGroup').style.display==='none';
-  document.getElementById('authTitle').textContent = loginMode?'Crear Cuenta':'Iniciar Sesión';
-  document.getElementById('nameGroup').style.display = loginMode?'block':'none';
-  document.getElementById('phoneGroup').style.display = loginMode?'block':'none';
-  document.getElementById('toggleText').innerHTML = loginMode?'¿Ya tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Inicia Sesión</a>':'¿No tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Regístrate</a>';
+  const loginMode = !esModoRegistro(); // si estaba login => pasa a registro
+
+  document.getElementById('authTitle').textContent = loginMode ? 'Crear Cuenta' : 'Iniciar Sesión';
+  document.getElementById('registerFields').style.display = loginMode ? 'block' : 'none';
+
+  document.getElementById('toggleText').innerHTML =
+    loginMode
+      ? '¿Ya tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Inicia Sesión</a>'
+      : '¿No tienes cuenta? <a href="#" onclick="cambiarModoAuth(event)">Regístrate</a>';
 }
 
 window.addEventListener('DOMContentLoaded', () => {
