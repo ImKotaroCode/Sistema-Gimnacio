@@ -1695,7 +1695,7 @@
           XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapSuscripcionesMensualesExcel(window._suscripcionesMensuales)), 'Suscripciones_Mensuales');
         }
 
-        XLSX.writeFile(wb, `reportes_fitzone_${nowSlug()}.xlsx`);
+        XLSX.writeFile(wb, `reportes_SmartFit_${nowSlug()}.xlsx`);
       } catch (e) {
         console.error(e);
         alert('No se pudo generar el Excel');
@@ -1736,7 +1736,7 @@
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(18);
-        doc.text('Reporte General - FitZone', margin, y);
+        doc.text('Reporte General - SmartFit', margin, y);
         y += 20;
 
         doc.setFont('helvetica', 'normal');
@@ -1774,7 +1774,7 @@
           mm.map(r => [String(r['ID']), r['Usuario'], r['Plan'], String(r['Precio']), r['Inicio'], r['Fin'], r['Estado'], r['Auto-renovación']])
         );
 
-        doc.save(`reportes_fitzone_${nowSlug()}.pdf`);
+        doc.save(`reportes_SmartFit_${nowSlug()}.pdf`);
       } catch (e) {
         console.error(e);
         alert('No se pudo generar el PDF');
