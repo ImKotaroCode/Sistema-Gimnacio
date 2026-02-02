@@ -1,622 +1,913 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartFit - Mi Perfil</title>
-  <link rel="stylesheet" href="/css/estilos.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartFit - Mi Perfil</title>
+    <link rel="stylesheet" href="/css/estilos.css" />
 
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-</head>
-<body>
-  <nav>
-    <ul>
-      <li class="logo">SMARTFIT</li>
-      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-      <div class="nav-links" id="navLinks">
-        <li><a href="index.html">Inicio</a></li>
-        <li><a href="precios.html">Precios</a></li>
-        <li><a href="ubicaciones.html">Ubicaciones</a></li>
-        <li><a href="clases.html">Clases</a></li>
-        <li><a href="contacto.html">Contacto</a></li>
-        <li id="perfilLink" style="display:none;"><a href="miperfil.html" style="color:#ff4500;font-weight:700;">Mi Perfil</a></li>
-        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
-        <li class="user-info" id="userInfo">
-          <span class="user-name" id="userName"></span>
-          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
-        </li>
-        <li id="authLink"><a href="login.html">Login</a></li>
-      </div>
-    </ul>
-  </nav>
-
-  <!-- PERFIL -->
-  <div id="perfil" class="page active" style="padding-top:80px;">
-    <section class="auth-container">
-      <div class="auth-form">
-        <h2 class="section-title" style="text-align:center">Mi Perfil</h2>
-
-        <div class="admin-tabs" role="tablist" style="margin-bottom:1rem">
-          <button class="admin-tab active" data-perfil-tab="info" onclick="cambiarTabPerfil('info', this)">👤 Información</button>
-          <button class="admin-tab" data-perfil-tab="membresia" onclick="cambiarTabPerfil('membresia', this)">💳 Membresía</button>
-          <button class="admin-tab" data-perfil-tab="pagos" onclick="cambiarTabPerfil('pagos', this)">💰 Pagos</button>
-          <button class="admin-tab" data-perfil-tab="clases" onclick="cambiarTabPerfil('clases', this)">🏋️ Clases</button>
-          <button class="admin-tab" data-perfil-tab="preferencias" onclick="cambiarTabPerfil('preferencias', this)">🔔 Preferencias</button>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li class="logo">SMARTFIT</li>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        <div class="nav-links" id="navLinks">
+          <li><a href="/index.html">Inicio</a></li>
+          <li><a href="/html/precios.html">Precios</a></li>
+          <li><a href="/html/ubicaciones.html">Ubicaciones</a></li>
+          <li><a href="/html/clases.html">Clases</a></li>
+          <li><a href="/html/contacto.html">Contacto</a></li>
+          <li id="perfilLink" style="display: none">
+            <a href="/html/miperfil.html">Mi Perfil</a>
+          </li>
+          <li id="adminLink" style="display: none">
+            <a href="/html/admin.html">Panel Admin</a>
+          </li>
+          <li class="user-info" id="userInfo">
+            <span class="user-name" id="userName"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">
+              Cerrar Sesión
+            </button>
+          </li>
+          <li id="authLink">
+            <a href="/html/login.html">Login</a>
+          </li>
         </div>
+      </ul>
+    </nav>
 
-        <!-- Info -->
-        <div id="perfil-info" class="admin-content active">
-          <form id="formPerfil" onsubmit="guardarPerfil(event)">
+    <!-- PERFIL -->
+    <div id="perfil" class="page active" style="padding-top: 80px">
+      <section class="auth-container">
+        <div class="auth-form">
+          <h2 class="section-title" style="text-align: center">Mi Perfil</h2>
 
-            <div class="form-group">
-              <label>Nombres</label>
-              <input id="perfilNombres" type="text" required />
-            </div>
-            <div class="form-group">
-              <label>Apellido paterno</label>
-              <input id="perfilApellidoPaterno" type="text" required />
-            </div>
-            <div class="form-group">
-              <label>Apellido materno</label>
-              <input id="perfilApellidoMaterno" type="text" required />
-            </div>
-
-            <div class="form-group">
-              <label>Correo electrónico</label>
-              <input id="perfilCorreo" type="email" readonly />
-            </div>
-            <div class="form-group">
-              <label>Teléfono</label>
-              <input id="perfilTelefono" type="text" placeholder="+51 9xx xxx xxx" />
-            </div>
-            <div class="form-group">
-              <label>Rol</label>
-              <input id="perfilRol" type="text" readonly />
-            </div>
-            <div class="form-group">
-              <label>Fecha de registro</label>
-              <input id="perfilFecha" type="text" readonly />
-            </div>
-            <div class="form-group">
-              <button class="btn" type="submit">Guardar cambios</button>
-              <button class="btn btn-secondary" type="button" onclick="abrirModalPassword()">Cambiar contraseña</button>
-              <button class="btn btn-secondary" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Membresía -->
-        <div id="perfil-membresia" class="admin-content">
-          <div class="payment-summary" id="perfilMembresiaBox">
-            <p>Cargando membresía...</p>
+          <div class="admin-tabs" role="tablist" style="margin-bottom: 1rem">
+            <button
+              class="admin-tab active"
+              data-perfil-tab="info"
+              onclick="cambiarTabPerfil('info', this)"
+            >
+              👤 Información
+            </button>
+            <button
+              class="admin-tab"
+              data-perfil-tab="membresia"
+              onclick="cambiarTabPerfil('membresia', this)"
+            >
+              💳 Membresía
+            </button>
+            <button
+              class="admin-tab"
+              data-perfil-tab="pagos"
+              onclick="cambiarTabPerfil('pagos', this)"
+            >
+              💰 Pagos
+            </button>
+            <button
+              class="admin-tab"
+              data-perfil-tab="clases"
+              onclick="cambiarTabPerfil('clases', this)"
+            >
+              🏋️ Clases
+            </button>
+            <button
+              class="admin-tab"
+              data-perfil-tab="preferencias"
+              onclick="cambiarTabPerfil('preferencias', this)"
+            >
+              🔔 Preferencias
+            </button>
           </div>
-          <div>
-            <button class="btn" id="btnActivarMembresia" style="display:none" onclick="activarMembresia()">Activar/Renovar</button>
-            <button class="btn btn-secondary" id="btnCancelarMembresia" style="display:none" onclick="cancelarMembresiaUsuario()">Cancelar membresía</button>
-            <label style="margin-left:1rem">
-              <input id="chkAutoRenov" type="checkbox" onchange="toggleAutoRenovacion(this)" />
-              Renovación automática
-            </label>
-          </div>
-        </div>
 
-        <!-- Pagos -->
-        <div id="perfil-pagos" class="admin-content">
-          <div class="section-top" style="margin-bottom:.5rem">
-            <div class="filters">
-              <input type="text" id="filtroPagosUsuario" placeholder="Buscar por transacción/fecha" oninput="renderPagosUsuario()" />
+          <!-- Info -->
+          <div id="perfil-info" class="admin-content active">
+            <form id="formPerfil" onsubmit="guardarPerfil(event)">
+              <div class="form-group">
+                <label>Nombres</label>
+                <input id="perfilNombres" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Apellido paterno</label>
+                <input id="perfilApellidoPaterno" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Apellido materno</label>
+                <input id="perfilApellidoMaterno" type="text" required />
+              </div>
+
+              <div class="form-group">
+                <label>Correo electrónico</label>
+                <input id="perfilCorreo" type="email" readonly />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input
+                  id="perfilTelefono"
+                  type="text"
+                  placeholder="+51 9xx xxx xxx"
+                />
+              </div>
+              <div class="form-group">
+                <label>Rol</label>
+                <input id="perfilRol" type="text" readonly />
+              </div>
+              <div class="form-group">
+                <label>Fecha de registro</label>
+                <input id="perfilFecha" type="text" readonly />
+              </div>
+              <div class="form-group">
+                <button class="btn" type="submit">Guardar cambios</button>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  onclick="abrirModalPassword()"
+                >
+                  Cambiar contraseña
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  onclick="cerrarSesion()"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Membresía -->
+          <div id="perfil-membresia" class="admin-content">
+            <div class="payment-summary" id="perfilMembresiaBox">
+              <p>Cargando membresía...</p>
             </div>
-            <div class="perfil-actions">
-              <button class="btn btn-secondary" type="button" onclick="descargarPagosUsuarioPDF()">Descargar PDF</button>
-              <button class="btn btn-secondary" type="button" onclick="descargarPagosUsuarioExcel()">Descargar Excel</button>
-            </div>
-          </div>
-          <div class="data-table" id="tablaPagosUsuario"></div>
-        </div>
-
-        <!-- Clases -->
-        <div id="perfil-clases" class="admin-content">
-          <div class="filters" style="margin-bottom:.5rem">
-            <select id="filtroClasesTipo" onchange="renderClasesUsuario()">
-              <option value="proximas">Próximas</option>
-              <option value="pasadas">Pasadas</option>
-              <option value="todas">Todas</option>
-            </select>
-          </div>
-          <div class="data-table" id="tablaClasesUsuario"></div>
-        </div>
-
-        <!-- Preferencias -->
-        <div id="perfil-preferencias" class="admin-content">
-          <form id="formPreferencias" onsubmit="guardarPreferencias(event)">
-            <div class="form-group">
-              <label>
-                <input type="checkbox" id="prefEmailNoti" />
-                Recibir notificaciones por correo
+            <div>
+              <button
+                class="btn"
+                id="btnActivarMembresia"
+                style="display: none"
+                onclick="activarMembresia()"
+              >
+                Activar/Renovar
+              </button>
+              <button
+                class="btn btn-secondary"
+                id="btnCancelarMembresia"
+                style="display: none"
+                onclick="cancelarMembresiaUsuario()"
+              >
+                Cancelar membresía
+              </button>
+              <label style="margin-left: 1rem">
+                <input
+                  id="chkAutoRenov"
+                  type="checkbox"
+                  onchange="toggleAutoRenovacion(this)"
+                />
+                Renovación automática
               </label>
             </div>
-            <div class="form-group">
-              <label>Recordatorios de clases</label>
-              <select id="prefRecordatorios">
-                <option value="none">Sin recordatorios</option>
-                <option value="24h">24 horas antes</option>
-                <option value="2h">2 horas antes</option>
-                <option value="30m">30 minutos antes</option>
+          </div>
+
+          <!-- Pagos -->
+          <div id="perfil-pagos" class="admin-content">
+            <div class="section-top" style="margin-bottom: 0.5rem">
+              <div class="filters">
+                <input
+                  type="text"
+                  id="filtroPagosUsuario"
+                  placeholder="Buscar por transacción/fecha"
+                  oninput="renderPagosUsuario()"
+                />
+              </div>
+              <div class="perfil-actions">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  onclick="descargarPagosUsuarioPDF()"
+                >
+                  Descargar PDF
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  onclick="descargarPagosUsuarioExcel()"
+                >
+                  Descargar Excel
+                </button>
+              </div>
+            </div>
+            <div class="data-table" id="tablaPagosUsuario"></div>
+          </div>
+
+          <!-- Clases -->
+          <div id="perfil-clases" class="admin-content">
+            <div class="filters" style="margin-bottom: 0.5rem">
+              <select id="filtroClasesTipo" onchange="renderClasesUsuario()">
+                <option value="proximas">Próximas</option>
+                <option value="pasadas">Pasadas</option>
+                <option value="todas">Todas</option>
               </select>
             </div>
-            <button class="btn" type="submit">Guardar preferencias</button>
-          </form>
-        </div>
-      </div>
-    </section>
-  </div>
+            <div class="data-table" id="tablaClasesUsuario"></div>
+          </div>
 
-  <!-- Modal Cambiar Contraseña -->
-  <div class="modal" id="modalPassword">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Cambiar contraseña</h3>
-        <button class="close-modal" onclick="cerrarModal('modalPassword')">×</button>
-      </div>
-      <form id="formPassword" onsubmit="guardarPassword(event)">
-        <div class="form-group">
-          <label>Contraseña actual</label>
-          <input id="pwdActual" type="password" required />
+          <!-- Preferencias -->
+          <div id="perfil-preferencias" class="admin-content">
+            <form id="formPreferencias" onsubmit="guardarPreferencias(event)">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="prefEmailNoti" />
+                  Recibir notificaciones por correo
+                </label>
+              </div>
+              <div class="form-group">
+                <label>Recordatorios de clases</label>
+                <select id="prefRecordatorios">
+                  <option value="none">Sin recordatorios</option>
+                  <option value="24h">24 horas antes</option>
+                  <option value="2h">2 horas antes</option>
+                  <option value="30m">30 minutos antes</option>
+                </select>
+              </div>
+              <button class="btn" type="submit">Guardar preferencias</button>
+            </form>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Nueva contraseña</label>
-          <input id="pwdNueva" type="password" minlength="6" required />
-        </div>
-        <div class="form-group">
-          <label>Confirmar nueva contraseña</label>
-          <input id="pwdNueva2" type="password" minlength="6" required />
-        </div>
-        <button class="btn" type="submit">Actualizar</button>
-      </form>
+      </section>
     </div>
-  </div>
 
-  <div id="successMsg" class="success-message"></div>
-  <div id="errorMsg" class="error-message"></div>
+    <!-- Modal Cambiar Contraseña -->
+    <div class="modal" id="modalPassword">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Cambiar contraseña</h3>
+          <button class="close-modal" onclick="cerrarModal('modalPassword')">
+            ×
+          </button>
+        </div>
+        <form id="formPassword" onsubmit="guardarPassword(event)">
+          <div class="form-group">
+            <label>Contraseña actual</label>
+            <input id="pwdActual" type="password" required />
+          </div>
+          <div class="form-group">
+            <label>Nueva contraseña</label>
+            <input id="pwdNueva" type="password" minlength="6" required />
+          </div>
+          <div class="form-group">
+            <label>Confirmar nueva contraseña</label>
+            <input id="pwdNueva2" type="password" minlength="6" required />
+          </div>
+          <button class="btn" type="submit">Actualizar</button>
+        </form>
+      </div>
+    </div>
 
-<script>
-const API_BASE =
-  location.hostname === "localhost"
-    ? "http://localhost:8080"
-    : "https://gimnacioapi.onrender.com";
+    <div id="successMsg" class="success-message"></div>
+    <div id="errorMsg" class="error-message"></div>
 
-const API_URL = `${API_BASE}/api`;
+    <script>
+      const API_BASE =
+        location.hostname === "localhost"
+          ? "http://localhost:8080"
+          : "https://gimnacioapi.onrender.com";
 
-const ENDPOINTS = {
-  usuarios: {
-    me: `${API_URL}/usuarios/me`,
-    update:   (id) => `${API_URL}/usuarios/${id}`,
-    password: (id) => `${API_URL}/usuarios/${id}/contrasena`,
-    prefs:    (id) => `${API_URL}/usuarios/${id}/preferencias`
-  },
-  membresias: {
-    porUsuario: (id) => `${API_URL}/membresias/usuario/${id}`,
-    crear: `${API_URL}/membresias`,
-    cancelar: (id) => `${API_URL}/membresias/${id}/cancelar`,
-    update:   (id) => `${API_URL}/membresias/${id}`
-  },
-  pagos: {
-    porUsuario: (id) => `${API_URL}/pagos/usuario/${id}`
-  },
-  clases: {
-    porUsuario: (id) => `${API_URL}/clases/usuario/${id}`,
-    cancelarInscripcion: (claseId) =>
-      `${API_URL}/clases/${claseId}/cancelar-inscripcion`
-  }
-};
+      const API_URL = `${API_BASE}/api`;
 
-const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
+      const ENDPOINTS = {
+        usuarios: {
+          me: `${API_URL}/usuarios/me`,
+          update: (id) => `${API_URL}/usuarios/${id}`,
+          password: (id) => `${API_URL}/usuarios/${id}/contrasena`,
+          prefs: (id) => `${API_URL}/usuarios/${id}/preferencias`,
+        },
+        membresias: {
+          porUsuario: (id) => `${API_URL}/membresias/usuario/${id}`,
+          crear: `${API_URL}/membresias`,
+          cancelar: (id) => `${API_URL}/membresias/${id}/cancelar`,
+          update: (id) => `${API_URL}/membresias/${id}`,
+        },
+        pagos: {
+          porUsuario: (id) => `${API_URL}/pagos/usuario/${id}`,
+        },
+        clases: {
+          porUsuario: (id) => `${API_URL}/clases/usuario/${id}`,
+          cancelarInscripcion: (claseId) =>
+            `${API_URL}/clases/${claseId}/cancelar-inscripcion`,
+        },
+      };
 
-function buildNombreCompleto(u){
-  const n  = (u?.nombres || '').trim();
-  const ap = (u?.apellidoPaterno || '').trim();
-  const am = (u?.apellidoMaterno || '').trim();
-  const combo = `${n} ${ap} ${am}`.trim();
-  return combo || (u?.nombreCompleto || '').trim();
-}
+      const authHeaders = () => ({
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      });
 
-function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+      function buildNombreCompleto(u) {
+        const n = (u?.nombres || "").trim();
+        const ap = (u?.apellidoPaterno || "").trim();
+        const am = (u?.apellidoMaterno || "").trim();
+        const combo = `${n} ${ap} ${am}`.trim();
+        return combo || (u?.nombreCompleto || "").trim();
+      }
 
-function verificarSesion(){
-  const u = localStorage.getItem('usuario');
-  const t = localStorage.getItem('token');
-  if (u && t) window.usuarioActual = JSON.parse(u);
-  else window.usuarioActual = null;
-}
+      function toggleMobileMenu() {
+        document.getElementById("navLinks").classList.toggle("active");
+      }
 
-function actualizarUIUsuario() {
-  const isLogged = !!window.usuarioActual;
-  const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+      function verificarSesion() {
+        const u = localStorage.getItem("usuario");
+        const t = localStorage.getItem("token");
+        if (u && t) window.usuarioActual = JSON.parse(u);
+        else window.usuarioActual = null;
+      }
 
-  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
-  document.getElementById('userInfo').classList.toggle('active', isLogged);
-  document.getElementById('userName').textContent = isLogged ? buildNombreCompleto(window.usuarioActual) : '';
-  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
-  document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
-}
+      function actualizarUIUsuario() {
+        const isLogged = !!window.usuarioActual;
+        const isAdmin =
+          window.usuarioActual?.rol === "ADMINISTRADOR" ||
+          window.usuarioActual?.rol === "ENTRENADOR";
 
-function mostrarMensaje(msg,tipo){
-  const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
-  if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
-  else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
-}
+        document.getElementById("authLink").style.display = isLogged
+          ? "none"
+          : "block";
+        document
+          .getElementById("userInfo")
+          .classList.toggle("active", isLogged);
+        document.getElementById("userName").textContent = isLogged
+          ? buildNombreCompleto(window.usuarioActual)
+          : "";
+        document.getElementById("perfilLink").style.display = isLogged
+          ? "block"
+          : "none";
+        document.getElementById("adminLink").style.display = isAdmin
+          ? "block"
+          : "none";
+      }
 
-function cerrarSesion() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  window.usuarioActual = null;
+      function mostrarMensaje(msg, tipo) {
+        const s = document.getElementById("successMsg");
+        const e = document.getElementById("errorMsg");
+        if (tipo === "success") {
+          s.textContent = msg;
+          s.classList.add("show");
+          e.classList.remove("show");
+          setTimeout(() => s.classList.remove("show"), 2500);
+        } else {
+          e.textContent = msg;
+          e.classList.add("show");
+          s.classList.remove("show");
+          setTimeout(() => e.classList.remove("show"), 4000);
+        }
+      }
 
-  actualizarUIUsuario();
-  mostrarMensaje('Sesión cerrada','success');
+      function cerrarSesion() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        window.usuarioActual = null;
 
-  window.location.href = "index.html";
+        actualizarUIUsuario();
+        mostrarMensaje("Sesión cerrada", "success");
 
-}
+        window.location.href = "index.html";
+      }
 
-/* ===== fetch helpers ===== */
-async function getJson(url, opts = {}) {
-  const res = await fetch(url, { ...opts, headers: { "Content-Type":"application/json", ...(opts.headers||{}) } });
-  const data = await res.json().catch(()=>null);
-  return { ok: res.ok, data };
-}
-async function sendJson(url, method="POST", body=null, headers={}) {
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type":"application/json", ...headers },
-    body: body? JSON.stringify(body): null
-  });
-  const data = await res.json().catch(()=>null);
-  return { ok: res.ok, data };
-}
+      /* ===== fetch helpers ===== */
+      async function getJson(url, opts = {}) {
+        const res = await fetch(url, {
+          ...opts,
+          headers: {
+            "Content-Type": "application/json",
+            ...(opts.headers || {}),
+          },
+        });
+        const data = await res.json().catch(() => null);
+        return { ok: res.ok, data };
+      }
+      async function sendJson(url, method = "POST", body = null, headers = {}) {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...headers },
+          body: body ? JSON.stringify(body) : null,
+        });
+        const data = await res.json().catch(() => null);
+        return { ok: res.ok, data };
+      }
 
-/* ===== PERFIL TABS ===== */
-function abrirModalPassword(){ document.getElementById('modalPassword').classList.add('show'); }
-function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
+      /* ===== PERFIL TABS ===== */
+      function abrirModalPassword() {
+        document.getElementById("modalPassword").classList.add("show");
+      }
+      function cerrarModal(id) {
+        document.getElementById(id).classList.remove("show");
+      }
 
-function cambiarTabPerfil(tab, btn){
-  document.querySelectorAll('[data-perfil-tab]').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  ['info','membresia','pagos','clases','preferencias'].forEach(id=>{ document.getElementById('perfil-'+id).classList.remove('active'); });
-  document.getElementById('perfil-'+tab).classList.add('active');
-  if(tab==='membresia') cargarMembresiaUsuario();
-  if(tab==='pagos')     cargarPagosUsuario();
-  if(tab==='clases')    cargarClasesUsuario();
-  if(tab==='preferencias') cargarPreferencias();
-}
+      function cambiarTabPerfil(tab, btn) {
+        document
+          .querySelectorAll("[data-perfil-tab]")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        ["info", "membresia", "pagos", "clases", "preferencias"].forEach(
+          (id) => {
+            document.getElementById("perfil-" + id).classList.remove("active");
+          },
+        );
+        document.getElementById("perfil-" + tab).classList.add("active");
+        if (tab === "membresia") cargarMembresiaUsuario();
+        if (tab === "pagos") cargarPagosUsuario();
+        if (tab === "clases") cargarClasesUsuario();
+        if (tab === "preferencias") cargarPreferencias();
+      }
 
-/* ===== PERFIL: cargar datos ===== */
-async function cargarPerfil(){
-  let me = null;
+      /* ===== PERFIL: cargar datos ===== */
+      async function cargarPerfil() {
+        let me = null;
 
-  try {
-    const { ok, data } = await getJson(ENDPOINTS.usuarios.me, { headers: authHeaders() });
-    if (ok) me = data;
-  } catch (e) {}
+        try {
+          const { ok, data } = await getJson(ENDPOINTS.usuarios.me, {
+            headers: authHeaders(),
+          });
+          if (ok) me = data;
+        } catch (e) {}
 
-  if (!me && window.usuarioActual) {
-    me = {
-      id: window.usuarioActual.usuarioId || window.usuarioActual.id,
-      nombres: window.usuarioActual.nombres || '',
-      apellidoPaterno: window.usuarioActual.apellidoPaterno || '',
-      apellidoMaterno: window.usuarioActual.apellidoMaterno || '',
-      nombreCompleto: window.usuarioActual.nombreCompleto || window.usuarioActual.nombre || '',
-      correoElectronico: window.usuarioActual.correoElectronico || window.usuarioActual.correo || window.usuarioActual.email || '',
-      numeroTelefono: window.usuarioActual.numeroTelefono || '',
-      rol: window.usuarioActual.rol || 'USUARIO',
-      fechaCreacion: window.usuarioActual.fechaCreacion
-    };
-  }
+        if (!me && window.usuarioActual) {
+          me = {
+            id: window.usuarioActual.usuarioId || window.usuarioActual.id,
+            nombres: window.usuarioActual.nombres || "",
+            apellidoPaterno: window.usuarioActual.apellidoPaterno || "",
+            apellidoMaterno: window.usuarioActual.apellidoMaterno || "",
+            nombreCompleto:
+              window.usuarioActual.nombreCompleto ||
+              window.usuarioActual.nombre ||
+              "",
+            correoElectronico:
+              window.usuarioActual.correoElectronico ||
+              window.usuarioActual.correo ||
+              window.usuarioActual.email ||
+              "",
+            numeroTelefono: window.usuarioActual.numeroTelefono || "",
+            rol: window.usuarioActual.rol || "USUARIO",
+            fechaCreacion: window.usuarioActual.fechaCreacion,
+          };
+        }
 
-  if (!me) {
-    mostrarMensaje('No se pudo cargar el perfil','error');
-    return;
-  }
+        if (!me) {
+          mostrarMensaje("No se pudo cargar el perfil", "error");
+          return;
+        }
 
-  document.getElementById('perfilNombres').value = me.nombres || '';
-  document.getElementById('perfilApellidoPaterno').value = me.apellidoPaterno || '';
-  document.getElementById('perfilApellidoMaterno').value = me.apellidoMaterno || '';
+        document.getElementById("perfilNombres").value = me.nombres || "";
+        document.getElementById("perfilApellidoPaterno").value =
+          me.apellidoPaterno || "";
+        document.getElementById("perfilApellidoMaterno").value =
+          me.apellidoMaterno || "";
 
-  document.getElementById('perfilCorreo').value = me.correoElectronico || '';
-  document.getElementById('perfilTelefono').value = me.numeroTelefono || '';
-  document.getElementById('perfilRol').value = me.rol || 'USUARIO';
-  document.getElementById('perfilFecha').value = me.fechaCreacion ? new Date(me.fechaCreacion).toLocaleString() : '—';
+        document.getElementById("perfilCorreo").value =
+          me.correoElectronico || "";
+        document.getElementById("perfilTelefono").value =
+          me.numeroTelefono || "";
+        document.getElementById("perfilRol").value = me.rol || "USUARIO";
+        document.getElementById("perfilFecha").value = me.fechaCreacion
+          ? new Date(me.fechaCreacion).toLocaleString()
+          : "—";
 
-  window._perfilUsuario = me;
-}
+        window._perfilUsuario = me;
+      }
 
-async function guardarPerfil(e){
-  e.preventDefault();
-  const me = window._perfilUsuario; if (!me) return;
+      async function guardarPerfil(e) {
+        e.preventDefault();
+        const me = window._perfilUsuario;
+        if (!me) return;
 
-  const payload = {
-    nombres: document.getElementById('perfilNombres').value.trim(),
-    apellidoPaterno: document.getElementById('perfilApellidoPaterno').value.trim(),
-    apellidoMaterno: document.getElementById('perfilApellidoMaterno').value.trim(),
-    numeroTelefono: document.getElementById('perfilTelefono').value.trim(),
+        const payload = {
+          nombres: document.getElementById("perfilNombres").value.trim(),
+          apellidoPaterno: document
+            .getElementById("perfilApellidoPaterno")
+            .value.trim(),
+          apellidoMaterno: document
+            .getElementById("perfilApellidoMaterno")
+            .value.trim(),
+          numeroTelefono: document
+            .getElementById("perfilTelefono")
+            .value.trim(),
+        };
 
-  };
+        const { ok, data } = await sendJson(
+          ENDPOINTS.usuarios.update(me.id),
+          "PUT",
+          payload,
+          authHeaders(),
+        );
 
-  const { ok, data } = await sendJson(ENDPOINTS.usuarios.update(me.id), 'PUT', payload, authHeaders());
+        if (ok) {
+          mostrarMensaje(
+            (data && data.mensaje) || "Perfil actualizado",
+            "success",
+          );
 
-  if (ok) {
-    mostrarMensaje((data && data.mensaje) || 'Perfil actualizado','success');
+          const ls = JSON.parse(localStorage.getItem("usuario") || "{}");
+          ls.nombres = payload.nombres;
+          ls.apellidoPaterno = payload.apellidoPaterno;
+          ls.apellidoMaterno = payload.apellidoMaterno;
+          ls.nombreCompleto =
+            `${payload.nombres} ${payload.apellidoPaterno} ${payload.apellidoMaterno}`.trim();
+          ls.numeroTelefono = payload.numeroTelefono;
 
-    const ls = JSON.parse(localStorage.getItem('usuario') || '{}');
-    ls.nombres = payload.nombres;
-    ls.apellidoPaterno = payload.apellidoPaterno;
-    ls.apellidoMaterno = payload.apellidoMaterno;
-    ls.nombreCompleto = `${payload.nombres} ${payload.apellidoPaterno} ${payload.apellidoMaterno}`.trim();
-    ls.numeroTelefono = payload.numeroTelefono;
+          localStorage.setItem("usuario", JSON.stringify(ls));
+          window.usuarioActual = ls;
+          actualizarUIUsuario();
 
-    localStorage.setItem('usuario', JSON.stringify(ls));
-    window.usuarioActual = ls;
-    actualizarUIUsuario();
+          cargarPerfil();
+        } else {
+          mostrarMensaje(
+            (data && data.mensaje) || "No se pudo guardar",
+            "error",
+          );
+        }
+      }
 
-    cargarPerfil();
-  } else {
-    mostrarMensaje((data && data.mensaje) || 'No se pudo guardar','error');
-  }
-}
+      async function guardarPassword(e) {
+        e.preventDefault();
+        const me = window._perfilUsuario;
+        if (!me) return;
+        const a = document.getElementById("pwdActual").value;
+        const n = document.getElementById("pwdNueva").value;
+        const n2 = document.getElementById("pwdNueva2").value;
+        if (n !== n2) {
+          alert("La nueva contraseña no coincide");
+          return;
+        }
+        const payload = { actual: a, nueva: n };
+        const { ok, data } = await sendJson(
+          ENDPOINTS.usuarios.password(me.id),
+          "PUT",
+          payload,
+          authHeaders(),
+        );
+        if (ok) {
+          alert("Contraseña actualizada");
+          cerrarModal("modalPassword");
+        } else {
+          alert((data && data.mensaje) || "No se pudo actualizar");
+        }
+      }
 
-async function guardarPassword(e){
-  e.preventDefault();
-  const me = window._perfilUsuario; if (!me) return;
-  const a = document.getElementById('pwdActual').value;
-  const n = document.getElementById('pwdNueva').value;
-  const n2 = document.getElementById('pwdNueva2').value;
-  if (n !== n2) { alert('La nueva contraseña no coincide'); return; }
-  const payload = { actual: a, nueva: n };
-  const { ok, data } = await sendJson(ENDPOINTS.usuarios.password(me.id), 'PUT', payload, authHeaders());
-  if (ok) {
-    alert('Contraseña actualizada');
-    cerrarModal('modalPassword');
-  } else {
-    alert((data && data.mensaje) || 'No se pudo actualizar');
-  }
-}
-
-/* ===== MEMBRESÍA ===== */
-async function cargarMembresiaUsuario(){
-  const me = window._perfilUsuario || window.usuarioActual;
-  if (!me) return;
-  const box = document.getElementById('perfilMembresiaBox');
-  box.innerHTML = '<p>Cargando...</p>';
-  try {
-    const { ok, data } = await getJson(ENDPOINTS.membresias.porUsuario(me.id), { headers: authHeaders() });
-    if (!ok) {
-      box.innerHTML = '<p style="color:#dc3545;">No se pudo obtener la membresía.</p>';
-      return;
-    }
-    window._membresiaUsuario = data;
-    const diasRest = data.fechaFin ? Math.max(0, Math.ceil((new Date(data.fechaFin) - new Date()) / (1000*60*60*24))) : '—';
-    box.innerHTML = `
-      <p><b>Plan:</b> <span class="badge badge-info">${data.tipoPlan || '—'}</span></p>
-      <p><b>Precio:</b> S/ ${data.precio ?? '—'}</p>
-      <p><b>Inicio:</b> ${data.fechaInicio ? new Date(data.fechaInicio).toLocaleString() : '—'}</p>
-      <p><b>Fin:</b> ${data.fechaFin ? new Date(data.fechaFin).toLocaleString() : '—'} ${diasRest!=='—' ? `(<b>${diasRest} días restantes</b>)` : ''}</p>
-      <p><b>Estado:</b> <span class="badge ${data.estado==='ACTIVO' ? 'badge-success' : 'badge-warning'}">${data.estado || '—'}</span></p>
+      /* ===== MEMBRESÍA ===== */
+      async function cargarMembresiaUsuario() {
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        const box = document.getElementById("perfilMembresiaBox");
+        box.innerHTML = "<p>Cargando...</p>";
+        try {
+          const { ok, data } = await getJson(
+            ENDPOINTS.membresias.porUsuario(me.id),
+            { headers: authHeaders() },
+          );
+          if (!ok) {
+            box.innerHTML =
+              '<p style="color:#dc3545;">No se pudo obtener la membresía.</p>';
+            return;
+          }
+          window._membresiaUsuario = data;
+          const diasRest = data.fechaFin
+            ? Math.max(
+                0,
+                Math.ceil(
+                  (new Date(data.fechaFin) - new Date()) /
+                    (1000 * 60 * 60 * 24),
+                ),
+              )
+            : "—";
+          box.innerHTML = `
+      <p><b>Plan:</b> <span class="badge badge-info">${data.tipoPlan || "—"}</span></p>
+      <p><b>Precio:</b> S/ ${data.precio ?? "—"}</p>
+      <p><b>Inicio:</b> ${data.fechaInicio ? new Date(data.fechaInicio).toLocaleString() : "—"}</p>
+      <p><b>Fin:</b> ${data.fechaFin ? new Date(data.fechaFin).toLocaleString() : "—"} ${diasRest !== "—" ? `(<b>${diasRest} días restantes</b>)` : ""}</p>
+      <p><b>Estado:</b> <span class="badge ${data.estado === "ACTIVO" ? "badge-success" : "badge-warning"}">${data.estado || "—"}</span></p>
     `;
-    document.getElementById('btnActivarMembresia').style.display = 'inline-block';
-    document.getElementById('btnCancelarMembresia').style.display = (data.estado === 'ACTIVO') ? 'inline-block' : 'none';
-    document.getElementById('chkAutoRenov').checked = !!data.renovacionAutomatica;
-  } catch {
-    box.innerHTML = '<p style="color:#dc3545;">Error de conexión.</p>';
-  }
-}
-async function activarMembresia(){
-  const me = window._perfilUsuario || window.usuarioActual; if (!me) return;
-  const plan = prompt('Elige plan: BASICO | PREMIUM | ANUAL', 'BASICO');
-  if (!plan) return;
-  const payload = { usuarioId: me.id, tipoPlan: plan.toUpperCase(), renovacionAutomatica: true };
-  const { ok, data } = await sendJson(ENDPOINTS.membresias.crear, 'POST', payload, authHeaders());
-  if (ok) { alert('Membresía activada/renovada'); cargarMembresiaUsuario(); }
-  else { alert((data && data.mensaje) || 'No se pudo crear/renovar'); }
-}
-async function cancelarMembresiaUsuario(){
-  const m = window._membresiaUsuario; if (!m) return;
-  if (!confirm('¿Cancelar tu membresía actual?')) return;
-  const { ok, data } = await sendJson(ENDPOINTS.membresias.cancelar(m.id), 'PUT', {}, authHeaders());
-  if (ok) { alert('Membresía cancelada'); cargarMembresiaUsuario(); }
-  else { alert((data && data.mensaje) || 'No se pudo cancelar'); }
-}
-async function toggleAutoRenovacion(chk){
-  const m = window._membresiaUsuario; if (!m) return;
-  const payload = { renovacionAutomatica: !!chk.checked };
-  const { ok } = await sendJson(ENDPOINTS.membresias.update(m.id), 'PUT', payload, authHeaders());
-  if (!ok) { alert('No se pudo actualizar la auto-renovación'); chk.checked = !chk.checked; }
-}
+          document.getElementById("btnActivarMembresia").style.display =
+            "inline-block";
+          document.getElementById("btnCancelarMembresia").style.display =
+            data.estado === "ACTIVO" ? "inline-block" : "none";
+          document.getElementById("chkAutoRenov").checked =
+            !!data.renovacionAutomatica;
+        } catch {
+          box.innerHTML = '<p style="color:#dc3545;">Error de conexión.</p>';
+        }
+      }
+      async function activarMembresia() {
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        const plan = prompt("Elige plan: BASICO | PREMIUM | ANUAL", "BASICO");
+        if (!plan) return;
+        const payload = {
+          usuarioId: me.id,
+          tipoPlan: plan.toUpperCase(),
+          renovacionAutomatica: true,
+        };
+        const { ok, data } = await sendJson(
+          ENDPOINTS.membresias.crear,
+          "POST",
+          payload,
+          authHeaders(),
+        );
+        if (ok) {
+          alert("Membresía activada/renovada");
+          cargarMembresiaUsuario();
+        } else {
+          alert((data && data.mensaje) || "No se pudo crear/renovar");
+        }
+      }
+      async function cancelarMembresiaUsuario() {
+        const m = window._membresiaUsuario;
+        if (!m) return;
+        if (!confirm("¿Cancelar tu membresía actual?")) return;
+        const { ok, data } = await sendJson(
+          ENDPOINTS.membresias.cancelar(m.id),
+          "PUT",
+          {},
+          authHeaders(),
+        );
+        if (ok) {
+          alert("Membresía cancelada");
+          cargarMembresiaUsuario();
+        } else {
+          alert((data && data.mensaje) || "No se pudo cancelar");
+        }
+      }
+      async function toggleAutoRenovacion(chk) {
+        const m = window._membresiaUsuario;
+        if (!m) return;
+        const payload = { renovacionAutomatica: !!chk.checked };
+        const { ok } = await sendJson(
+          ENDPOINTS.membresias.update(m.id),
+          "PUT",
+          payload,
+          authHeaders(),
+        );
+        if (!ok) {
+          alert("No se pudo actualizar la auto-renovación");
+          chk.checked = !chk.checked;
+        }
+      }
 
-/* ===== PAGOS ===== */
-async function cargarPagosUsuario(){
-  const me = window._perfilUsuario || window.usuarioActual; if (!me) return;
-  const { ok, data } = await getJson(ENDPOINTS.pagos.porUsuario(me.id), { headers: authHeaders() });
-  window._pagosUsuario = ok ? data : [];
-  renderPagosUsuario();
-}
-function renderPagosUsuario(){
-  const cont = document.getElementById('tablaPagosUsuario');
-  const q = (document.getElementById('filtroPagosUsuario')?.value||'').toLowerCase();
-  const arr = (window._pagosUsuario||[]).filter(p=>{
-    const f = `${p.idTransaccion||''} ${p.metodoPago||''} ${p.estadoPago||''} ${p.monto||''} ${p.fechaPago||''}`.toLowerCase();
-    return f.includes(q);
-  });
-  cont.innerHTML = `
+      /* ===== PAGOS ===== */
+      async function cargarPagosUsuario() {
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        const { ok, data } = await getJson(ENDPOINTS.pagos.porUsuario(me.id), {
+          headers: authHeaders(),
+        });
+        window._pagosUsuario = ok ? data : [];
+        renderPagosUsuario();
+      }
+      function renderPagosUsuario() {
+        const cont = document.getElementById("tablaPagosUsuario");
+        const q = (
+          document.getElementById("filtroPagosUsuario")?.value || ""
+        ).toLowerCase();
+        const arr = (window._pagosUsuario || []).filter((p) => {
+          const f =
+            `${p.idTransaccion || ""} ${p.metodoPago || ""} ${p.estadoPago || ""} ${p.monto || ""} ${p.fechaPago || ""}`.toLowerCase();
+          return f.includes(q);
+        });
+        cont.innerHTML = `
     <table>
       <thead><tr>
         <th>Transacción</th><th>Fecha</th><th>Monto</th><th>Método</th><th>Estado</th>
       </tr></thead>
       <tbody>
-        ${arr.map(p=>`
+        ${arr
+          .map(
+            (p) => `
           <tr>
-            <td>${p.idTransaccion || '—'}</td>
-            <td>${p.fechaPago ? new Date(p.fechaPago).toLocaleString() : '—'}</td>
-            <td>S/ ${p.monto ?? '—'}</td>
-            <td>${p.metodoPago || '—'}</td>
-            <td><span class="badge ${p.estadoPago==='COMPLETADO'?'badge-success':(p.estadoPago==='PENDIENTE'?'badge-warning':'badge-danger')}">${p.estadoPago||'—'}</span></td>
+            <td>${p.idTransaccion || "—"}</td>
+            <td>${p.fechaPago ? new Date(p.fechaPago).toLocaleString() : "—"}</td>
+            <td>S/ ${p.monto ?? "—"}</td>
+            <td>${p.metodoPago || "—"}</td>
+            <td><span class="badge ${p.estadoPago === "COMPLETADO" ? "badge-success" : p.estadoPago === "PENDIENTE" ? "badge-warning" : "badge-danger"}">${p.estadoPago || "—"}</span></td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </tbody>
     </table>
   `;
-}
-function descargarPagosUsuarioPDF(){ descargarTablaComoPDF('tablaPagosUsuario', 'Pagos_Mi_Perfil'); }
-function descargarPagosUsuarioExcel(){ descargarTablaComoExcel('tablaPagosUsuario', 'Pagos_Mi_Perfil'); }
+      }
+      function descargarPagosUsuarioPDF() {
+        descargarTablaComoPDF("tablaPagosUsuario", "Pagos_Mi_Perfil");
+      }
+      function descargarPagosUsuarioExcel() {
+        descargarTablaComoExcel("tablaPagosUsuario", "Pagos_Mi_Perfil");
+      }
 
-/* ===== CLASES ===== */
-async function cargarClasesUsuario(){
-  const me = window._perfilUsuario || window.usuarioActual; if (!me) return;
-  const { ok, data } = await getJson(ENDPOINTS.clases.porUsuario(me.id), { headers: authHeaders() });
-  window._clasesUsuario = ok ? data : [];
-  renderClasesUsuario();
-}
-function renderClasesUsuario(){
-  const cont = document.getElementById('tablaClasesUsuario');
-  const tipo = document.getElementById('filtroClasesTipo')?.value || 'proximas';
-  const ahora = new Date();
-  const arr = (window._clasesUsuario||[]).filter(c=>{
-    const d = c.horario && !isNaN(Date.parse(c.horario)) ? new Date(c.horario) : null;
-    if (!d) return tipo === 'todas';
-    if (tipo === 'proximas') return d >= ahora;
-    if (tipo === 'pasadas')  return d <  ahora;
-    return true;
-  });
-  cont.innerHTML = `
+      /* ===== CLASES ===== */
+      async function cargarClasesUsuario() {
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        const { ok, data } = await getJson(ENDPOINTS.clases.porUsuario(me.id), {
+          headers: authHeaders(),
+        });
+        window._clasesUsuario = ok ? data : [];
+        renderClasesUsuario();
+      }
+      function renderClasesUsuario() {
+        const cont = document.getElementById("tablaClasesUsuario");
+        const tipo =
+          document.getElementById("filtroClasesTipo")?.value || "proximas";
+        const ahora = new Date();
+        const arr = (window._clasesUsuario || []).filter((c) => {
+          const d =
+            c.horario && !isNaN(Date.parse(c.horario))
+              ? new Date(c.horario)
+              : null;
+          if (!d) return tipo === "todas";
+          if (tipo === "proximas") return d >= ahora;
+          if (tipo === "pasadas") return d < ahora;
+          return true;
+        });
+        cont.innerHTML = `
     <table>
       <thead><tr>
         <th>Clase</th><th>Instructor</th><th>Horario</th><th>Duración</th><th>Cupos</th><th>Acciones</th>
       </tr></thead>
       <tbody>
-        ${arr.map(c=>{
-          const inscritos = (c.usuariosInscritos?.length)||0;
-          const cap = c.capacidadMaxima ?? 0;
-          const llena = cap>0 && inscritos>=cap;
-          let horarioTxt = '—';
-          if (c.horario) {
-            if (!isNaN(Date.parse(c.horario))) { horarioTxt = new Date(c.horario).toLocaleString(); }
-            else { horarioTxt = String(c.horario); }
-          }
-          return `
+        ${arr
+          .map((c) => {
+            const inscritos = c.usuariosInscritos?.length || 0;
+            const cap = c.capacidadMaxima ?? 0;
+            const llena = cap > 0 && inscritos >= cap;
+            let horarioTxt = "—";
+            if (c.horario) {
+              if (!isNaN(Date.parse(c.horario))) {
+                horarioTxt = new Date(c.horario).toLocaleString();
+              } else {
+                horarioTxt = String(c.horario);
+              }
+            }
+            return `
           <tr>
-            <td>${c.nombreClase||'—'}</td>
-            <td>${c.nombreInstructor||'—'}</td>
+            <td>${c.nombreClase || "—"}</td>
+            <td>${c.nombreInstructor || "—"}</td>
             <td>${horarioTxt}</td>
-            <td>${c.duracionMinutos? c.duracionMinutos+' min':'—'}</td>
-            <td>${inscritos}/${cap} ${llena?'<span class="badge badge-warning">Completa</span>':''}</td>
+            <td>${c.duracionMinutos ? c.duracionMinutos + " min" : "—"}</td>
+            <td>${inscritos}/${cap} ${llena ? '<span class="badge badge-warning">Completa</span>' : ""}</td>
             <td><button class="action-btn btn-delete" onclick="cancelarInscripcionClase(${c.id})">Cancelar inscripción</button></td>
           </tr>`;
-        }).join('')}
+          })
+          .join("")}
       </tbody>
     </table>
   `;
-}
-async function cancelarInscripcionClase(claseId) {
-  const usuario = JSON.parse(localStorage.getItem('usuario') || "{}");
-  const token = localStorage.getItem('token');
+      }
+      async function cancelarInscripcionClase(claseId) {
+        const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+        const token = localStorage.getItem("token");
 
-  if (!usuario || !usuario.usuarioId && !usuario.id) {
-    alert("No se encontró el usuario actual.");
-    return;
-  }
+        if (!usuario || (!usuario.usuarioId && !usuario.id)) {
+          alert("No se encontró el usuario actual.");
+          return;
+        }
 
-  const uid = Number(usuario.usuarioId || usuario.id);
+        const uid = Number(usuario.usuarioId || usuario.id);
 
-  try {
-    const res = await fetch(ENDPOINTS.clases.cancelarInscripcion(claseId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ usuarioId: uid })
-    });
-    const data = await res.json().catch(()=> ({}));
-    if (!res.ok) {
-      alert(data.mensaje || "Error al cancelar inscripción");
-    } else {
-      alert(data.mensaje || "Inscripción cancelada con éxito");
-      cargarClasesUsuario();
-    }
-  } catch (error) {
-    console.error("Error al cancelar inscripción:", error);
-    alert("Error de conexión con el servidor");
-  }
-}
+        try {
+          const res = await fetch(
+            ENDPOINTS.clases.cancelarInscripcion(claseId),
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ usuarioId: uid }),
+            },
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            alert(data.mensaje || "Error al cancelar inscripción");
+          } else {
+            alert(data.mensaje || "Inscripción cancelada con éxito");
+            cargarClasesUsuario();
+          }
+        } catch (error) {
+          console.error("Error al cancelar inscripción:", error);
+          alert("Error de conexión con el servidor");
+        }
+      }
 
-/* ===== Preferencias ===== */
-async function cargarPreferencias(){
-  const me = window._perfilUsuario || window.usuarioActual; if (!me) return;
-  try{
-    const { ok, data } = await getJson(ENDPOINTS.usuarios.prefs(me.id), { headers: authHeaders() });
-    if(ok){
-      document.getElementById('prefEmailNoti').checked = !!data.emailNotificaciones;
-      document.getElementById('prefRecordatorios').value = data.recordatorios || 'none';
-    }
-  }catch{}
-}
-async function guardarPreferencias(e){
-  e.preventDefault();
-  const me = window._perfilUsuario || window.usuarioActual; if (!me) return;
-  const payload = {
-    emailNotificaciones: document.getElementById('prefEmailNoti').checked,
-    recordatorios: document.getElementById('prefRecordatorios').value
-  };
-  const { ok } = await sendJson(ENDPOINTS.usuarios.prefs(me.id),'PUT',payload,authHeaders());
-  mostrarMensaje(ok? 'Preferencias guardadas' : 'No se pudo guardar', ok? 'success':'error');
-}
+      /* ===== Preferencias ===== */
+      async function cargarPreferencias() {
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        try {
+          const { ok, data } = await getJson(ENDPOINTS.usuarios.prefs(me.id), {
+            headers: authHeaders(),
+          });
+          if (ok) {
+            document.getElementById("prefEmailNoti").checked =
+              !!data.emailNotificaciones;
+            document.getElementById("prefRecordatorios").value =
+              data.recordatorios || "none";
+          }
+        } catch {}
+      }
+      async function guardarPreferencias(e) {
+        e.preventDefault();
+        const me = window._perfilUsuario || window.usuarioActual;
+        if (!me) return;
+        const payload = {
+          emailNotificaciones: document.getElementById("prefEmailNoti").checked,
+          recordatorios: document.getElementById("prefRecordatorios").value,
+        };
+        const { ok } = await sendJson(
+          ENDPOINTS.usuarios.prefs(me.id),
+          "PUT",
+          payload,
+          authHeaders(),
+        );
+        mostrarMensaje(
+          ok ? "Preferencias guardadas" : "No se pudo guardar",
+          ok ? "success" : "error",
+        );
+      }
 
-/* ======= UTILIDADES DE EXPORTAR ======= */
-function tablaDOMToArrays(tableEl){
-  const head = [...tableEl.querySelectorAll('thead th')].map(th=>th.innerText.trim());
-  const body = [...tableEl.querySelectorAll('tbody tr')].map(tr =>
-    [...tr.children].map(td => td.innerText.trim())
-  );
-  return { head, body };
-}
-function descargarTablaComoPDF(tableContainerId, filenameBase='Tabla'){
-  const table = document.querySelector(`#${tableContainerId} table`);
-  if(!table){ alert('No hay datos para exportar'); return; }
-  const { head, body } = tablaDOMToArrays(table);
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p','pt');
-  doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text(filenameBase, 36, 40);
-  doc.autoTable({
-    startY: 60,
-    head: [head],
-    body: body,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [255,69,0], textColor: 255 },
-    margin: { left: 36, right: 36 },
-    theme: 'striped'
-  });
-  doc.save(`${filenameBase}_${new Date().toISOString().slice(0,10)}.pdf`);
-}
-function descargarTablaComoExcel(tableContainerId, filenameBase='Tabla'){
-  const table = document.querySelector(`#${tableContainerId} table`);
-  if(!table){ alert('No hay datos para exportar'); return; }
-  const { head, body } = tablaDOMToArrays(table);
-  const rows = body.map(r=>{ const obj = {}; head.forEach((h,i)=>{ obj[h] = r[i] ?? ''; }); return obj; });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Datos');
-  XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
+      /* ======= UTILIDADES DE EXPORTAR ======= */
+      function tablaDOMToArrays(tableEl) {
+        const head = [...tableEl.querySelectorAll("thead th")].map((th) =>
+          th.innerText.trim(),
+        );
+        const body = [...tableEl.querySelectorAll("tbody tr")].map((tr) =>
+          [...tr.children].map((td) => td.innerText.trim()),
+        );
+        return { head, body };
+      }
+      function descargarTablaComoPDF(tableContainerId, filenameBase = "Tabla") {
+        const table = document.querySelector(`#${tableContainerId} table`);
+        if (!table) {
+          alert("No hay datos para exportar");
+          return;
+        }
+        const { head, body } = tablaDOMToArrays(table);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("p", "pt");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(filenameBase, 36, 40);
+        doc.autoTable({
+          startY: 60,
+          head: [head],
+          body: body,
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [255, 69, 0], textColor: 255 },
+          margin: { left: 36, right: 36 },
+          theme: "striped",
+        });
+        doc.save(
+          `${filenameBase}_${new Date().toISOString().slice(0, 10)}.pdf`,
+        );
+      }
+      function descargarTablaComoExcel(
+        tableContainerId,
+        filenameBase = "Tabla",
+      ) {
+        const table = document.querySelector(`#${tableContainerId} table`);
+        if (!table) {
+          alert("No hay datos para exportar");
+          return;
+        }
+        const { head, body } = tablaDOMToArrays(table);
+        const rows = body.map((r) => {
+          const obj = {};
+          head.forEach((h, i) => {
+            obj[h] = r[i] ?? "";
+          });
+          return obj;
+        });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.json_to_sheet(rows),
+          "Datos",
+        );
+        XLSX.writeFile(
+          wb,
+          `${filenameBase}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        );
+      }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  verificarSesion();
-  if (!localStorage.getItem('token')) {
-    window.location.replace("login.html");
-    return;
-  }
-  actualizarUIUsuario();
-  await cargarPerfil();
-});
-</script>
-</body>
+      window.addEventListener("DOMContentLoaded", async () => {
+        verificarSesion();
+        if (!localStorage.getItem("token")) {
+          window.location.replace("login.html");
+          return;
+        }
+        actualizarUIUsuario();
+        await cargarPerfil();
+      });
+    </script>
+  </body>
 </html>

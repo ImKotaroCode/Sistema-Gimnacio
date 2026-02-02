@@ -1,173 +1,216 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartFit - Ubicaciones</title>
-  <link rel="stylesheet" href="/css/estilos.css" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-</head>
-<body>
-  <nav>
-    <ul>
-      <li class="logo">SMARTFIT</li>
-      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-      <div class="nav-links" id="navLinks">
-        <li><a href="index.html">Inicio</a></li>
-        <li><a href="precios.html">Precios</a></li>
-        <li><a href="ubicaciones.html">Ubicaciones</a></li>
-        <li><a href="clases.html">Clases</a></li>
-        <li><a href="contacto.html">Contacto</a></li>
-        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
-        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
-        <li class="user-info" id="userInfo">
-          <span class="user-name" id="userName"></span>
-          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
-        </li>
-        <li id="authLink"><a href="login.html">Login</a></li>
-      </div>
-    </ul>
-  </nav>
-  <div class="page active" id="locations">
-    <div class="locations-container">
-      <h2>Encuentra tu SmartFit</h2>
-
-      <div class="map-container-full">
-        <div id="map"></div>
-        <div class="map-dim"></div>
-        <div class="map-overlay">
-          <div class="map-emoji">🗺️</div>
-          <div class="map-title">Mapa Interactivo - Integración con Leaflet</div>
-          <div class="map-sub">En producción: búsqueda por ubicación GPS</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartFit - Ubicaciones</title>
+    <link rel="stylesheet" href="/css/estilos.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li class="logo">SMARTFIT</li>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        <div class="nav-links" id="navLinks">
+          <li><a href="/index.html">Inicio</a></li>
+          <li><a href="/html/precios.html">Precios</a></li>
+          <li><a href="/html/ubicaciones.html">Ubicaciones</a></li>
+          <li><a href="/html/clases.html">Clases</a></li>
+          <li><a href="/html/contacto.html">Contacto</a></li>
+          <li id="perfilLink" style="display: none">
+            <a href="/html/miperfil.html">Mi Perfil</a>
+          </li>
+          <li id="adminLink" style="display: none">
+            <a href="/html/admin.html">Panel Admin</a>
+          </li>
+          <li class="user-info" id="userInfo">
+            <span class="user-name" id="userName"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">
+              Cerrar Sesión
+            </button>
+          </li>
+          <li id="authLink">
+            <a href="/html/login.html">Login</a>
+          </li>
         </div>
-      </div>
+      </ul>
+    </nav>
 
-      <div class="section-top" style="margin-top:1.25rem;">
-        <div class="filters">
-          <input type="text" id="filtroPublicUbicacionesTexto" placeholder="🔍 Buscar distrito o ciudad" oninput="renderUbicacionesPublicas()"/>
+    <div class="page active" id="locations">
+      <div class="locations-container">
+        <h2>Encuentra tu SmartFit</h2>
+
+        <div class="map-container-full">
+          <div id="map"></div>
+          <div class="map-dim"></div>
+          <div class="map-overlay">
+            <div class="map-emoji">🗺️</div>
+            <div class="map-title">
+              Mapa Interactivo - Integración con Leaflet
+            </div>
+            <div class="map-sub">En producción: búsqueda por ubicación GPS</div>
+          </div>
         </div>
-      </div>
 
-      <div class="loading" id="loadingLocations">
-        <div class="spinner"></div>
-        <p>Cargando ubicaciones...</p>
-      </div>
+        <div class="section-top" style="margin-top: 1.25rem">
+          <div class="filters">
+            <input
+              type="text"
+              id="filtroPublicUbicacionesTexto"
+              placeholder="🔍 Buscar distrito o ciudad"
+              oninput="renderUbicacionesPublicas()"
+            />
+          </div>
+        </div>
 
-      <div class="locations-grid" id="locationsList"></div>
+        <div class="loading" id="loadingLocations">
+          <div class="spinner"></div>
+          <p>Cargando ubicaciones...</p>
+        </div>
+
+        <div class="locations-grid" id="locationsList"></div>
+      </div>
     </div>
-  </div>
 
-<script>
-const API_BASE =
-  location.hostname === "localhost"
-    ? "http://localhost:8080"
-    : "https://gimnacioapi.onrender.com";
+    <script>
+      const API_BASE =
+        location.hostname === "localhost"
+          ? "http://localhost:8080"
+          : "https://gimnacioapi.onrender.com";
 
-const API_URL = `${API_BASE}/api`;
+      const API_URL = `${API_BASE}/api`;
 
-const ENDPOINTS = {
-  ubicaciones: {
-    listar: `${API_URL}/ubicaciones`
-  }
-};
+      const ENDPOINTS = {
+        ubicaciones: {
+          listar: `${API_URL}/ubicaciones`,
+        },
+      };
 
+      function toggleMobileMenu() {
+        document.getElementById("navLinks").classList.toggle("active");
+      }
 
-function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+      function verificarSesion() {
+        const u = localStorage.getItem("usuario");
+        const t = localStorage.getItem("token");
+        window.usuarioActual = u && t ? JSON.parse(u) : null;
+      }
 
-function verificarSesion(){
-  const u = localStorage.getItem('usuario');
-  const t = localStorage.getItem('token');
-  window.usuarioActual = (u && t) ? JSON.parse(u) : null;
-}
+      function actualizarUIUsuario() {
+        const isLogged = !!window.usuarioActual;
+        const isAdmin =
+          window.usuarioActual?.rol === "ADMINISTRADOR" ||
+          window.usuarioActual?.rol === "ENTRENADOR";
 
-function actualizarUIUsuario() {
-  const isLogged = !!window.usuarioActual;
-  const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+        document.getElementById("authLink").style.display = isLogged
+          ? "none"
+          : "block";
+        document
+          .getElementById("userInfo")
+          .classList.toggle("active", isLogged);
+        document.getElementById("userName").textContent = isLogged
+          ? window.usuarioActual.nombreCompleto || ""
+          : "";
+        document.getElementById("perfilLink").style.display = isLogged
+          ? "block"
+          : "none";
+        document.getElementById("adminLink").style.display = isAdmin
+          ? "block"
+          : "none";
+      }
 
-  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
-  document.getElementById('userInfo').classList.toggle('active', isLogged);
-  document.getElementById('userName').textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
-  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
-  document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
-}
+      let map;
+      let markers = [];
+      let selectedLocationIndex = null;
 
-let map;
-let markers = [];
-let selectedLocationIndex = null;
-
-function prepararContenedorMapa() {
-  const mapEl = document.getElementById('map');
-  if (!mapEl) return;
-  if (!mapEl.style.height && !mapEl.style.minHeight) {
-    mapEl.style.minHeight = '380px';
-  }
-  mapEl.style.width = '100%';
-  const dim = document.querySelector('.map-dim');
-  const overlay = document.querySelector('.map-overlay');
-  if (dim) dim.style.pointerEvents = 'none';
-  if (overlay) overlay.style.pointerEvents = 'none';
-}
-function initMap() {
-  if (map) return;
-  prepararContenedorMapa();
-  map = L.map('map').setView([-12.0464, -77.0428], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-  setTimeout(() => map.invalidateSize(), 80);
-}
-function getMarkerIcon(selected = false) {
-  const color = selected ? '#ff4500' : '#2e7d32';
-  return L.divIcon({
-    html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3)"></div>`,
-    className: '',
-    iconSize: [30, 30]
-  });
-}
-function pintarMarcadores(ubicaciones) {
-  if (!map) return;
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
-  const visibles = (ubicaciones || []).filter(u => u.latitud && u.longitud);
-  visibles.forEach((u, idx) => {
-    const marker = L
-      .marker([u.latitud, u.longitud], { icon: getMarkerIcon(selectedLocationIndex === idx) })
-      .addTo(map)
-      .bindPopup(`
+      function prepararContenedorMapa() {
+        const mapEl = document.getElementById("map");
+        if (!mapEl) return;
+        if (!mapEl.style.height && !mapEl.style.minHeight) {
+          mapEl.style.minHeight = "380px";
+        }
+        mapEl.style.width = "100%";
+        const dim = document.querySelector(".map-dim");
+        const overlay = document.querySelector(".map-overlay");
+        if (dim) dim.style.pointerEvents = "none";
+        if (overlay) overlay.style.pointerEvents = "none";
+      }
+      function initMap() {
+        if (map) return;
+        prepararContenedorMapa();
+        map = L.map("map").setView([-12.0464, -77.0428], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+        setTimeout(() => map.invalidateSize(), 80);
+      }
+      function getMarkerIcon(selected = false) {
+        const color = selected ? "#ff4500" : "#2e7d32";
+        return L.divIcon({
+          html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3)"></div>`,
+          className: "",
+          iconSize: [30, 30],
+        });
+      }
+      function pintarMarcadores(ubicaciones) {
+        if (!map) return;
+        markers.forEach((m) => map.removeLayer(m));
+        markers = [];
+        const visibles = (ubicaciones || []).filter(
+          (u) => u.latitud && u.longitud,
+        );
+        visibles.forEach((u, idx) => {
+          const marker = L.marker([u.latitud, u.longitud], {
+            icon: getMarkerIcon(selectedLocationIndex === idx),
+          }).addTo(map).bindPopup(`
         <div style="padding: 0.5rem;">
-          <strong style="color:#ff4500;font-size:1.05rem;">${u.nombreUbicacion || 'FitZone'}</strong><br/>
-          ${u.direccion ? `📍 ${u.direccion}<br/>` : ''}
-          ${u.distrito ? `🏙️ ${u.distrito}<br/>` : ''}
-          ${u.horario ? `⏰ ${u.horario}<br/>` : ''}
-          ${u.numeroTelefono ? `📞 ${u.numeroTelefono}` : ''}
+          <strong style="color:#ff4500;font-size:1.05rem;">${u.nombreUbicacion || "FitZone"}</strong><br/>
+          ${u.direccion ? `📍 ${u.direccion}<br/>` : ""}
+          ${u.distrito ? `🏙️ ${u.distrito}<br/>` : ""}
+          ${u.horario ? `⏰ ${u.horario}<br/>` : ""}
+          ${u.numeroTelefono ? `📞 ${u.numeroTelefono}` : ""}
         </div>
       `);
-    marker.on('click', () => seleccionarUbicacion(idx));
-    markers.push(marker);
-  });
-  if (markers.length) {
-    const group = L.featureGroup(markers);
-    map.fitBounds(group.getBounds().pad(0.1));
-  }
-}
-function seleccionarUbicacion(index) {
-  selectedLocationIndex = index;
-  const u = (window._ubicacionesCache || [])[index];
-  if (!u || !u.latitud || !u.longitud || !map) return;
-  map.setView([u.latitud, u.longitud], 16, { animate: true, duration: 1 });
-  pintarMarcadores(window._ubicacionesCache || []);
-  renderUbicacionesPublicas();
-}
-function renderUbicacionesPublicas(){
-  const list = document.getElementById('locationsList');
-  const q = (document.getElementById('filtroPublicUbicacionesTexto')?.value || '').toLowerCase();
-  const arr = (window._ubicacionesCache || []).filter(u =>
-    `${u.distrito || ''} ${u.ciudad || ''} ${u.nombreUbicacion || ''}`.toLowerCase().includes(q)
-  );
-  list.innerHTML = arr.length ? arr.map((u, index) => `
-    <div class="location-card ${selectedLocationIndex === index ? 'selected' : ''}" onclick="seleccionarUbicacion(${index})">
+          marker.on("click", () => seleccionarUbicacion(idx));
+          markers.push(marker);
+        });
+        if (markers.length) {
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
+        }
+      }
+      function seleccionarUbicacion(index) {
+        selectedLocationIndex = index;
+        const u = (window._ubicacionesCache || [])[index];
+        if (!u || !u.latitud || !u.longitud || !map) return;
+        map.setView([u.latitud, u.longitud], 16, {
+          animate: true,
+          duration: 1,
+        });
+        pintarMarcadores(window._ubicacionesCache || []);
+        renderUbicacionesPublicas();
+      }
+      function renderUbicacionesPublicas() {
+        const list = document.getElementById("locationsList");
+        const q = (
+          document.getElementById("filtroPublicUbicacionesTexto")?.value || ""
+        ).toLowerCase();
+        const arr = (window._ubicacionesCache || []).filter((u) =>
+          `${u.distrito || ""} ${u.ciudad || ""} ${u.nombreUbicacion || ""}`
+            .toLowerCase()
+            .includes(q),
+        );
+        list.innerHTML = arr.length
+          ? arr
+              .map(
+                (u, index) => `
+    <div class="location-card ${selectedLocationIndex === index ? "selected" : ""}" onclick="seleccionarUbicacion(${index})">
       <h3>SmartFit ${u.nombreUbicacion}</h3>
       <p><strong>📍 Dirección:</strong> ${u.direccion}</p>
       <p><strong>🏙️ Distrito:</strong> ${u.distrito}</p>
@@ -175,44 +218,48 @@ function renderUbicacionesPublicas(){
       <p><strong>📞 Teléfono:</strong> ${u.numeroTelefono}</p>
       <button class="btn-view-location" type="button">VER DETALLES</button>
     </div>
-  `).join('') : '<p style="color:#ff4500; text-align:center; padding: 2rem; grid-column: 1/-1;">No hay ubicaciones disponibles</p>';
-}
+  `,
+              )
+              .join("")
+          : '<p style="color:#ff4500; text-align:center; padding: 2rem; grid-column: 1/-1;">No hay ubicaciones disponibles</p>';
+      }
 
-async function cargarUbicaciones() {
-  const loading = document.getElementById('loadingLocations');
-  const list = document.getElementById('locationsList');
-  try {
-    loading.classList.add('show');
-    list.style.display = 'none';
-    const response = await fetch(ENDPOINTS.ubicaciones.listar);
-    if (!response.ok) throw new Error('Error al cargar ubicaciones');
-    const data = await response.json();
-    window._ubicacionesCache = data;
-    if (!map) initMap();
-    pintarMarcadores(window._ubicacionesCache || []);
-    renderUbicacionesPublicas();
-    loading.classList.remove('show');
-    list.style.display = 'grid';
-  } catch (error) {
-    console.error('Error:', error);
-    loading.innerHTML = '<p style="color:#ff4500; padding: 2rem; text-align: center;">Error al cargar las ubicaciones. Por favor, intenta de nuevo.</p>';
-  }
-}
+      async function cargarUbicaciones() {
+        const loading = document.getElementById("loadingLocations");
+        const list = document.getElementById("locationsList");
+        try {
+          loading.classList.add("show");
+          list.style.display = "none";
+          const response = await fetch(ENDPOINTS.ubicaciones.listar);
+          if (!response.ok) throw new Error("Error al cargar ubicaciones");
+          const data = await response.json();
+          window._ubicacionesCache = data;
+          if (!map) initMap();
+          pintarMarcadores(window._ubicacionesCache || []);
+          renderUbicacionesPublicas();
+          loading.classList.remove("show");
+          list.style.display = "grid";
+        } catch (error) {
+          console.error("Error:", error);
+          loading.innerHTML =
+            '<p style="color:#ff4500; padding: 2rem; text-align: center;">Error al cargar las ubicaciones. Por favor, intenta de nuevo.</p>';
+        }
+      }
 
-function cerrarSesion() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  window.usuarioActual = null;
-  actualizarUIUsuario();
-  alert('Sesión cerrada');
-}
+      function cerrarSesion() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        window.usuarioActual = null;
+        actualizarUIUsuario();
+        alert("Sesión cerrada");
+      }
 
-window.addEventListener('DOMContentLoaded', () => {
-  verificarSesion();
-  actualizarUIUsuario();
-  initMap();
-  cargarUbicaciones();
-});
-</script>
-</body>
+      window.addEventListener("DOMContentLoaded", () => {
+        verificarSesion();
+        actualizarUIUsuario();
+        initMap();
+        cargarUbicaciones();
+      });
+    </script>
+  </body>
 </html>

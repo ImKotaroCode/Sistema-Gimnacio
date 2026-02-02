@@ -1,164 +1,219 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartFit - Precios</title>
-  <link rel="stylesheet" href="/css/estilos.css" />
-  <script src="https://js.stripe.com/v3"></script>
-</head>
-<body>
-  <nav>
-    <ul>
-      <li class="logo">SMARTFIT</li>
-      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-      <div class="nav-links" id="navLinks">
-        <li><a href="index.html">Inicio</a></li>
-        <li><a href="precios.html">Precios</a></li>
-        <li><a href="ubicaciones.html">Ubicaciones</a></li>
-        <li><a href="clases.html">Clases</a></li>
-        <li><a href="contacto.html">Contacto</a></li>
-        <li id="perfilLink" style="display:none;"><a href="miperfil.html">Mi Perfil</a></li>
-        <li id="adminLink" style="display:none;"><a href="admin.html">Panel Admin</a></li>
-        <li class="user-info" id="userInfo">
-          <span class="user-name" id="userName"></span>
-          <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
-        </li>
-        <li id="authLink"><a href="login.html">Login</a></li>
-      </div>
-    </ul>
-  </nav>
-
-
-  <div class="page active" id="pricing">
-    <div class="pricing-container">
-      <h2>Planes y Precios</h2>
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <h3>Plan Básico</h3>
-          <div class="price">S/29<span style="font-size:1rem;">/mes</span></div>
-          <ul class="pricing-features">
-            <li>Acceso a 1 gimnasio</li><li>Horario 6am - 10pm</li><li>Área de pesas</li><li>Cardio ilimitado</li>
-          </ul>
-          <button class="btn" onclick="seleccionarPlan('BASICO',29)">Seleccionar</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartFit - Precios</title>
+    <link rel="stylesheet" href="/css/estilos.css" />
+    <script src="https://js.stripe.com/v3"></script>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li class="logo">SMARTFIT</li>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        <div class="nav-links" id="navLinks">
+          <li><a href="/index.html">Inicio</a></li>
+          <li><a href="/html/precios.html">Precios</a></li>
+          <li><a href="/html/ubicaciones.html">Ubicaciones</a></li>
+          <li><a href="/html/clases.html">Clases</a></li>
+          <li><a href="/html/contacto.html">Contacto</a></li>
+          <li id="perfilLink" style="display: none">
+            <a href="/html/miperfil.html">Mi Perfil</a>
+          </li>
+          <li id="adminLink" style="display: none">
+            <a href="/html/admin.html">Panel Admin</a>
+          </li>
+          <li class="user-info" id="userInfo">
+            <span class="user-name" id="userName"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">
+              Cerrar Sesión
+            </button>
+          </li>
+          <li id="authLink">
+            <a href="/html/login.html">Login</a>
+          </li>
         </div>
-        <div class="pricing-card featured">
-          <h3>Plan Premium</h3>
-          <div class="price">S/49<span style="font-size:1rem;">/mes</span></div>
-          <ul class="pricing-features">
-            <li>Acceso a todas las sedes</li><li>Acceso 24/7</li><li>Todas las clases</li><li>1 sesión personal</li>
-          </ul>
-          <button class="btn" onclick="seleccionarPlan('PREMIUM',49)">Seleccionar</button>
-        </div>
-        <div class="pricing-card">
-          <h3>Plan Anual</h3>
-          <div class="price">S/399<span style="font-size:1rem;">/año</span></div>
-          <ul class="pricing-features">
-            <li>Todo del Plan Premium</li><li>Ahorra S/189</li><li>3 sesiones/mes</li><li>Plan nutricional</li>
-          </ul>
-          <button class="btn" onclick="seleccionarPlan('ANUAL',399)">Seleccionar</button>
+      </ul>
+    </nav>
+
+    <div class="page active" id="pricing">
+      <div class="pricing-container">
+        <h2>Planes y Precios</h2>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3>Plan Básico</h3>
+            <div class="price">
+              S/29<span style="font-size: 1rem">/mes</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Acceso a 1 gimnasio</li>
+              <li>Horario 6am - 10pm</li>
+              <li>Área de pesas</li>
+              <li>Cardio ilimitado</li>
+            </ul>
+            <button class="btn" onclick="seleccionarPlan('BASICO', 29)">
+              Seleccionar
+            </button>
+          </div>
+          <div class="pricing-card featured">
+            <h3>Plan Premium</h3>
+            <div class="price">
+              S/49<span style="font-size: 1rem">/mes</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Acceso a todas las sedes</li>
+              <li>Acceso 24/7</li>
+              <li>Todas las clases</li>
+              <li>1 sesión personal</li>
+            </ul>
+            <button class="btn" onclick="seleccionarPlan('PREMIUM', 49)">
+              Seleccionar
+            </button>
+          </div>
+          <div class="pricing-card">
+            <h3>Plan Anual</h3>
+            <div class="price">
+              S/399<span style="font-size: 1rem">/año</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Todo del Plan Premium</li>
+              <li>Ahorra S/189</li>
+              <li>3 sesiones/mes</li>
+              <li>Plan nutricional</li>
+            </ul>
+            <button class="btn" onclick="seleccionarPlan('ANUAL', 399)">
+              Seleccionar
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="successMsg" class="success-message"></div>
-  <div id="errorMsg" class="error-message"></div>
+    <div id="successMsg" class="success-message"></div>
+    <div id="errorMsg" class="error-message"></div>
 
-<script>
-  
-const API_BASE =
-  location.hostname === "localhost"
-    ? "http://localhost:8080"
-    : "https://gimnacioapi.onrender.com";
+    <script>
+      const API_BASE =
+        location.hostname === "localhost"
+          ? "http://localhost:8080"
+          : "https://gimnacioapi.onrender.com";
 
-const API_URL = `${API_BASE}/api`;
+      const API_URL = `${API_BASE}/api`;
 
-const ENDPOINTS = {
-  pagosStripe: `${API_URL}/pagos/stripe/checkout`
-};
+      const ENDPOINTS = {
+        pagosStripe: `${API_URL}/pagos/stripe/checkout`,
+      };
 
-const STRIPE_PRICE_MAP = {
-  BASICO:  "price_1SPSFOPSvkDPHeMDAYuIcbPx",
-  PREMIUM: "price_1SPSAzPSvkDPHeMDIsBqzLJl",
-  ANUAL:   "price_1SPSFvPSvkDPHeMDPibimNRW"
-};
-const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
+      const STRIPE_PRICE_MAP = {
+        BASICO: "price_1SPSFOPSvkDPHeMDAYuIcbPx",
+        PREMIUM: "price_1SPSAzPSvkDPHeMDIsBqzLJl",
+        ANUAL: "price_1SPSFvPSvkDPHeMDPibimNRW",
+      };
+      const authHeaders = () => ({
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      });
 
-function toggleMobileMenu(){ document.getElementById('navLinks').classList.toggle('active'); }
+      function toggleMobileMenu() {
+        document.getElementById("navLinks").classList.toggle("active");
+      }
 
-function verificarSesion(){
-  const u = localStorage.getItem('usuario');
-  const t = localStorage.getItem('token');
-  window.usuarioActual = (u && t) ? JSON.parse(u) : null;
-}
+      function verificarSesion() {
+        const u = localStorage.getItem("usuario");
+        const t = localStorage.getItem("token");
+        window.usuarioActual = u && t ? JSON.parse(u) : null;
+      }
 
-function actualizarUIUsuario() {
-  const isLogged = !!window.usuarioActual;
-  const isAdmin = window.usuarioActual?.rol === 'ADMINISTRADOR' || window.usuarioActual?.rol === 'ENTRENADOR';
+      function actualizarUIUsuario() {
+        const isLogged = !!window.usuarioActual;
+        const isAdmin =
+          window.usuarioActual?.rol === "ADMINISTRADOR" ||
+          window.usuarioActual?.rol === "ENTRENADOR";
 
-  document.getElementById('authLink').style.display = isLogged ? 'none' : 'block';
-  document.getElementById('userInfo').classList.toggle('active', isLogged);
-  document.getElementById('userName').textContent = isLogged ? (window.usuarioActual.nombreCompleto || '') : '';
-  document.getElementById('perfilLink').style.display = isLogged ? 'block' : 'none';
-  document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
-}
+        document.getElementById("authLink").style.display = isLogged
+          ? "none"
+          : "block";
+        document
+          .getElementById("userInfo")
+          .classList.toggle("active", isLogged);
+        document.getElementById("userName").textContent = isLogged
+          ? window.usuarioActual.nombreCompleto || ""
+          : "";
+        document.getElementById("perfilLink").style.display = isLogged
+          ? "block"
+          : "none";
+        document.getElementById("adminLink").style.display = isAdmin
+          ? "block"
+          : "none";
+      }
 
-function mostrarMensaje(msg,tipo){
-  const s=document.getElementById('successMsg'); const e=document.getElementById('errorMsg');
-  if (tipo==='success'){ s.textContent=msg; s.classList.add('show'); e.classList.remove('show'); setTimeout(()=>s.classList.remove('show'),2500); }
-  else { e.textContent=msg; e.classList.add('show'); s.classList.remove('show'); setTimeout(()=>e.classList.remove('show'),4000); }
-}
+      function mostrarMensaje(msg, tipo) {
+        const s = document.getElementById("successMsg");
+        const e = document.getElementById("errorMsg");
+        if (tipo === "success") {
+          s.textContent = msg;
+          s.classList.add("show");
+          e.classList.remove("show");
+          setTimeout(() => s.classList.remove("show"), 2500);
+        } else {
+          e.textContent = msg;
+          e.classList.add("show");
+          s.classList.remove("show");
+          setTimeout(() => e.classList.remove("show"), 4000);
+        }
+      }
 
-function cerrarSesion() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuario');
-  window.usuarioActual = null;
-  actualizarUIUsuario();
-  mostrarMensaje('Sesión cerrada', 'success');
-}
+      function cerrarSesion() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        window.usuarioActual = null;
+        actualizarUIUsuario();
+        mostrarMensaje("Sesión cerrada", "success");
+      }
 
-async function seleccionarPlan(tipoPlan, precio) {
-  if (!window.usuarioActual) {
-    mostrarMensaje('Debes iniciar sesión', 'error');
-    window.location.href = 'login.html';
-    return;
-  }
-  const priceId = STRIPE_PRICE_MAP[tipoPlan];
-  if (!priceId) {
-    alert('No hay priceId configurado para ' + tipoPlan);
-    return;
-  }
-  try {
-    const res = await fetch(ENDPOINTS.pagosStripe, {
-      method: 'POST',
-      headers: {
-        'Content-Type':'application/json',
-        ...authHeaders()
-      },
-      body: JSON.stringify({
-        priceId,
-        usuarioId: window.usuarioActual.usuarioId,
-        plan: tipoPlan
-      })
-    });
-    const data = await res.json();
-    if (!res.ok || !data?.sessionId) {
-      alert(data?.mensaje || 'No se pudo crear la sesión de pago');
-      return;
-    }
-    const stripe = Stripe("pk_test_51SMeZBPSvkDPHeMDqR5nrAh8d48Scc8v0F8BncEhJkLqjqGTf5O6hQcLOZFdCX0Xknl3sZbwG3JY9xJM1YfVaf2A009ksXOexP");
-    await stripe.redirectToCheckout({ sessionId: data.sessionId });
-  } catch (error) {
-    console.error(error);
-    alert('Error de conexión con Stripe');
-  }
-}
+      async function seleccionarPlan(tipoPlan, precio) {
+        if (!window.usuarioActual) {
+          mostrarMensaje("Debes iniciar sesión", "error");
+          window.location.href = "login.html";
+          return;
+        }
+        const priceId = STRIPE_PRICE_MAP[tipoPlan];
+        if (!priceId) {
+          alert("No hay priceId configurado para " + tipoPlan);
+          return;
+        }
+        try {
+          const res = await fetch(ENDPOINTS.pagosStripe, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...authHeaders(),
+            },
+            body: JSON.stringify({
+              priceId,
+              usuarioId: window.usuarioActual.usuarioId,
+              plan: tipoPlan,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data?.sessionId) {
+            alert(data?.mensaje || "No se pudo crear la sesión de pago");
+            return;
+          }
+          const stripe = Stripe(
+            "pk_test_51SMeZBPSvkDPHeMDqR5nrAh8d48Scc8v0F8BncEhJkLqjqGTf5O6hQcLOZFdCX0Xknl3sZbwG3JY9xJM1YfVaf2A009ksXOexP",
+          );
+          await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        } catch (error) {
+          console.error(error);
+          alert("Error de conexión con Stripe");
+        }
+      }
 
-window.addEventListener('DOMContentLoaded', () => {
-  verificarSesion();
-  actualizarUIUsuario();
-});
-</script>
-</body>
+      window.addEventListener("DOMContentLoaded", () => {
+        verificarSesion();
+        actualizarUIUsuario();
+      });
+    </script>
+  </body>
 </html>
