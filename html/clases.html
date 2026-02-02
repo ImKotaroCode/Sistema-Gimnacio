@@ -62,294 +62,235 @@
       </div>
     </div>
 
-<script>
-  const API_BASE =
-    location.hostname === "localhost"
-      ? "http://localhost:8080"
-      : "https://gimnacioapi.onrender.com";
+    <script>
+      const API_BASE =
+        location.hostname === "localhost"
+          ? "http://localhost:8080"
+          : "https://gimnacioapi.onrender.com";
 
-  const API_URL = `${API_BASE}/api`;
+      const API_URL = `${API_BASE}/api`;
 
-  const ENDPOINTS = {
-    clases: {
-      listar: `${API_URL}/clases`,
-      inscribir: `${API_URL}/clases/inscribir`,
-      porUsuario: (id) => `${API_URL}/clases/usuario/${id}`, 
-    },
-  };
-
-  window._misClasesIds = new Set();
-
-  function toggleMobileMenu() {
-    document.getElementById("navLinks").classList.toggle("active");
-  }
-
-  function verificarSesion() {
-    const u = localStorage.getItem("usuario");
-    const t = localStorage.getItem("token");
-    window.usuarioActual = u && t ? JSON.parse(u) : null;
-  }
-
-  function actualizarUIUsuario() {
-    const isLogged = !!window.usuarioActual;
-    const isAdmin =
-      window.usuarioActual?.rol === "ADMINISTRADOR" ||
-      window.usuarioActual?.rol === "ENTRENADOR";
-
-    document.getElementById("authLink").style.display = isLogged
-      ? "none"
-      : "block";
-    document.getElementById("userInfo").classList.toggle("active", isLogged);
-    document.getElementById("userName").textContent = isLogged
-      ? window.usuarioActual.nombreCompleto || ""
-      : "";
-    document.getElementById("perfilLink").style.display = isLogged
-      ? "block"
-      : "none";
-    document.getElementById("adminLink").style.display = isAdmin
-      ? "block"
-      : "none";
-  }
-
-  function authHeaders() {
-    const t = localStorage.getItem("token") || "";
-    return t ? { Authorization: "Bearer " + t } : {};
-  }
-
-  function isTokenExpiredFromResponse(data) {
-    if (!data) return false;
-    const txt = (data.mensaje || data.message || "").toString().toLowerCase();
-    return txt.includes("token_expirado") || txt.includes("token expirado");
-  }
-
-  function handleTokenExpiredLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
-    window.usuarioActual = null;
-    alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
-    window.location.href = "/html/login.html"; 
-  }
-
-  async function cargarMisClasesIds() {
-    try {
-      verificarSesion();
-      if (!window.usuarioActual?.usuarioId) {
-        window._misClasesIds = new Set();
-        return;
-      }
-
-      const res = await fetch(
-        ENDPOINTS.clases.porUsuario(window.usuarioActual.usuarioId),
-        {
-          headers: {
-            Accept: "application/json",
-            ...authHeaders(),
-          },
+      const ENDPOINTS = {
+        clases: {
+          listar: `${API_URL}/clases`,
+          inscribir: `${API_URL}/clases/inscribir`,
         },
-      );
-
-      if (res.status === 401) {
-        let data401 = null;
-        try {
-          data401 = await res.json();
-        } catch {
-          data401 = null;
-        }
-        if (isTokenExpiredFromResponse(data401)) {
-          handleTokenExpiredLogout();
-          return;
-        }
-      }
-
-      if (!res.ok) {
-        window._misClasesIds = new Set();
-        return;
-      }
-
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data : [];
-
-      window._misClasesIds = new Set(
-        arr
-          .map((x) => x?.id ?? x?.claseId ?? x?.clase?.id)
-          .filter(Boolean)
-          .map(Number),
-      );
-    } catch (e) {
-      console.error("cargarMisClasesIds error:", e);
-      window._misClasesIds = new Set();
-    }
-  }
-
-  async function cargarClases() {
-    const loading = document.getElementById("loadingClasses");
-    const list = document.getElementById("classesList");
-    loading.classList.add("show");
-    try {
-      const res = await fetch(ENDPOINTS.clases.listar, {
-        headers: { Accept: "application/json" },
-      });
-      const data = await res.json();
-      window._clasesCache = Array.isArray(data) ? data : [];
-
-      await cargarMisClasesIds();
-
-      renderClasesPublicas();
-    } catch (e) {
-      console.error(e);
-      list.innerHTML =
-        '<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
-    } finally {
-      loading.classList.remove("show");
-    }
-  }
-
-  function renderClasesPublicas() {
-    const list = document.getElementById("classesList");
-    const q = (
-      document.getElementById("filtroPublicClasesTexto")?.value || ""
-    ).toLowerCase();
-
-    const arr = (window._clasesCache || [])
-      .filter((c) => c.estaActivo !== false)
-      .filter((c) =>
-        `${c.nombreClase || ""} ${c.nombreInstructor || ""}`
-          .toLowerCase()
-          .includes(q),
-      );
-
-    if (!arr.length) {
-      list.innerHTML =
-        '<p style="color:#ff4500; text-align:center;">No hay clases disponibles.</p>';
-      return;
-    }
-
-    list.innerHTML = arr
-      .map((c) => {
-        const inscritos =
-          typeof c.usuariosInscritos === "number"
-            ? c.usuariosInscritos
-            : Array.isArray(c.usuariosInscritos)
-              ? c.usuariosInscritos.length
-              : c.inscritos || 0;
-
-        const cap = Number(c.capacidadMaxima || 0);
-        const cupos = Math.max(cap - inscritos, 0);
-        const llena = cap > 0 && inscritos >= cap;
-
-        const horarioStr =
-          typeof c.horario === "string" && c.horario.trim()
-            ? c.horario
-            : c.horario
-              ? String(c.horario)
-              : "—";
-
-        const yaInscrito = window._misClasesIds?.has(Number(c.id));
-
-        const deshabilitar = llena || c.estaActivo === false || yaInscrito; // ✅ modificado
-
-        return `
-  <div class="class-card">
-    <h3>${c.nombreClase || "—"}</h3>
-    <p>${c.descripcion || ""}</p>
-    <p style="margin:1rem 0;"><strong>📅 ${horarioStr}</strong></p>
-    <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor || "—"}</p>
-    <p class="spots">
-      🎯 Cupos:
-      <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || "—"}
-      ${
-        llena
-          ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>'
-          : ""
-      }
-      ${
-        yaInscrito
-          ? '<span class="badge" style="margin-left:.5rem;">Inscrito</span>'
-          : ""
-      }
-    </p>
-    <button
-      class="btn"
-      id="btn-insc-${c.id}"
-      onclick="inscribirseEnClase(${c.id})"
-      ${deshabilitar ? "disabled" : ""}
-    >
-      ${yaInscrito ? "Inscrito" : "Inscribirme"}
-    </button>
-  </div>`;
-      })
-      .join("");
-  }
-
-  async function inscribirseEnClase(claseId) {
-    if (!window.usuarioActual) {
-      alert("Debes iniciar sesión para inscribirte.");
-      window.location.href = "/html/login.html"; 
-      return;
-    }
-
-    const btn = document.getElementById(`btn-insc-${claseId}`);
-
-    try {
-      if (btn) btn.disabled = true;
-
-      const payload = {
-        usuarioId: window.usuarioActual.usuarioId,
-        claseId,
       };
 
-      const res = await fetch(ENDPOINTS.clases.inscribir, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          ...authHeaders(),
-        },
-        body: JSON.stringify(payload),
+      function toggleMobileMenu() {
+        document.getElementById("navLinks").classList.toggle("active");
+      }
+
+      function verificarSesion() {
+        const u = localStorage.getItem("usuario");
+        const t = localStorage.getItem("token");
+        window.usuarioActual = u && t ? JSON.parse(u) : null;
+      }
+
+      function actualizarUIUsuario() {
+        const isLogged = !!window.usuarioActual;
+        const isAdmin =
+          window.usuarioActual?.rol === "ADMINISTRADOR" ||
+          window.usuarioActual?.rol === "ENTRENADOR";
+
+        document.getElementById("authLink").style.display = isLogged
+          ? "none"
+          : "block";
+        document
+          .getElementById("userInfo")
+          .classList.toggle("active", isLogged);
+        document.getElementById("userName").textContent = isLogged
+          ? window.usuarioActual.nombreCompleto || ""
+          : "";
+        document.getElementById("perfilLink").style.display = isLogged
+          ? "block"
+          : "none";
+        document.getElementById("adminLink").style.display = isAdmin
+          ? "block"
+          : "none";
+      }
+
+      function authHeaders() {
+        const t = localStorage.getItem("token") || "";
+        return t ? { Authorization: "Bearer " + t } : {};
+      }
+
+      function isTokenExpiredFromResponse(data) {
+        if (!data) return false;
+        const txt = (data.mensaje || data.message || "")
+          .toString()
+          .toLowerCase();
+        return txt.includes("token_expirado") || txt.includes("token expirado");
+      }
+
+      function handleTokenExpiredLogout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        window.usuarioActual = null;
+        alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+        window.location.href = "login.html";
+      }
+
+      async function cargarClases() {
+        const loading = document.getElementById("loadingClasses");
+        const list = document.getElementById("classesList");
+        loading.classList.add("show");
+        try {
+          const res = await fetch(ENDPOINTS.clases.listar, {
+            headers: { Accept: "application/json" },
+          });
+          const data = await res.json();
+          window._clasesCache = Array.isArray(data) ? data : [];
+          renderClasesPublicas();
+        } catch (e) {
+          console.error(e);
+          list.innerHTML =
+            '<p style="color:#ff4500; text-align:center;">Error al cargar clases.</p>';
+        } finally {
+          loading.classList.remove("show");
+        }
+      }
+
+      function renderClasesPublicas() {
+        const list = document.getElementById("classesList");
+        const q = (
+          document.getElementById("filtroPublicClasesTexto")?.value || ""
+        ).toLowerCase();
+
+        const arr = (window._clasesCache || [])
+          // solo mostramos clases activas
+          .filter((c) => c.estaActivo !== false)
+          .filter((c) =>
+            `${c.nombreClase || ""} ${c.nombreInstructor || ""}`
+              .toLowerCase()
+              .includes(q),
+          );
+
+        if (!arr.length) {
+          list.innerHTML =
+            '<p style="color:#ff4500; text-align:center;">No hay clases disponibles.</p>';
+          return;
+        }
+
+        list.innerHTML = arr
+          .map((c) => {
+            const inscritos =
+              typeof c.usuariosInscritos === "number"
+                ? c.usuariosInscritos
+                : Array.isArray(c.usuariosInscritos)
+                  ? c.usuariosInscritos.length
+                  : c.inscritos || 0;
+
+            const cap = Number(c.capacidadMaxima || 0);
+            const cupos = Math.max(cap - inscritos, 0);
+            const llena = cap > 0 && inscritos >= cap;
+
+            const horarioStr =
+              typeof c.horario === "string" && c.horario.trim()
+                ? c.horario
+                : c.horario
+                  ? String(c.horario)
+                  : "—";
+
+            const deshabilitar = llena || c.estaActivo === false;
+
+            return `
+      <div class="class-card">
+        <h3>${c.nombreClase || "—"}</h3>
+        <p>${c.descripcion || ""}</p>
+        <p style="margin:1rem 0;"><strong>📅 ${horarioStr}</strong></p>
+        <p><strong>👨‍🏫 Instructor:</strong> ${c.nombreInstructor || "—"}</p>
+        <p class="spots">
+          🎯 Cupos:
+          <span class="cupos" id="cupos-${c.id}">${cupos}</span>/${cap || "—"}
+          ${
+            llena
+              ? '<span class="badge badge-warning" style="margin-left:.5rem;">Completa</span>'
+              : ""
+          }
+        </p>
+        <button
+          class="btn"
+          id="btn-insc-${c.id}"
+          onclick="inscribirseEnClase(${c.id})"
+          ${deshabilitar ? "disabled" : ""}
+        >
+          Inscribirme
+        </button>
+      </div>`;
+          })
+          .join("");
+      }
+
+      async function inscribirseEnClase(claseId) {
+        if (!window.usuarioActual) {
+          alert("Debes iniciar sesión para inscribirte.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        const btn = document.getElementById(`btn-insc-${claseId}`);
+
+        try {
+          if (btn) btn.disabled = true;
+
+          const payload = {
+            usuarioId: window.usuarioActual.usuarioId,
+            claseId,
+          };
+
+          const res = await fetch(ENDPOINTS.clases.inscribir, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              ...authHeaders(),
+            },
+            body: JSON.stringify(payload),
+          });
+
+          let data = null;
+          try {
+            data = await res.json();
+          } catch (e) {
+            data = null;
+          }
+
+          if (res.status === 401 && isTokenExpiredFromResponse(data)) {
+            handleTokenExpiredLogout();
+            return;
+          }
+
+          if (!res.ok) {
+            throw new Error(
+              data?.mensaje || data?.error || "No se pudo inscribir",
+            );
+          }
+
+          await cargarClases();
+
+          alert(data?.mensaje || "Inscripción exitosa");
+        } catch (e) {
+          console.error(e);
+          alert("❌ " + e.message);
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      function cerrarSesion() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        window.usuarioActual = null;
+        actualizarUIUsuario();
+        alert("Sesión cerrada");
+        window.location.href = "login.html";
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        verificarSesion();
+        actualizarUIUsuario();
+        cargarClases();
       });
-
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (e) {
-        data = null;
-      }
-
-      if (res.status === 401 && isTokenExpiredFromResponse(data)) {
-        handleTokenExpiredLogout();
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.mensaje || data?.error || "No se pudo inscribir");
-      }
-
-      await cargarMisClasesIds();
-      await cargarClases();
-
-      alert(data?.mensaje || "Inscripción exitosa");
-    } catch (e) {
-      console.error(e);
-      alert("❌ " + e.message);
-      if (btn) btn.disabled = false;
-    }
-  }
-
-  function cerrarSesion() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
-    window.usuarioActual = null;
-    actualizarUIUsuario();
-    alert("Sesión cerrada");
-    window.location.href = "/html/login.html"; 
-  }
-
-  window.addEventListener("DOMContentLoaded", () => {
-    verificarSesion();
-    actualizarUIUsuario();
-    cargarClases();
-  });
-</script>
-
+    </script>
   </body>
 </html>
