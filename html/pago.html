@@ -52,16 +52,23 @@
   </div>
 
 <script>
-const API_URL = 'http://localhost:8080/api';
+const API_BASE =
+  location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://gimnacioapi.onrender.com";
+
+const API_URL = `${API_BASE}/api`;
+
 const ENDPOINTS = {
   membresias: {
     crear: `${API_URL}/membresias`,
     cancelar: (membresiaId) => `${API_URL}/membresias/${membresiaId}/cancelar`
   },
-  pagos: {
+  pagos:{
     crear: `${API_URL}/pagos`
   }
 };
+
 
 let planSeleccionado = localStorage.getItem('planSeleccionado') || null;
 let precioSeleccionado = Number(localStorage.getItem('precioSeleccionado') || 0);

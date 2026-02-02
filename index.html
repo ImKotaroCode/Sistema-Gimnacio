@@ -53,9 +53,17 @@
   <div id="errorMsg" class="error-message"></div>
 
 <script>
-const API_URL = 'http://localhost:8080/api';
+const API_BASE =
+  location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://gimnacioapi.onrender.com";
+
+const API_URL = `${API_BASE}/api`;
+
 const ENDPOINTS = {
-  usuarios: { me: `${API_URL}/usuarios/me` }
+  usuarios: {
+    me: `${API_URL}/usuarios/me`
+  }
 };
 
 const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });

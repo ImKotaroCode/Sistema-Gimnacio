@@ -53,7 +53,13 @@
   </div>
 
 <script>
-const API_URL = 'http://localhost:8080/api';
+const API_BASE =
+  location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://gimnacioapi.onrender.com";
+
+const API_URL = `${API_BASE}/api`;
+
 const ENDPOINTS = {
   clases: {
     listar: `${API_URL}/clases`,

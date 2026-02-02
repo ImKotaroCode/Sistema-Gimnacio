@@ -178,16 +178,21 @@
     </div>
   </div>
 
-  <!-- Mensajes -->
   <div id="successMsg" class="success-message"></div>
   <div id="errorMsg" class="error-message"></div>
 
 <script>
-const API_URL = 'http://localhost:8080/api';
+const API_BASE =
+  location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://gimnacioapi.onrender.com";
+
+const API_URL = `${API_BASE}/api`;
+
 const ENDPOINTS = {
   usuarios: {
     me: `${API_URL}/usuarios/me`,
-    update: (id) => `${API_URL}/usuarios/${id}`,
+    update:   (id) => `${API_URL}/usuarios/${id}`,
     password: (id) => `${API_URL}/usuarios/${id}/contrasena`,
     prefs:    (id) => `${API_URL}/usuarios/${id}/preferencias`
   },
@@ -197,10 +202,13 @@ const ENDPOINTS = {
     cancelar: (id) => `${API_URL}/membresias/${id}/cancelar`,
     update:   (id) => `${API_URL}/membresias/${id}`
   },
-  pagos: { porUsuario: (id) => `${API_URL}/pagos/usuario/${id}` },
+  pagos: {
+    porUsuario: (id) => `${API_URL}/pagos/usuario/${id}`
+  },
   clases: {
     porUsuario: (id) => `${API_URL}/clases/usuario/${id}`,
-    cancelarInscripcion: (claseId) => `${API_URL}/clases/${claseId}/cancelar-inscripcion`
+    cancelarInscripcion: (claseId) =>
+      `${API_URL}/clases/${claseId}/cancelar-inscripcion`
   }
 };
 
