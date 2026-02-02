@@ -84,7 +84,6 @@
           <div id="errorMsg" class="error-message"></div>
 
           <form id="authForm" onsubmit="manejarAutenticacion(event)">
-            <!-- REGISTRO (oculto en modo login) -->
             <div id="registerFields" style="display: none">
               <div class="grid-2">
                 <div class="form-group">
@@ -362,7 +361,7 @@
             window.usuarioActual = JSON.parse(localStorage.getItem("usuario"));
             mostrarMensaje("¡Bienvenido!", "success");
             setTimeout(() => {
-              window.location.href = "index.html";
+              window.location.href = "/index.html";
             }, 700);
           } else {
             const backendMsg =
